@@ -78,6 +78,7 @@ namespace TVTComment.Model.ChatCollectService
                 catch (Exception)
                 {
                     isStreaming = false;
+                    lastStatusId = null;
                     SearchTweets(searchWord, token);
                 }
             }, token);
@@ -99,7 +100,7 @@ namespace TVTComment.Model.ChatCollectService
 
         private void SearchTweets(string searchWord, CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested && SearchWord.Value.Equals(searchWord))
             {
                 var response = Twitter.Token.Search.Tweets(q: searchWord, since_id: lastStatusId);
                 var tweets = response.Where(x => !x.Text.StartsWith("RT"))
