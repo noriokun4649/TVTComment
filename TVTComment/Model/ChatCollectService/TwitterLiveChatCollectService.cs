@@ -102,7 +102,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             while (!token.IsCancellationRequested && SearchWord.Value.Equals(searchWord))
             {
-                var response = Twitter.Token.Search.Tweets(q: searchWord, since_id: lastStatusId);
+                var response = Twitter.Token.Search.Tweets(q: searchWord, since_id: lastStatusId, tweet_mode: TweetMode.Extended);
                 var tweets = response.Where(x => !x.Text.StartsWith("RT"))
                     .Where(x => x.Language is null or "und" || x.Language.StartsWith("ja"))
                     .ToList();
