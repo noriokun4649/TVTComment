@@ -115,13 +115,16 @@ namespace TVTComment.Model.ChatCollectService
 
                 if (response.RateLimit.Remaining == 0)
                 {
-                    Task.Delay(15, token);
+                    Thread.Sleep(15);
                 }
                 else
                 {
-                    var duration = DateTime.Now - response.RateLimit.Reset;
-                    var safeRate = duration / response.RateLimit.Remaining;
-                    Task.Delay(safeRate, token);
+                    var duration =  response.RateLimit.Reset - DateTime.Now;
+                    var safeRate = duration / response.RateLimit.Remaining + TimeSpan.FromSeconds(30);
+                    if (safeRate.TotalMilliseconds > 0)
+                    {
+                        Thread.Sleep(safeRate);
+                    }
                 }
             }
         }
