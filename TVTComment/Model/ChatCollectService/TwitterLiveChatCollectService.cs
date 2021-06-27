@@ -39,7 +39,8 @@ namespace TVTComment.Model.ChatCollectService
         private readonly ObservableValue<string> SearchWord = new ObservableValue<string>("");
         private readonly SearchWordResolver SearchWordResolver;
         private readonly ModeSelectMethod ModeSelect;
-
+        private bool isStreaming = true;
+        private long? lastStatusId;
 
         public TwitterLiveChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, ModeSelectMethod modeSelect, SearchWordResolver searchWordResolver, TwitterAuthentication twitter)
         {
@@ -51,35 +52,81 @@ namespace TVTComment.Model.ChatCollectService
             switch (modeSelect)
             {
                 case ModeSelectMethod.Auto:
-                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
+                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchAsync(res, cancel.Token));
                     break;
 
                 case ModeSelectMethod.Manual:
-                    chatCollectTask = SearchStreamAsync(searchWord, cancel.Token);
+                    chatCollectTask = SearchAsync(searchWord, cancel.Token);
                     break;
             }
         }
 
         public string GetInformationText()
         {
-            return $"検索モード:{ModeSelect}\n検索ワード:{SearchWord.Value}";
+            return $"検索モード:{ModeSelect}\n検索ワード:{SearchWord.Value}\n取得方法:{(isStreaming ? "ストリーミング API" : "REST API")}";
         }
 
-        private async Task SearchStreamAsync(string searchWord, CancellationToken cancel)
+        private async Task SearchAsync(string searchWord, CancellationToken token)
         {
             await Task.Run(() =>
             {
-                foreach (var status in Twitter.Token.Streaming.Filter(track: searchWord)
-                            .OfType<StatusMessage>()
-                            .Where(x => !x.Status.Text.StartsWith("RT"))
-                            .Where(x => x.Status.Language is null or "und" || x.Status.Language.StartsWith("ja"))
-                            .Select(x => x.Status))
+                try
                 {
-                    if (cancel.IsCancellationRequested || !SearchWord.Value.Equals(searchWord))
-                        break;
-                    statusQueue.Enqueue(status);
+                    isStreaming = true;
+                    SearchStream(searchWord, token);
                 }
-            }, cancel);
+                catch (Exception)
+                {
+                    isStreaming = false;
+                    lastStatusId = null;
+                    SearchTweets(searchWord, token);
+                }
+            }, token);
+        }
+
+        private void SearchStream(string searchWord, CancellationToken token)
+        {
+            foreach (var status in Twitter.Token.Streaming.Filter(track: searchWord)
+                        .OfType<StatusMessage>()
+                        .Where(x => !x.Status.Text.StartsWith("RT"))
+                        .Where(x => x.Status.Language is null or "und" || x.Status.Language.StartsWith("ja"))
+                        .Select(x => x.Status))
+            {
+                if (token.IsCancellationRequested || !SearchWord.Value.Equals(searchWord))
+                    break;
+                statusQueue.Enqueue(status);
+            }
+        }
+
+        private void SearchTweets(string searchWord, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested && SearchWord.Value.Equals(searchWord))
+            {
+                var response = Twitter.Token.Search.Tweets(q: searchWord, since_id: lastStatusId, tweet_mode: TweetMode.Extended);
+                var tweets = response.Where(x => !x.Text.StartsWith("RT"))
+                    .Where(x => x.Language is null or "und" || x.Language.StartsWith("ja"))
+                    .ToList();
+
+                foreach (var tweet in tweets)
+                {
+                    statusQueue.Enqueue(tweet);
+                }
+                lastStatusId = tweets.FirstOrDefault()?.Id + 1 ?? lastStatusId;
+
+                if (response.RateLimit.Remaining == 0)
+                {
+                    Thread.Sleep(15);
+                }
+                else
+                {
+                    var duration =  response.RateLimit.Reset - DateTime.Now;
+                    var safeRate = duration / response.RateLimit.Remaining + TimeSpan.FromSeconds(30);
+                    if (safeRate.TotalMilliseconds > 0)
+                    {
+                        Thread.Sleep(safeRate);
+                    }
+                }
+            }
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
