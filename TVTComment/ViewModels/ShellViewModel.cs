@@ -249,7 +249,8 @@ namespace TVTComment.ViewModels
 
         private void UpdateWindowTitle()
         {
-            WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss")} - TVTComment";
+            var time = model.ChatModule.UiFlashingDeterrence.Value ? "" : CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss");
+            WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {time} - TVTComment";
         }
 
         private async Task AddChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item)
@@ -273,6 +274,7 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.TwitterLiveV2ChatCollectServiceEntry _:
                         var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
                             new Notifications.ChatCollectServiceCreationSettingsConfirmation { Title = "コメント元設定", TargetChatCollectServiceEntry = item.ServiceEntry }
                         );
@@ -287,6 +289,13 @@ namespace TVTComment.ViewModels
 
         private void Model_ErrorOccurredInChatCollecting(Model.ChatCollectService.IChatCollectService service, string errorText)
         {
+            // 「自動選択」が有効
+            if (UseDefaultChatCollectService.Value)
+            {
+                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+                return;
+            }
+
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"で以下のエラーが発生しました。このコメント元を無効化します。\n\n{errorText}" });
         }
 

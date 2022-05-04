@@ -28,12 +28,14 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiSecret { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterBearerToken { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiAccessKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiAccessSecret { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterStatus { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterPinCode { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictAccessToken { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
+        public ObservableValue<bool> AnnictAutoEnable { get; } = new ObservableValue<bool>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -61,7 +63,8 @@ namespace TVTComment.ViewModels
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
-            var annict = new AnnictAuthentication("jh7atLhJwvYqsSPUFg5w-GAJ5ZzaAerTONYMLMWouds", "mkvE7k2UZktun5A_GHKH-0K60kKWGK_RJKYMmU1bQPg");
+            var secrets = App.Configuration;
+            var annict = new AnnictAuthentication(secrets["Annict:ClientId"], secrets["Annict:ClientSecret"]);
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
@@ -69,6 +72,9 @@ namespace TVTComment.ViewModels
             twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
 
             ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model);
+
+            AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
+            AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
 
             LoginNiconicoCommand = new DelegateCommand(async () =>
               {
@@ -115,6 +121,7 @@ namespace TVTComment.ViewModels
             {
                 twitter.ApiKey = TwitterApiKey.Value;
                 twitter.ApiSecret = TwitterApiSecret.Value;
+                twitter.BearerToken = TwitterBearerToken.Value;
                 AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
             });
 
@@ -122,7 +129,7 @@ namespace TVTComment.ViewModels
             {
                 try
                 {
-                    await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value);
+                    await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value, TwitterBearerToken.Value);
                     SyncTwitterStatus();
                 }
                 catch (Exception e)
@@ -174,7 +181,14 @@ namespace TVTComment.ViewModels
             });
 
             AnnictAccessTokenApplyCommand = new DelegateCommand(() => {
-                twitter.SetAnnictToken(AnnictAccessToken.Value);
+                try
+                {
+                    twitter.SetAnnictToken(AnnictAccessToken.Value);
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
                 SyncAnnictStatus();
             });
 
@@ -235,6 +249,7 @@ namespace TVTComment.ViewModels
             TwitterApiSecret.Value = twitter.ApiSecret;
             TwitterApiAccessKey.Value = twitter.ApiAccessToken;
             TwitterApiAccessSecret.Value = twitter.ApiAccessSecret;
+            TwitterBearerToken.Value = twitter.BearerToken;
             TwitterStatus.Value = twitter.IsLoggedin ? twitter.UserName + "としてログイン中" : "未ログイン";
         }
 

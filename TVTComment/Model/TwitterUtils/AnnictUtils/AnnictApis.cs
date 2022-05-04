@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CSharp.Japanese.Kanaxs;
+using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,6 +31,8 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
             const string endpoint = "v1/works";
             using var client = new HttpClient();
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UA);
+
+            title = KanaEx.ToHankaku(title);
 
             Stream stream;
             try

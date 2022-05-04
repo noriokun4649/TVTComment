@@ -65,6 +65,8 @@
 
         <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">チャンネル変更時にログをクリアする</CheckBox>
 
+        <CheckBox IsChecked="{Binding UiFlashingDeterrence.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">UIのチラつきを抑える (タイトルから時間が省略されます)</CheckBox>
+
         <DockPanel>
             <Label DockPanel.Dock="Left">ウィンドウフォントサイズ</Label>
             <Slider
@@ -86,7 +88,7 @@
             バージョン: <Run Text="{Binding Version, Mode=OneTime}"/>
         </TextBlock>
         <TextBlock>
-            © 2017 silane / © 2020 noriokun4649
+            © 2017 silane / © 2020-2021 noriokun4649
         </TextBlock>
     </StackPanel>
 </UserControl>

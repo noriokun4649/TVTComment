@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
@@ -17,32 +17,31 @@ namespace TVTComment.Model.NichanUtils
             this.backTime = backTime;
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> Get(ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            MatchingThread matchingThread = threadResolver.Resolve(channel, true);
-            if (matchingThread == null)
-                return Enumerable.Empty<string>();
+            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false);
 
-            string[] keywords = matchingThread.ThreadTitleKeywords?.Select(
-                x => x.ToLower().Normalize(NormalizationForm.FormKD)
-            ).ToArray() ?? Array.Empty<string>();
-            (string server, string board) = GetServerAndBoardFromBoardUrl(matchingThread.BoardUri.ToString());
-
-            if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
+            foreach (var thread in matchingThreads)
             {
-                threadLister = new Nichan.PastThreadLister(board, server, backTime);
-                await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
-                pastThreadListerCache.Add(board, threadLister);
+                string[] keywords = thread.ThreadTitleKeywords?.Select(
+                    x => x.ToLower().Normalize(NormalizationForm.FormKD)
+                )?.ToArray() ?? Array.Empty<string>();
+                (string server, string board) = GetServerAndBoardFromBoardUrl(thread.BoardUri.ToString());
+
+                if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
+                {
+                    threadLister = new Nichan.PastThreadLister(board, server, backTime);
+                    await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
+                    pastThreadListerCache.Add(board, threadLister);
+                }
+
+                DateTimeOffset startTime = time;
+                var threads = threadLister.GetBetween(startTime, startTime + getTimeSpan, keywords, cancellationToken);
+                await foreach (var x in threads)
+                {
+                    yield return x.Uri.ToString();
+                }
             }
-
-            DateTimeOffset startTime = time;
-            IEnumerable<Nichan.Thread> threads = await threadLister.GetBetween(
-                startTime, startTime + getTimeSpan, cancellationToken
-            ).ConfigureAwait(false);
-
-            return threads.Where(x => keywords.All(
-                keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)
-            )).Select(x => x.Uri.ToString());
         }
 
         private readonly ThreadResolver threadResolver;

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -60,6 +61,7 @@ namespace TVTComment.Model.ChatCollectService
         private string liveId = "";
         private bool notOnAir = false;
         private Task chatCollectTask = null;
+        private Task chatSessionTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
 
         public NewNiconicoJikkyouChatCollectService(
@@ -81,6 +83,11 @@ namespace TVTComment.Model.ChatCollectService
 
             commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(niconicoLoginSession);
             commentSender = new NiconicoUtils.NicoLiveCommentSender(niconicoLoginSession);
+        }
+
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
+        {
+            return GetChats(channel, time);
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
@@ -107,6 +114,7 @@ namespace TVTComment.Model.ChatCollectService
                 try
                 {
                     chatCollectTask?.Wait();
+                    chatSessionTask?.Wait();
                 }
                 //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
                 catch (AggregateException e) when (e.InnerExceptions.All(
@@ -122,6 +130,7 @@ namespace TVTComment.Model.ChatCollectService
                 {
                     cancellationTokenSource = new CancellationTokenSource();
                     chatCollectTask = CollectChat(originalLiveId, cancellationTokenSource.Token);
+                    chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancellationTokenSource.Token);
                 }
             }
 
@@ -178,6 +187,7 @@ namespace TVTComment.Model.ChatCollectService
                 throw new LiveNotFoundChatReceivingException();
 
             liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
+            
 
             try
             {
@@ -207,29 +217,25 @@ namespace TVTComment.Model.ChatCollectService
         public async Task PostChat(BasicChatPostObject chatPostObject)
         {
             string liveId = this.liveId;
-            if (liveId == "")
+            if (liveId != "")
+            {
+                try { 
+                    await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
+                }
+                catch (ResponseFormatNicoLiveCommentSenderException e)
+                {
+                    throw new ChatPostException($"サーバーからエラーが返されました\n{e.Response}", e);
+                }
+                catch (NicoLiveCommentSenderException e)
+                {
+                    throw new ChatPostException($"サーバーに接続できませんでした\n{e.Message}", e);
+                }
+            }
+            else
+            {
                 throw new ChatPostException("コメントが投稿できる状態にありません。しばらく待ってから再試行してください。");
-
-            try
-            {
-                await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
             }
-            catch (NiconicoUtils.NetworkNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーに接続できませんでした", e);
-            }
-            catch (NiconicoUtils.InvalidPlayerStatusNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーから無効な PlayerStatus が返されました\n\n{e.PlayerStatus}", e);
-            }
-            catch (NiconicoUtils.ResponseFormatNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーから予期しない形式の応答がありました\n\n{e.Response}", e);
-            }
-            catch (NiconicoUtils.ResponseErrorNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーからエラーが返されました", e);
-            }
+            
         }
 
         public void Dispose()
@@ -242,6 +248,7 @@ namespace TVTComment.Model.ChatCollectService
                 try
                 {
                     if (chatCollectTask != null) chatCollectTask.Wait();
+                    if (chatSessionTask != null) chatSessionTask.Wait();
 
                 }
                 //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視

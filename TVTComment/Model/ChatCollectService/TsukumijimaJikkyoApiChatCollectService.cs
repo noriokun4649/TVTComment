@@ -180,7 +180,10 @@ namespace TVTComment.Model.ChatCollectService
                     if (chatObj.TryGetProperty("deleted", out _)) //削除済みの場合スキップ
                         continue;
 
-                    int vpos = int.Parse(chatObj.GetProperty("vpos").GetString());
+                    if (!(chatObj.TryGetProperty("vpos", out elem) && elem.ValueKind == JsonValueKind.String))
+                        continue;
+
+                    int vpos = int.Parse(elem.GetString());
                     long date = int.Parse(chatObj.GetProperty("date").GetString());
                     int dateUsec = chatObj.TryGetProperty("date_usec", out elem) ? elem.ValueKind == JsonValueKind.String ? int.Parse(elem.GetString()) : 0 : 0;
                     string mail = chatObj.TryGetProperty("mail", out elem) ? elem.ValueKind == JsonValueKind.String ? elem.GetString() : "" : "";

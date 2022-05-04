@@ -50,6 +50,7 @@
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                 <Button Content="NGワード" Command="{Binding AddWordNgCommand}"/>
                                 <Button Content="NGユーザー" Command="{Binding AddUserNgCommand}"/>
+                                <Button Content="NG正規表現" Command="{Binding AddRegexNgCommand}"/>
                             </StackPanel>
                             <Button Content="色コメNG" Command="{Binding AddIroKomeNgCommand}"/>
                             <Button Content="上下コメNG" Command="{Binding AddJyougeKomeNgCommand}"/>
@@ -60,6 +61,8 @@
                                     文字以上のコメNG
                                 </TextBlock>
                             </Button>
+                            <Button Command="{Binding AddUrlNgCommand}">URLが含まれるコメNG</Button>
+                            <Button Command="{Binding AddMentionNgCommand}">メンションが含まれるコメNG</Button>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Header="改変">
@@ -104,8 +107,20 @@
                             <Button Command="{Binding AddRemoveUrlCommand}">URL 削除</Button>
                             <Button Command="{Binding AddRemoveHashtagCommand}">ハッシュタグ削除</Button>
                             <Button Command="{Binding AddRemoveMentionCommand}">メンション削除</Button>
+                            <Button Command="{Binding AddReplaceRegexCommand}" VerticalContentAlignment="Center">
+                                <TextBlock>
+                                    正規表現置換
+                                    <LineBreak/>
+                                    検索
+                                    <TextBox VerticalAlignment="Center" Width="150" Text="{Binding ReplaceRegexPattern.Value,UpdateSourceTrigger=PropertyChanged}"/>
+                                    <LineBreak/>
+                                    置換
+                                    <TextBox VerticalAlignment="Center" Width="150" Text="{Binding ReplaceRegexReplacement.Value,UpdateSourceTrigger=PropertyChanged}"/>
+                                </TextBlock>
+                            </Button>
                             <Button Command="{Binding AddRenderEmotionAsCommentCommand}">/emotion をコメントとして描画</Button>
                             <Button Command="{Binding AddRenderInfoAsCommentCommand}">/info をコメントとして描画</Button>
+                            <Button Command="{Binding AddRenderNicoadAsCommentCommand}">/nicoad をコメントとして描画</Button>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>

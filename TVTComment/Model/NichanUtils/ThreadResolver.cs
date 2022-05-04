@@ -1,4 +1,6 @@
-﻿namespace TVTComment.Model.NichanUtils
+﻿using System.Collections.Generic;
+
+namespace TVTComment.Model.NichanUtils
 {
     /// <summary>
     /// <see cref="ChannelInfo"/>から対応する板URL・スレッドタイトルキーワードを得る
@@ -14,19 +16,24 @@
             this.boardDatabase = boardDatabase;
         }
 
-        public MatchingThread Resolve(ChannelInfo channelInfo, bool ignoreMainThreadTitleKeywords)
+        public IEnumerable<MatchingThread> Resolve(ChannelInfo channelInfo, bool ignoreMainThreadTitleKeywords)
         {
-            MatchingThread getMatchingThread(ChannelEntry channel)
+            IEnumerable<MatchingThread> getMatchingThread(ChannelEntry channel)
             {
                 if (!ignoreMainThreadTitleKeywords)
-                    return boardDatabase.GetMatchingThread(channel);
+                    foreach (var entry in boardDatabase.GetMatchingThread(channel))
+                    {
+                        yield return entry;
+                    }
                 else
                 {
-                    ThreadMappingRuleEntry ruleEntry = boardDatabase.GetMatchingThreadMappingRuleEntry(channel);
-                    if (ruleEntry == null) return null;
-                    BoardEntry boardEntry = boardDatabase.GetBoardEntryById(ruleEntry.BoardId);
-                    if (boardEntry == null) return null;
-                    return new MatchingThread(boardEntry.Title, boardEntry.Uri, ruleEntry.ThreadTitleKeywords);
+                    IEnumerable<ThreadMappingRuleEntry> ruleEntry = boardDatabase.GetMatchingThreadMappingRuleEntry(channel);
+                    foreach (var entry in ruleEntry)
+                    {
+                        BoardEntry boardEntry = boardDatabase.GetBoardEntryById(entry.BoardId);
+                        if (boardEntry == null) continue;
+                        yield return new MatchingThread(boardEntry.Title, boardEntry.Uri, entry.ThreadTitleKeywords);
+                    }
                 }
             }
 
@@ -37,9 +44,8 @@
                 //BSとCSの間ではサービスIDが重複する可能性があるがほとんどないので割り切る
                 foreach (ChannelEntry channel in channelDatabase.GetByServiceId(serviceId))
                 {
-                    MatchingThread ret = getMatchingThread(channel);
-                    if (ret != null)
-                        return ret;
+                    IEnumerable<MatchingThread> ret = getMatchingThread(channel);
+                    return ret;
                 }
                 return null;
             }

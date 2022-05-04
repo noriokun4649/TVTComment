@@ -87,6 +87,11 @@ namespace TVTComment.Model.ChatCollectService
                 return ret + "サーバーに接続中";
         }
 
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
+        {
+            return GetChats(channel, time);
+        }
+
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
             if (chatCollectTask != null && chatCollectTask.IsFaulted)

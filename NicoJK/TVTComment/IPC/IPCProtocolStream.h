@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 #include "RawIPCMessage.h"
 #include <istream>
 namespace TVTComment
 {
-	//0x1E(Record Separator),0x1F(Unit Separator)�����͓`���f�[�^�Ɋ܂߂Ă͂Ȃ�Ȃ�
+	//0x1E(Record Separator),0x1F(Unit Separator)文字は伝送データに含めてはならない
 	class IPCProtocolStream
 	{
 	private:

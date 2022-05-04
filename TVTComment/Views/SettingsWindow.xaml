@@ -138,6 +138,8 @@
                                     <TextBox Text="{Binding TwitterApiAccessKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                                     <Label Content="Access secret" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
                                     <TextBox Text="{Binding TwitterApiAccessSecret.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
+                                    <Label Content="Bearer token" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="3"/>
+                                    <TextBox Text="{Binding TwitterBearerToken.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="3"/>
                                 </Grid>
                                 <Button Content="ログイン" Command="{Binding LoginTokensTwitterCommand}"  Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" Margin="5,5,5,0"/>
 
@@ -162,7 +164,7 @@
             </Grid>
         </TabItem>
         <TabItem Header="Annict">
-            <Grid local:Grid.Shape="*:auto,auto,auto">
+            <Grid local:Grid.Shape="*:auto,auto,auto,auto">
                 <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
                 <TextBlock Text="AnnictはTwitter実況においてハッシュタグをアニメ毎に自動取得するのに利用します。アニメ毎に自動取得する機能を使わない場合認証は必要ありません。" TextWrapping="Wrap" Grid.Row="1"/>
                 <GroupBox Header="AnnictAPI設定" Grid.Row="2">
@@ -188,6 +190,12 @@
                                 <Button Content="認証" Command="{Binding AnnictOAuthCertificationCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Grid.Row="2"/>
                             </Grid>
                         </GroupBox>
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="コメント元自動選択" Grid.Row="3">
+                    <Grid local:Grid.Shape="*:auto,auto">
+                        <TextBlock Text="「Twitterリアルタイム実況」がコメント元自動選択で有効になったときの動作を指定できます。下記設定が無効の場合「Twitterリアルタイム実況」では「プリセット」モードで有効になります。" TextWrapping="Wrap" Grid.Row="0"/>
+                        <CheckBox IsChecked="{Binding AnnictAutoEnable.Value}" Content="「自動(アニメ用・Annictからハッシュタグ取得)」を利用する"  Grid.Row="1"/>
                     </Grid>
                 </GroupBox>
             </Grid>

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <string>
 
 namespace TVTComment
@@ -30,6 +30,6 @@ namespace TVTComment
 
 		unsigned short ServiceID;
 
-		bool Hidden;//TVTest‚Ìİ’è‚Å”ñ•\¦‚É‚È‚Á‚Ä‚¢‚é
+		bool Hidden;//TVTestã®è¨­å®šã§éè¡¨ç¤ºã«ãªã£ã¦ã„ã‚‹
 	};
 }

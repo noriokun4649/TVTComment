@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IPCProtocolStream.h"
 #include "IPCMessage/IIPCMessage.h"
 #include "../win32filestream.h"
@@ -19,9 +19,9 @@ namespace TVTComment
 		virtual const char *what() const override { return what_arg.c_str(); }
 	};
 
-	//ƒvƒƒZƒXŠÔ’ÊMƒgƒ“ƒlƒ‹
-	//Connect‚ªŠ®—¹‚·‚é‘O‚ÉSend‚âReceive‚ğŒÄ‚Ô‚Æ–¢’è‹`“®ì
-	//Send‚ÆReceive©‘Ì‚ÌÄ“ü‚Í‚Å‚«‚È‚¢‚ª•ÊƒXƒŒƒbƒh‚©‚çSend‚ÆReceive‚ğ“¯‚ÉŒÄ‚ñ‚ÅOK
+	//ãƒ—ãƒ­ã‚»ã‚¹é–“é€šä¿¡ãƒˆãƒ³ãƒãƒ«
+	//ConnectãŒå®Œäº†ã™ã‚‹å‰ã«Sendã‚„Receiveã‚’å‘¼ã¶ã¨æœªå®šç¾©å‹•ä½œ
+	//Sendã¨Receiveè‡ªä½“ã®å†å…¥ã¯ã§ããªã„ãŒåˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã‹ã‚‰Sendã¨Receiveã‚’åŒæ™‚ã«å‘¼ã‚“ã§OK
 	class IPCTunnel
 	{
 	private:
@@ -36,7 +36,7 @@ namespace TVTComment
 		void Connect();
 		void Send(const IIPCMessage &msg);
 		std::unique_ptr<IIPCMessage> Receive();
-		void Cancel() noexcept;//ˆ—’†‚ÌConnect,Send,Receive‚ğƒLƒƒƒ“ƒZƒ‹‚µAstd::system_error‚Å‹A‚ç‚¹‚é
-		~IPCTunnel() noexcept;//Cancel‚ğŒÄ‚ñ‚¾Œã
+		void Cancel() noexcept;//å‡¦ç†ä¸­ã®Connect,Send,Receiveã‚’ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã—ã€std::system_errorã§å¸°ã‚‰ã›ã‚‹
+		~IPCTunnel() noexcept;//Cancelã‚’å‘¼ã‚“ã å¾Œ
 	};
 }

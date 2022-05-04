@@ -1,0 +1,259 @@
+﻿# 2chスレ設定
+
+[boards]
+NHK	番組ch(NHK)	https://nhk2.5ch.net/livenhk/subback.html	
+ETV	番組ch(教育)	https://nhk2.5ch.net/liveetv/subback.html	
+NTV	番組ch(NTV)	https://sora.5ch.net/liventv/subback.html	
+TBS	番組ch(TBS)	https://sora.5ch.net/livetbs/subback.html	
+CX	番組ch(フジ)	https://sora.5ch.net/livecx/subback.html	
+ANB	番組ch(朝日)	https://sora.5ch.net/liveanb/subback.html	
+TX	番組ch(TX)	https://sora.5ch.net/livetx/subback.html	
+MX	番組ch(MX)	https://fate.5ch.net/livemx/subback.html	
+BSNHK_BS1	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	BS1
+BSNHK_BSP	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	BSプレミアム
+BSFREE_NTV	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS日テレ
+BSFREE_ANB	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS朝日
+BSFREE_TBS	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS-TBS
+BSFREE_TX	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BSテレ東 BSジャパン
+BSFREE_CX	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BSフジ
+BSFREE_BS11	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS11
+BSFREE_BS12	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS12 TwellV
+BSFREE_OUJ	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	放送大学
+BSFREE_DLIFE	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	Dlife
+BSPAY_WOWOWP	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	WOWOWプライム
+BSPAY_WOWOWC	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	WOWOWシネマ
+BSPAY_WOWOWL	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	WOWOWライブ
+BSPAY_STAR	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	スターチャンネル スタチャン
+BSPAY_SKYPER	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	BSスカパー
+SKYPER	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	
+SKYPER_GREEN	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	グリーンチャンネル
+SKYPER_ANIMAX	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	アニマックス
+SKYPER_225	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	日本映画専門
+SKYPER_218	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	東映チャンネル
+SKYPER_NECO	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	NECO NEKO
+SKYPER_GTASU	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	G+
+SKYPER_KIDS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	キッズステーション ｷｯｽﾞｽﾃｰｼｮﾝ
+SKYPER_CARTOON	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	カートゥーン
+SKYPER_ATX	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	AT-X
+SKYPER_TBS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	TBSチャンネル
+SKYPER_ANB	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	テレ朝チャンネル
+SKYPER_NTVPLUS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	日テレプラス
+SKYPER_GINGA	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	チャンネル銀河
+SKYPER_CXONE	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ONE
+SKYPER_CXTWO	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	TWO
+SKYPER_CXNEXT	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	NEXT
+SKYPER_SKYSTAGE	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	タカラヅカスカイステージ
+SKYPER_292	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	時代劇専門
+SKYPER_FAMILY	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ファミリー劇場
+SKYPER_MONDO	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	MONDOTV
+SKYPER_DISCOVERY	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ﾃﾞｨｽｶﾊﾞ
+SKYPER_ANIMAL	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ｱﾆﾌﾟﾗ
+SKYPER_HISTORY	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ﾋｽﾄﾘ
+SKYPER_NATIONAL	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ﾅｼｮｼﾞｵ
+SKYPER_NEWS24	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	NEWS24
+SKYPER_TBSNEWS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	TBS NEWS
+SKYPER_DRAMA	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	FOX・スパドラ・AXN・AXNミステリー
+ANIME_BS11	アニメ特撮実況	https://mao.5ch.net/liveanime/subback.html	BS11
+ANIME_MX	アニメ特撮実況	https://mao.5ch.net/liveanime/subback.html	TOKYO MX
+LOCAL_MX	番組ch	https://sora.5ch.net/weekly/subback.html	MX
+LOCAL_TVK	番組ch	https://sora.5ch.net/weekly/subback.html	tvk
+LOCAL_TVS	番組ch	https://sora.5ch.net/weekly/subback.html	テレ玉
+LOCAL_CTC	番組ch	https://sora.5ch.net/weekly/subback.html	チバ
+LOCAL_GTV	番組ch	https://sora.5ch.net/weekly/subback.html	群馬
+LOCAL_GYT	番組ch	https://sora.5ch.net/weekly/subback.html	とちぎ
+LOCAL_WEST	番組ch(西日本)	https://sora.5ch.net/livewkwest/subback.html	関西ローカル ｱﾆﾒ関西ﾛｰｶﾙ
+
+[threadmapping]
+# GR: NHK 総合
+flags	1	NHK
+# GR: Eテレ
+flags	2	ETV
+# GR: 日テレ
+flags	4	NTV
+# GR: テレビ朝日
+flags	32	ANB
+# GR: TBS
+flags	8	TBS
+# GR: テレビ東京
+flags	64	TX
+# GR: フジテレビ
+flags	16	CX
+# GR: TOKYO MX
+nsid	0xf5c38	MX
+nsid	0xf5c39	MX
+nsid	0xf5c3a	MX
+# GR: TOKYO MX
+nsid	0xf5c38	LOCAL_MX
+nsid	0xf5c39	LOCAL_MX
+nsid	0xf5c3a	LOCAL_MX
+# GR: TOKYO MX
+nsid	0xf5c38	ANIME_MX
+nsid	0xf5c39	ANIME_MX
+nsid	0xf5c3a	ANIME_MX
+# GR: テレ玉
+nsid	0xf7438	LOCAL_TVS
+nsid	0xf7439	LOCAL_TVS
+nsid	0xf743a	LOCAL_TVS
+# GR: tvk
+nsid	0xf6038	LOCAL_TVK
+nsid	0xf6039	LOCAL_TVK
+nsid	0xf603a	LOCAL_TVK
+# GR: チバテレビ
+nsid	0xf6c38	LOCAL_CTC
+nsid	0xf6c39	LOCAL_CTC
+nsid	0xf6c3a	LOCAL_CTC
+# GR: 群馬テレビ
+nsid	0xf6438	LOCAL_GTV
+nsid	0xf6439	LOCAL_GTV
+nsid	0xf643a	LOCAL_GTV
+# GR: とちぎテレビ
+nsid	0xf7038	LOCAL_GYT
+nsid	0xf7039	LOCAL_GYT
+nsid	0xf703a	LOCAL_GYT
+# GR: 三重テレビ
+nsid	0xf9830	LOCAL_WEST
+nsid	0xf9831	LOCAL_WEST
+nsid	0xf9832	LOCAL_WEST
+# GR: ぎふチャン
+nsid	0xf9c30	LOCAL_WEST
+nsid	0xf9c31	LOCAL_WEST
+nsid	0xf9c32	LOCAL_WEST
+# GR: KBS京都
+nsid	0xfa430	LOCAL_WEST
+nsid	0xfa431	LOCAL_WEST
+nsid	0xfa432	LOCAL_WEST
+# GR: サンテレビ
+nsid	0xfa830	LOCAL_WEST
+nsid	0xfa831	LOCAL_WEST
+nsid	0xfa832	LOCAL_WEST
+# GR: テレビ和歌山
+nsid	0xfac30	LOCAL_WEST
+nsid	0xfac31	LOCAL_WEST
+nsid	0xfac32	LOCAL_WEST
+# GR: 奈良テレビ
+nsid	0xfb030	LOCAL_WEST
+nsid	0xfb031	LOCAL_WEST
+nsid	0xfb032	LOCAL_WEST
+# GR: BBCびわ湖放送
+nsid	0xfb430	LOCAL_WEST
+nsid	0xfb431	LOCAL_WEST
+nsid	0xfb432	LOCAL_WEST
+# BS: NHKBS1
+nsid	0x40065	BSNHK_BS1
+nsid	0x40066	BSNHK_BS1
+# BS: NHKBSプレミアム
+nsid	0x40067	BSNHK_BSP
+nsid	0x40068	BSNHK_BSP
+# BS: BS日テレ
+nsid	0x4008d	BSFREE_NTV
+nsid	0x4008e	BSFREE_NTV
+nsid	0x4008f	BSFREE_NTV
+# BS: BS朝日
+nsid	0x40097	BSFREE_ANB
+nsid	0x40098	BSFREE_ANB
+nsid	0x40099	BSFREE_ANB
+# BS: BS-TBS
+nsid	0x400a1	BSFREE_TBS
+nsid	0x400a2	BSFREE_TBS
+nsid	0x400a3	BSFREE_TBS
+# BS: BSテレ東
+nsid	0x400ab	BSFREE_TX
+nsid	0x400ac	BSFREE_TX
+nsid	0x400ad	BSFREE_TX
+# BS: BSフジ
+nsid	0x400b5	BSFREE_CX
+nsid	0x400b6	BSFREE_CX
+nsid	0x400b7	BSFREE_CX
+# BS: WOWOWプライム
+nsid	0x400bf	BSPAY_WOWOWP
+# BS: WOWOWライブ
+nsid	0x400c0	BSPAY_WOWOWL
+# BS: WOWOWシネマ
+nsid	0x400c1	BSPAY_WOWOWC
+# BS: スターチャンネル1
+nsid	0x400c8	BSPAY_STAR
+# BS: スターチャンネル2
+nsid	0x400c9	BSPAY_STAR
+# BS: スターチャンネル3
+nsid	0x400ca	BSPAY_STAR
+# BS: BS11イレブン
+nsid	0x400d3	BSFREE_BS11
+# BS: BS11イレブン
+nsid	0x400d3	ANIME_BS11
+# BS: BS12トゥエルビ
+nsid	0x400de	BSFREE_BS12
+# BS: 放送大学ex
+nsid	0x400e7	BSFREE_OUJ
+# BS: 放送大学on
+nsid	0x400e8	BSFREE_OUJ
+nsid	0x400e9	BSFREE_OUJ
+# BS: グリーンチャンネル
+nsid	0x400ea	SKYPER_GREEN
+# BS: BSアニマックス
+nsid	0x400ec	SKYPER_ANIMAX
+# BS: BSスカパー!
+nsid	0x400f1	BSPAY_SKYPER
+# BS: 日本映画専門ch
+nsid	0x400ff	SKYPER_225
+# BS: Dlife
+nsid	0x40102	BSFREE_DLIFE
+# BS: 放送大学ラジオ
+nsid	0x40213	BSFREE_OUJ
+# CS: 東映チャンネル
+nsid	0x600da	SKYPER_218
+# CS: 映画・chNECO
+nsid	0x700df	SKYPER_NECO
+# CS: 日テレジータス
+nsid	0x70101	SKYPER_GTASU
+# CS: SKY STAGE
+nsid	0x70122	SKYPER_SKYSTAGE
+# CS: 時代劇専門ch
+nsid	0x70124	SKYPER_292
+# CS: ファミリー劇場
+nsid	0x70125	SKYPER_FAMILY
+# CS: MONDO TV
+nsid	0x70127	SKYPER_MONDO
+# CS: TBSチャンネル1
+nsid	0x60128	SKYPER_TBS
+# CS: TBSチャンネル2
+nsid	0x70129	SKYPER_TBS
+# CS: テレ朝チャンネル1
+nsid	0x6012a	SKYPER_ANB
+# CS: テレ朝チャンネル2
+nsid	0x6012b	SKYPER_ANB
+# CS: 日テレプラス
+nsid	0x7012c	SKYPER_NTVPLUS
+# CS: 銀河◆歴ドラ・サスペ
+nsid	0x70131	SKYPER_GINGA
+# CS: フジテレビONE
+nsid	0x70133	SKYPER_CXONE
+# CS: フジテレビTWO
+nsid	0x70134	SKYPER_CXTWO
+# CS: フジテレビNEXT
+nsid	0x70135	SKYPER_CXNEXT
+# CS: スーパー！ドラマTV
+nsid	0x70136	SKYPER_DRAMA
+# CS: AXN 海外ドラマ
+nsid	0x70137	SKYPER_DRAMA
+# CS: FOX
+nsid	0x70138	SKYPER_DRAMA
+# CS: AXNミステリー
+nsid	0x7013c	SKYPER_DRAMA
+# CS: キッズステーション
+nsid	0x7014a	SKYPER_KIDS
+# CS: カートゥーン
+nsid	0x7014b	SKYPER_CARTOON
+# CS: AT-X
+nsid	0x7014d	SKYPER_ATX
+# CS: ディスカバリー
+nsid	0x70154	SKYPER_DISCOVERY
+# CS: アニマルプラネット
+nsid	0x70155	SKYPER_ANIMAL
+# CS: ヒストリーチャンネル
+nsid	0x70156	SKYPER_HISTORY
+# CS: ナショジオ
+nsid	0x70157	SKYPER_NATIONAL
+# CS: 日テレNEWS24
+nsid	0x6015d	SKYPER_NEWS24
+# CS: TBS NEWS
+nsid	0x7015f	SKYPER_TBSNEWS

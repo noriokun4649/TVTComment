@@ -21,9 +21,8 @@ namespace TVTComment.Model.NichanUtils
         /// <paramref name="channel"/>に対応する<see cref="ThreadMappingRuleEntry"/>を返す
         /// 見つからなければ<c>null</c>
         /// </summary>
-        public ThreadMappingRuleEntry GetMatchingThreadMappingRuleEntry(ChannelEntry channel)
+        public IEnumerable<ThreadMappingRuleEntry> GetMatchingThreadMappingRuleEntry(ChannelEntry channel)
         {
-            ThreadMappingRuleEntry ret = null;
             foreach (ThreadMappingRuleEntry entry in ThreadMappingRuleEntries)
             {
                 switch (entry.Target)
@@ -31,24 +30,23 @@ namespace TVTComment.Model.NichanUtils
                     case ThreadMappingRuleTarget.Flags:
                         if (((ChannelFlags)entry.Value & channel.Flags) != 0)
                         {
-                            ret = entry;
+                            yield return entry;
                         }
-                        break;
+                        continue;
                     case ThreadMappingRuleTarget.NSId:
                         if (entry.Value == (channel.NetworkId << 16 | channel.ServiceId))
                         {
-                            ret = entry;
+                            yield return entry;
                         }
-                        break;
+                        continue;
                     case ThreadMappingRuleTarget.NId:
                         if (entry.Value == channel.NetworkId)
                         {
-                            ret = entry;
+                            yield return entry;
                         }
-                        break;
+                        continue;
                 }
             }
-            return ret;
         }
 
         /// <summary>
@@ -63,21 +61,27 @@ namespace TVTComment.Model.NichanUtils
         /// <paramref name="channel"/>に対応する板とスレッド名キーワードを返す
         /// 見つからなければ<c>null</c>
         /// </summary>
-        public MatchingThread GetMatchingThread(ChannelEntry channel)
+        public IEnumerable<MatchingThread> GetMatchingThread(ChannelEntry channel)
         {
-            string[] threadTitleKeywords;
+            var boardAndThread = GetMatchingThreadMappingRuleEntry(channel).ToList();//板名とスレッドタイトルを得る
+            foreach (var entry in boardAndThread)
+            {
+                BoardEntry board = GetBoardEntryById(entry.BoardId);//板名から板URLと主要スレッド名を得る
+                if (board == null)
+                    continue;
 
-            var boardAndThread = GetMatchingThreadMappingRuleEntry(channel);//板名とスレッドタイトルを得る
-            if (boardAndThread == null)
-                return null;
-            BoardEntry board = GetBoardEntryById(boardAndThread.BoardId);//板名から板URLと主要スレッド名を得る
-            if (board == null)
-                return null;
-            threadTitleKeywords = boardAndThread.ThreadTitleKeywords ?? board.MainThreadTitleKeywords;
-            if (threadTitleKeywords == null)
-                return null;
+                var threadTitleKeywords = new List<string>();
+                if (entry.ThreadTitleKeywords != null)
+                {
+                    threadTitleKeywords.AddRange(entry.ThreadTitleKeywords);
+                }
+                if (board.MainThreadTitleKeywords != null)
+                {
+                    threadTitleKeywords.AddRange(board.MainThreadTitleKeywords);
+                }
 
-            return new MatchingThread(board.Title, board.Uri, threadTitleKeywords);
+                yield return new MatchingThread(board.Title, board.Uri, threadTitleKeywords.ToArray());
+            }
         }
     }
 }

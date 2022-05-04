@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,21 +31,25 @@ namespace TVTComment.Model.NichanUtils
             Keywords = keywords.Select(x => x.ToLower().Normalize(NormalizationForm.FormKD));
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> Get(ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{boardHost}/{boardName}/subject.txt", cancellationToken);
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);
-            IEnumerable<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader);
+            var threadsInBoard = Nichan.SubjecttxtParser.ParseFromStream(textReader)
+                .Select(
+                    x => { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
+                ).Where(
+                    x => Keywords.All(keyword => x.Title.Contains(keyword))
+                ).Select(
+                    x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
+                );
 
-            return threadsInBoard.Select(
-                x => { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
-            ).Where(
-                x => Keywords.All(keyword => x.Title.Contains(keyword))
-            ).Select(
-                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
-            );
+            await foreach (var thread in threadsInBoard)
+            {
+                yield return thread;
+            }
         }
     }
 }

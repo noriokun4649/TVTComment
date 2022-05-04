@@ -12,7 +12,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
 {
     class AnnictAuthentication
     {
-        private readonly string HOST = $"https://annict.jp/";
+        private readonly string HOST = $"https://api.annict.com/";
         private readonly string ResponseType = "code";
         private readonly string RedirectUri = "urn:ietf:wg:oauth:2.0:oob";
         private readonly string Scope = "read";

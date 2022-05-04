@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "win32filebuf.h"
 #include <cstring>
 #include <algorithm>
@@ -26,8 +26,8 @@ std::streamsize basic_win32filebuf<charT, traits>::xsputn(const typename basic_w
 		std::streamsize charsFree=this->epptr()-this->pptr();
 		if (charsFree<n-ret)
 		{
-			//s‚ÉŽc‚Á‚Ä‚¢‚éƒf[ƒ^‚ð‚·‚×‚Äƒoƒbƒtƒ@‚É‘‚«ž‚Þ‚Æƒoƒbƒtƒ@‚Ì‹ó‚«‚ð’´‚¦‚é‚È‚ç
-			//ƒoƒbƒtƒ@‚Ì‹ó‚«‚Ì•ª‚¾‚¯‘‚«ž‚ñ‚ÅAƒoƒbƒtƒ@‚ðÁ”ï‚·‚é‚½‚ßoverflow‚ðŒÄ‚Ô
+			//sã«æ®‹ã£ã¦ã„ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’ã™ã¹ã¦ãƒãƒƒãƒ•ã‚¡ã«æ›¸ãè¾¼ã‚€ã¨ãƒãƒƒãƒ•ã‚¡ã®ç©ºãã‚’è¶…ãˆã‚‹ãªã‚‰
+			//ãƒãƒƒãƒ•ã‚¡ã®ç©ºãã®åˆ†ã ã‘æ›¸ãè¾¼ã‚“ã§ã€ãƒãƒƒãƒ•ã‚¡ã‚’æ¶ˆè²»ã™ã‚‹ãŸã‚overflowã‚’å‘¼ã¶
 			traits::copy(this->pptr(), s + ret, (std::size_t)charsFree);
 			this->pbump((int)charsFree);
 			ret += charsFree;
@@ -36,8 +36,8 @@ std::streamsize basic_win32filebuf<charT, traits>::xsputn(const typename basic_w
 		}
 		else
 		{
-			//s‚ÉŽc‚Á‚Ä‚¢‚éƒf[ƒ^‚ð‚·‚×‚Äƒoƒbƒtƒ@‚É‘‚«ž‚ñ‚Å‚à‚Ü‚¾ƒoƒbƒtƒ@‚Ì‘å‚«‚³‚É‚Æ‚Ç‚©‚È‚¢‚È‚ç
-			//Žc‚è‚ð‚·‚×‚Ä‘‚«ž‚Þ
+			//sã«æ®‹ã£ã¦ã„ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’ã™ã¹ã¦ãƒãƒƒãƒ•ã‚¡ã«æ›¸ãè¾¼ã‚“ã§ã‚‚ã¾ã ãƒãƒƒãƒ•ã‚¡ã®å¤§ãã•ã«ã¨ã©ã‹ãªã„ãªã‚‰
+			//æ®‹ã‚Šã‚’ã™ã¹ã¦æ›¸ãè¾¼ã‚€
 			traits::copy(this->pptr(), s + ret, (std::size_t)(n - ret));
 			this->pbump((int)(n - ret));
 			return n;
@@ -54,8 +54,8 @@ std::streamsize basic_win32filebuf<charT, traits>::xsgetn(typename basic_win32fi
 		std::streamsize charsLeft = this->egptr() - this->gptr();
 		if (ret+charsLeft < n)
 		{
-			//ƒoƒbƒtƒ@‚ð‚·‚×‚Äs‚É‘‚«ž‚ñ‚Å‚à‚Ü‚¾n‚É‚Æ‚Ç‚©‚È‚¢‚È‚ç
-			//¡‚ ‚éƒoƒbƒtƒ@‚ð‚·‚×‚Ä‘‚«ž‚ñ‚ÅAV‚½‚Éƒoƒbƒtƒ@‚Éƒf[ƒ^‚ðæ‚¹‚é‚½‚ßunderflow‚ðŒÄ‚Ô
+			//ãƒãƒƒãƒ•ã‚¡ã‚’ã™ã¹ã¦sã«æ›¸ãè¾¼ã‚“ã§ã‚‚ã¾ã nã«ã¨ã©ã‹ãªã„ãªã‚‰
+			//ä»Šã‚ã‚‹ãƒãƒƒãƒ•ã‚¡ã‚’ã™ã¹ã¦æ›¸ãè¾¼ã‚“ã§ã€æ–°ãŸã«ãƒãƒƒãƒ•ã‚¡ã«ãƒ‡ãƒ¼ã‚¿ã‚’ä¹—ã›ã‚‹ãŸã‚underflowã‚’å‘¼ã¶
 			traits::copy(s+ret, this->gptr(), (std::size_t)charsLeft);
 			this->gbump((int)charsLeft);
 			ret += charsLeft;
@@ -64,8 +64,8 @@ std::streamsize basic_win32filebuf<charT, traits>::xsgetn(typename basic_win32fi
 		}
 		else
 		{
-			//ƒoƒbƒtƒ@‚ð‚·‚×‚Äs‚É‘‚«ž‚Þ‚Æn‚ð’´‚¦‚Ä‚µ‚Ü‚¤‚È‚ç
-			//‘‚«ž‚ß‚é‚¾‚¯‘‚«ž‚Þ
+			//ãƒãƒƒãƒ•ã‚¡ã‚’ã™ã¹ã¦sã«æ›¸ãè¾¼ã‚€ã¨nã‚’è¶…ãˆã¦ã—ã¾ã†ãªã‚‰
+			//æ›¸ãè¾¼ã‚ã‚‹ã ã‘æ›¸ãè¾¼ã‚€
 			traits::copy(s+ret, this->gptr(), (std::size_t)(n - ret));
 			this->gbump((int)(n - ret));
 			return n;

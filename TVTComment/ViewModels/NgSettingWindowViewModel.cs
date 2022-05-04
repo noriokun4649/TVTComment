@@ -74,6 +74,8 @@ namespace TVTComment.ViewModels
         public ObservableValue<int> TextLengthCount { get; } = new ObservableValue<int>(20);
         public ObservableValue<int> SmallOnMultiLineRuleLineCount { get; } = new ObservableValue<int>(2);
         public ObservableValue<Color> SetColorRuleColor { get; } = new ObservableValue<Color>(Color.FromArgb(255, 255, 255));
+        public ObservableValue<string> ReplaceRegexPattern { get; } = new ObservableValue<string>("");
+        public ObservableValue<string> ReplaceRegexReplacement { get; } = new ObservableValue<string>("");
 
         public ICommand AddWordNgCommand { get; private set; }
         public ICommand AddUserNgCommand { get; private set; }
@@ -90,7 +92,12 @@ namespace TVTComment.ViewModels
         public ICommand AddRenderEmotionAsCommentCommand { get; private set; }
         public ICommand AddRenderInfoAsCommentCommand { get; private set; }
         public ICommand AddSetColorRuleCommand { get; private set; }
+        public ICommand AddRenderNicoadAsCommentCommand { get; private set; }
+        public ICommand AddReplaceRegexCommand { get; private set; }
+        public ICommand AddRegexNgCommand { get; private set; }
         public ICommand RemoveRuleCommand { get; private set; }
+        public ICommand AddUrlNgCommand { get; private set; }
+        public ICommand AddMentionNgCommand { get; private set; }
 
         public NgSettingWindowViewModel(Model.TVTComment model)
         {
@@ -188,11 +195,36 @@ namespace TVTComment.ViewModels
                 ));
             });
 
+            AddRenderNicoadAsCommentCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderNicoadAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddReplaceRegexCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.ReplaceRegexChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), ReplaceRegexPattern.Value, ReplaceRegexReplacement.Value));
+            });
+
+            AddRegexNgCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RegexNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
+            });
+
+            AddUrlNgCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.UrlNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddMentionNgCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.MentionNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
             RemoveRuleCommand = new DelegateCommand(() =>
-              {
-                  if (SelectedRule == null) return;
-                  model.ChatModule.RemoveChatModRule(SelectedRule.ChatModRule);
-              });
+            {
+                if (SelectedRule == null) return;
+                model.ChatModule.RemoveChatModRule(SelectedRule.ChatModRule);
+            });
         }
 
         public void Dispose()

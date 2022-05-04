@@ -12,9 +12,11 @@ namespace TVTComment.Model.ChatService
     {
         public string ApiKey { get; set; } = "";
         public string ApiSecret { get; set; } = "";
+        public string BearerToken { get; set; } = "";
         public string ApiAccessToken { get; set; } = "";
         public string ApiAccessSecret { get; set; } = "";
         public string AnnictAccessToken { get; set; } = "";
+        public bool AnnictAutoEnable { get; set; } = false;
     }
 
     class TwitterChatService : IChatService
@@ -40,6 +42,11 @@ namespace TVTComment.Model.ChatService
             get { return settings.ApiSecret; }
             set { settings.ApiSecret = value; }
         }
+        public string BearerToken
+        {
+            get { return settings.BearerToken; }
+            set { settings.BearerToken = value; }
+        }
         public string ApiAccessToken
         {
             get { return settings.ApiAccessToken; }
@@ -53,6 +60,12 @@ namespace TVTComment.Model.ChatService
             get { return settings.AnnictAccessToken; }
         }
 
+        public bool AnnictAutoEnable
+        {
+            get { return settings.AnnictAutoEnable; }
+            set { settings.AnnictAutoEnable = value; }
+        }
+
         public TwitterChatService(TwitterChatServiceSettings settings, ChannelDatabase channelDatabase, string filepath)
         {
             this.settings = settings;
@@ -62,14 +75,15 @@ namespace TVTComment.Model.ChatService
             {
                 if (!string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(ApiSecret) &&
                     !string.IsNullOrWhiteSpace(ApiAccessToken) && !string.IsNullOrWhiteSpace(ApiAccessSecret))
-                    LoginAccessTokens(ApiKey, ApiSecret, ApiAccessToken, ApiAccessSecret).Wait();
+                    LoginAccessTokens(ApiKey, ApiSecret, ApiAccessToken, ApiAccessSecret, BearerToken).Wait();
             }
             catch (AggregateException e)
             when (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is TwiiterAuthException)
             { }
 
-            ChatCollectServiceEntries = new IChatCollectServiceEntry[1] {
-                new TwitterLiveChatCollectServiceEntry(this, searchWordResolver, twitterSession)
+            ChatCollectServiceEntries = new IChatCollectServiceEntry[2] {
+                new TwitterLiveChatCollectServiceEntry(this, searchWordResolver, twitterSession),
+                new TwitterLiveV2ChatCollectServiceEntry(this, searchWordResolver, twitterSession),
             };
             ChatTrendServiceEntries = Array.Empty<IChatTrendServiceEntry>();
         }
@@ -84,7 +98,7 @@ namespace TVTComment.Model.ChatService
         /// <param name="apiAccessSecret">TwitterAPIのAccessSecret</param>
         /// <exception cref="ArgumentException"><paramref name="apiKey"/>または<paramref name="apiSecret"/>または<paramref name="apiAccessToken"/>または<paramref name="apiAccessSecret"/>がnull若しくはホワイトスペースだった時</exception>
         /// <exception cref="TwiiterAuthException">TwitterAPIで認証に失敗した時</exception>
-        public async Task LoginAccessTokens(string apiKey, string apiSecret, string apiAccessToken, string apiAccessSecret)
+        public async Task LoginAccessTokens(string apiKey, string apiSecret, string apiAccessToken, string apiAccessSecret, string bearerToken)
         {
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new ArgumentException($"{nameof(apiKey)} が空白もしくは不正です", nameof(apiKey));
@@ -95,7 +109,7 @@ namespace TVTComment.Model.ChatService
             if (string.IsNullOrWhiteSpace(apiAccessSecret))
                 throw new ArgumentException($"{nameof(apiAccessSecret)} が空白もしくは不正です", nameof(apiAccessSecret));
 
-            var twitterAuthentication = new TwitterAuthentication(apiKey, apiSecret, apiAccessToken, apiAccessSecret);
+            var twitterAuthentication = new TwitterAuthentication(apiKey, apiSecret, apiAccessToken, apiAccessSecret, bearerToken);
             twitterAuthentication.Login();
             var tokens = twitterAuthentication.Token;
             var userResponse = await tokens.Account.VerifyCredentialsAsync().ConfigureAwait(false);
@@ -105,7 +119,9 @@ namespace TVTComment.Model.ChatService
             settings.ApiSecret = apiSecret;
             settings.ApiAccessToken = apiAccessToken;
             settings.ApiAccessSecret = apiAccessSecret;
+            settings.BearerToken = bearerToken;
             twitterSession.Value = twitterAuthentication;
+            twitterSession.Value.AnnictSet(settings.AnnictAccessToken);
         }
         public TwitterAuthentication InitOAuthPin(string apiKey, string apiSecret)
         {
@@ -140,8 +156,10 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = true;
             UserName = userResponse.Name;
             twitterSession.Value = twitterAuthentication;
+            twitterSession.Value.AnnictSet(settings.AnnictAccessToken);
             settings.ApiAccessToken = tokens.AccessToken;
             settings.ApiAccessSecret = tokens.AccessTokenSecret;
+            settings.BearerToken = twitterAuthentication.OAuth2Token.BearerToken;
         }
 
         public void Logout()
@@ -151,11 +169,19 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = false;
             settings.ApiAccessToken = "";
             settings.ApiAccessSecret = "";
+            settings.BearerToken = "";
         }
 
         public void SetAnnictToken(string token)
         {
-            settings.AnnictAccessToken = token;
+            if (twitterSession.Value != null) { 
+                settings.AnnictAccessToken = token;
+                twitterSession.Value.AnnictSet(token);
+            }
+            else
+            {
+                throw new ArgumentException($"先にTwitterへのログインが必要です。");
+            }
         }
 
         public void Dispose()

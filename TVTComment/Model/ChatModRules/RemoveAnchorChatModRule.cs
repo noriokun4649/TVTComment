@@ -6,7 +6,7 @@ namespace TVTComment.Model.ChatModRules
 {
     internal class RemoveAnchorChatModRule : IChatModRule
     {
-        private static readonly Regex AnchorPattern = new Regex(">>\\d+", RegexOptions.Compiled);
+        private static readonly Regex AnchorPattern = new Regex(@">>\d+([-,]\d+)?", RegexOptions.Compiled);
 
         public string Description => "アンカーを削除";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }

@@ -20,7 +20,7 @@ public:
 	// ログファイルフォルダの更新をチェックする間隔
 	static const int READ_LOG_FOLDER_INTERVAL = 3000;*/
 	// チャンネル変更などの後に適当な実況IDのチェックを行うまでの猶予
-	static const int SETUP_CURJK_DELAY = 3000;
+	static const int SETUP_CURJK_DELAY = 5000;
 	// 投稿できる最大コメント文字数(たぶん安易に変更しないほうがいい)
 	//static const int POST_COMMENT_MAX = 76;
 	// 連投制限(短いと規制されるとのウワサ)

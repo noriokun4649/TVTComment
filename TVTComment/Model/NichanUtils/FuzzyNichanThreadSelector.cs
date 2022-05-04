@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -58,8 +59,8 @@ namespace TVTComment.Model.NichanUtils
             ThreadTitleExample = NormalizeThreadTitle(threadTitleExample);
         }
 
-        public async Task<IEnumerable<string>> Get(
-            ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken
+        public async IAsyncEnumerable<string> Get(
+            ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
             byte[] subjectBytes = await httpClient.GetByteArrayAsync(
@@ -68,22 +69,28 @@ namespace TVTComment.Model.NichanUtils
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);
-            IEnumerable<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader);
+            var threadsInBoard = Nichan.SubjecttxtParser.ParseFromStream(textReader);
 
-            var threads = threadsInBoard.Where(x => x.ResCount <= 1000).
-                Select(x => new
+            var threads = await threadsInBoard
+                .Where(x => x.ResCount <= 1000)
+                .Select(x => new
                 {
                     Thread = x,
                     EditDistance = GetLevenshteinDistance(NormalizeThreadTitle(x.Title), ThreadTitleExample)
-                }).
-                OrderBy(x => x.EditDistance).ToArray();
+                })
+                .OrderBy(x => x.EditDistance).ToArrayAsync(cancellationToken);
 
             //レーベンシュタイン距離の最小値から距離10以内のものを選択
-            return threads.TakeWhile(
+            var selectedThreads = threads.TakeWhile(
                 x => x.EditDistance <= threads.First().EditDistance + 10
             ).Take(3).Select(
                 x => $"{boardHost}/test/read.cgi/{boardName}/{x.Thread.Name}/l50"
             );
+
+            foreach (var thread in selectedThreads)
+            {
+                yield return thread;
+            }
         }
     }
 }

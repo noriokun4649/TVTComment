@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "CommandIPCMessage.h"
 #include "../IPCMessageDecodeError.h"
 
@@ -17,7 +17,7 @@ namespace TVTComment
 	void CommandIPCMessage::Decode(const std::vector<std::string> &contents)
 	{
 		if (contents.size() != 1)
-			throw IPCMessageDecodeError("CommandIPCMessage‚Ìcontents‚Ì”‚ª1ˆÈŠO‚Å‚·");
+			throw IPCMessageDecodeError("CommandIPCMessageã®contentsã®æ•°ãŒ1ä»¥å¤–ã§ã™");
 		
 		this->CommandId = contents[0];
 	}

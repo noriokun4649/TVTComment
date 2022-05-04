@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "ChannelSelectIPCMessage.h"
 #include <stdexcept>
 #include "../IPCMessageDecodeError.h"
@@ -18,7 +18,7 @@ namespace TVTComment
 	void ChannelSelectIPCMessage::Decode(const std::vector<std::string> &contents)
 	{
 		if (contents.size() != 3)
-			throw IPCMessageDecodeError("ChannelSelect‚Ìcontents‚Ì”‚ª3ˆÈŠO‚Å‚·");
+			throw IPCMessageDecodeError("ChannelSelectã®contentsã®æ•°ãŒ3ä»¥å¤–ã§ã™");
 
 		try
 		{
@@ -28,7 +28,7 @@ namespace TVTComment
 		}
 		catch (std::invalid_argument)
 		{
-			throw IPCMessageDecodeError("ChannelSelect‚ÌƒtƒH[ƒ}ƒbƒg‚ª•s³‚Å‚·");
+			throw IPCMessageDecodeError("ChannelSelectã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒä¸æ­£ã§ã™");
 		}
 	}
 }

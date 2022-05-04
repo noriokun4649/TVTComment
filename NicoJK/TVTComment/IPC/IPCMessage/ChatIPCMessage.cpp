@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "ChatIPCMessage.h"
 #include "../IPCMessageDecodeError.h"
 #include <cstdlib>
@@ -46,7 +46,7 @@ namespace TVTComment
 	void ChatIPCMessage::Decode(const std::vector<std::string> &contents)
 	{
 		if (contents.size() != 4)
-			throw IPCMessageDecodeError("Chat‚Ìcontents‚Ì”‚ª4ˆÈŠO‚Å‚·");
+			throw IPCMessageDecodeError("Chatã®contentsã®æ•°ãŒ4ä»¥å¤–ã§ã™");
 
 		this->Chat.text = contents[0];
 
@@ -57,7 +57,7 @@ namespace TVTComment
 		else if (contents[1] == "Top")
 			this->Chat.position = Chat::Position::Top;
 		else
-			throw IPCMessageDecodeError("Chat‚ÌPosition‚Ì’l‚ª•s³‚Å‚·: "+contents[1]);
+			throw IPCMessageDecodeError("Chatã®Positionã®å€¤ãŒä¸æ­£ã§ã™: "+contents[1]);
 
 		if (contents[2] == "Default")
 			this->Chat.size = Chat::Size::Default;
@@ -66,7 +66,7 @@ namespace TVTComment
 		else if (contents[2] == "Large")
 			this->Chat.size = Chat::Size::Large;
 		else
-			throw IPCMessageDecodeError("Chat‚ÌSize‚Ì’l‚ª•s³‚Å‚·: " + contents[1]);
+			throw IPCMessageDecodeError("Chatã®Sizeã®å€¤ãŒä¸æ­£ã§ã™: " + contents[1]);
 
 		std::string colorstr = contents[3]+",";
 		int count=0;
@@ -86,8 +86,8 @@ namespace TVTComment
 				break;
 			}
 		}
-		//ƒtƒH[ƒ}ƒbƒg‚ªR,G,B‚Å‚àR,G,B,‚Å‚à‚È‚¢‚È‚ç
+		//ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒR,G,Bã§ã‚‚R,G,B,ã§ã‚‚ãªã„ãªã‚‰
 		if (count != 3 && count != 4)
-			throw IPCMessageDecodeError("Chat‚ÌColor‚ÌƒtƒH[ƒ}ƒbƒg‚ª•s³‚Å‚·: " + contents[3]);
+			throw IPCMessageDecodeError("Chatã®Colorã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒä¸æ­£ã§ã™: " + contents[3]);
 	}
 }

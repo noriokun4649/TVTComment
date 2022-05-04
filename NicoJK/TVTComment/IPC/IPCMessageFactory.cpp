@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "IPCMessageFactory.h"
 #include "IPCMessageDecodeError.h"
 #include "IPCMessage/ChatIPCMessage.h"
@@ -32,7 +32,7 @@ namespace TVTComment
 		else if (rawmsg.MessageName == "Command")
 			msg = new CommandIPCMessage();
 		else
-			throw IPCMessageDecodeError("•s–¾‚ÈMessageName‚Å‚·: " + rawmsg.ToString());
+			throw IPCMessageDecodeError("ä¸æ˜ãªMessageNameã§ã™: " + rawmsg.ToString());
 
 		std::unique_ptr<IIPCMessage> ret(msg);
 		ret->Decode(rawmsg.Contents);

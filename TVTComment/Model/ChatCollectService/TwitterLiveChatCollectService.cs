@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using TVTComment.Model.ChatCollectServiceEntry;
 using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
+using TVTComment.Model.TwitterUtils.AnnictUtils;
 using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
 
 namespace TVTComment.Model.ChatCollectService
@@ -35,34 +36,58 @@ namespace TVTComment.Model.ChatCollectService
         private readonly TwitterAuthentication Twitter;
         private Task chatCollectTask;
         private readonly ConcurrentQueue<Status> statusQueue = new ConcurrentQueue<Status>();
-        private readonly CancellationTokenSource cancel = new CancellationTokenSource();
+        private CancellationTokenSource cancel = new CancellationTokenSource();
         private readonly ObservableValue<string> SearchWord = new ObservableValue<string>("");
+        private readonly ObservableValue<string> EventTextWord = new ObservableValue<string>("");
         private readonly SearchWordResolver SearchWordResolver;
         private readonly ModeSelectMethod ModeSelect;
-
+        private readonly AnnictApis Annict;
 
         public TwitterLiveChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, ModeSelectMethod modeSelect, SearchWordResolver searchWordResolver, TwitterAuthentication twitter)
         {
+            Twitter = twitter;
             ServiceEntry = serviceEntry;
             SearchWord.Value = searchWord;
-            Twitter = twitter;
             ModeSelect = modeSelect;
             SearchWordResolver = searchWordResolver;
             switch (modeSelect)
             {
-                case ModeSelectMethod.Auto:
-                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
+                case ModeSelectMethod.Preset:
+                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res =>
+                    {
+                        if (!cancel.Token.IsCancellationRequested) cancel.Cancel();
+                        cancel = new CancellationTokenSource();
+                        chatCollectTask = SearchStreamAsync(res, cancel.Token);
+                    });
                     break;
 
                 case ModeSelectMethod.Manual:
                     chatCollectTask = SearchStreamAsync(searchWord, cancel.Token);
+                    break;
+                case ModeSelectMethod.Auto:
+                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res =>
+                    {
+                        if (!cancel.Token.IsCancellationRequested) cancel.Cancel();
+                        cancel = new CancellationTokenSource();
+                        chatCollectTask = SearchStreamAsync(res, cancel.Token);
+                    });
+                    if (Twitter.AnnictToken != null && !Twitter.AnnictToken.Equals(""))
+                    {
+                        Annict = new(Twitter.AnnictToken);
+                        EventTextWord.Where(x => x != null && !x.Equals("")).Subscribe(res => _ = annictSearch(EventTextWord.Value));
+                    }
+                    else
+                    {
+                        throw new ChatCollectServiceCreationException("AnnictAPIの認証設定がされていません");
+                    }
                     break;
             }
         }
 
         public string GetInformationText()
         {
-            return $"検索モード:{ModeSelect}\n検索ワード:{SearchWord.Value}";
+            var modename = new string[] { "自動(アニメ用・Annictからハッシュタグ取得)", "プリセット", "手動"};
+            return $"検索モード:{modename[ModeSelect.GetHashCode()]}\n検索ワード:{SearchWord.Value}";
         }
 
         private async Task SearchStreamAsync(string searchWord, CancellationToken cancel)
@@ -72,6 +97,7 @@ namespace TVTComment.Model.ChatCollectService
                 foreach (var status in Twitter.Token.Streaming.Filter(track: searchWord)
                             .OfType<StatusMessage>()
                             .Where(x => !x.Status.Text.StartsWith("RT"))
+                            .Where(x => x.Status.Language is null or "und" || x.Status.Language.StartsWith("ja"))
                             .Select(x => x.Status))
                 {
                     if (cancel.IsCancellationRequested || !SearchWord.Value.Equals(searchWord))
@@ -81,12 +107,26 @@ namespace TVTComment.Model.ChatCollectService
             }, cancel);
         }
 
-        public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
+        private async Task annictSearch(string evetnText)
         {
+            try
+            {
+                var result = await Annict.GetTwitterHashtagAsync(evetnText);
+                SearchWord.Value = result != null && !result.Equals("") ? $"#{result}" : "";
+            }
+            catch (AnnictNotFoundResponseException)
+            {
+                SearchWord.Value = "";
+            }
+        }
+
+        public IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo events, DateTime time)
+        {
+            if (ModeSelect == ModeSelectMethod.Preset || (SearchWord.Value != null && SearchWord.Value.Equals(""))) SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
             if (ModeSelect == ModeSelectMethod.Auto)
             {
-
-                SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
+                var result = AnnimeTitleGetter.Convert(events.EventName);
+                if (result != null && !result.Equals("")) EventTextWord.Value = result;
             }
             if (chatCollectTask != null)
             {

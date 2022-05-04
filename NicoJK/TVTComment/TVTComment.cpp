@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "TVTComment.h"
 #include "IPC/IPCMessage/ChannelListIPCMessage.h"
 #include "IPC/IPCMessage/ChatIPCMessage.h"
@@ -19,8 +19,8 @@ namespace TVTComment
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> TVTComment::utf8_utf16_conv;
 
-	//Task“à‚©‚çŒÄ‚Ño‚·‘O’ñ‚Åì‚ç‚ê‚Ä‚¢‚é
-	//Ú‘±Š®—¹‚Ü‚ÅƒuƒƒbƒN‚·‚é‚ªAƒLƒƒƒ“ƒZƒ‹‚³‚ê‚½ê‡‚Íconcurrency::task_canceled—áŠO‚ğ‘—o‚·‚é
+	//Taskå†…ã‹ã‚‰å‘¼ã³å‡ºã™å‰æã§ä½œã‚‰ã‚Œã¦ã„ã‚‹
+	//æ¥ç¶šå®Œäº†ã¾ã§ãƒ–ãƒ­ãƒƒã‚¯ã™ã‚‹ãŒã€ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚ŒãŸå ´åˆã¯concurrency::task_canceledä¾‹å¤–ã‚’é€å‡ºã™ã‚‹
 	void TVTComment::doConnect()
 	{
 		for (int i = 0;; i++)
@@ -30,7 +30,7 @@ namespace TVTComment
 			concurrency::interruption_point();
 			try
 			{
-				//ƒvƒƒZƒXŠÔ’ÊM‚Ég‚¤ƒpƒCƒv–¼‚ğUUID‚©‚çì‚é
+				//ãƒ—ãƒ­ã‚»ã‚¹é–“é€šä¿¡ã«ä½¿ã†ãƒ‘ã‚¤ãƒ—åã‚’UUIDã‹ã‚‰ä½œã‚‹
 				UUID uuid;
 				RPC_WSTR uuidStr;
 				std::wstring receivePipeName=LR"(\\.\pipe\TVTComment_Up_)";
@@ -58,11 +58,11 @@ namespace TVTComment
 
 				concurrency::interruption_point();
 
-				//ˆê’è‰ñ”‚µ‚Ä‚·‚×‚Ä¸”s‚µ‚½‚çƒGƒ‰[
+				//ä¸€å®šå›æ•°è©¦ã—ã¦ã™ã¹ã¦å¤±æ•—ã—ãŸã‚‰ã‚¨ãƒ©ãƒ¼
 				if (i > 5)
 					throw;
 
-				//‚à‚¤ˆê‰ñ‚µ‚Ä‚İ‚é
+				//ã‚‚ã†ä¸€å›è©¦ã—ã¦ã¿ã‚‹
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 				continue;
 			}
@@ -73,7 +73,7 @@ namespace TVTComment
 
 	void TVTComment::receiveLoop()
 	{
-		//ƒƒbƒZ[ƒWóMƒ‹[ƒv
+		//ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å—ä¿¡ãƒ«ãƒ¼ãƒ—
 		try
 		{
 			while (true)
@@ -94,7 +94,7 @@ namespace TVTComment
 				catch (std::system_error &)
 				{
 					if (this->isClosing)
-						throw;//‘Šè‚ªÚ‘±‚ğØ‚Á‚½
+						throw;//ç›¸æ‰‹ãŒæ¥ç¶šã‚’åˆ‡ã£ãŸ
 
 					PostMessage(this->dialog, WM_USERINTERACTIONREQUEST, (WPARAM)UserInteractionRequestType::ReceiveError, 0);
 					errorCount++;
@@ -105,7 +105,7 @@ namespace TVTComment
 		}
 		catch (std::exception &e)
 		{
-			//‰½‚ç‚©‚ÌƒGƒ‰[‚ª‹N‚±‚Á‚½A‘Šè‚ªÚ‘±‚ğØ‚Á‚½
+			//ä½•ã‚‰ã‹ã®ã‚¨ãƒ©ãƒ¼ãŒèµ·ã“ã£ãŸæ™‚ã€ç›¸æ‰‹ãŒæ¥ç¶šã‚’åˆ‡ã£ãŸæ™‚
 			if (!this->isClosing)
 			{
 				static std::wstring_convert<std::codecvt<wchar_t, char, mbstate_t >> char_wide_conv;
@@ -123,7 +123,7 @@ namespace TVTComment
 	void TVTComment::processReceivedMessage(const IIPCMessage &msg)
 	{
 #pragma warning(push)
-#pragma warning(disable:4456)//•Ï”message‚ÌéŒ¾‚ª”í‚Á‚Ä‚¢‚é‚Ì‚É‘Î‚·‚éŒx—}~
+#pragma warning(disable:4456)//å¤‰æ•°messageã®å®£è¨€ãŒè¢«ã£ã¦ã„ã‚‹ã®ã«å¯¾ã™ã‚‹è­¦å‘ŠæŠ‘æ­¢
 		if (auto message = dynamic_cast<const ChatIPCMessage *>(&msg))
 		{
 			const Chat &chat = message->Chat;
@@ -152,7 +152,7 @@ namespace TVTComment
 
 	bool TVTComment::sendMessage(const IIPCMessage &msg)
 	{
-		//closingó‘Ô‚È‚çCloseIPCMessageˆÈŠO‚Í‘—‚ç‚È‚¢
+		//closingçŠ¶æ…‹ãªã‚‰CloseIPCMessageä»¥å¤–ã¯é€ã‚‰ãªã„
 		if (this->isClosing && dynamic_cast<const CloseIPCMessage *>(&msg) == nullptr)
 			return false;
 
@@ -200,12 +200,12 @@ namespace TVTComment
 				}
 				catch (concurrency::task_canceled)
 				{
-					//Ú‘±ˆ—’†‚ÉƒLƒƒƒ“ƒZƒ‹‚³‚ê‚½
+					//æ¥ç¶šå‡¦ç†ä¸­ã«ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚ŒãŸ
 					throw;
 				}
 				catch (std::system_error &e)
 				{
-					//Ú‘±‚ª¸”s‚µ‚½
+					//æ¥ç¶šãŒå¤±æ•—ã—ãŸ
 					std::wstring_convert<std::codecvt<wchar_t, char, mbstate_t >> char_wide_conv;
 
 					std::wstring what = char_wide_conv.from_bytes(e.what());
@@ -218,14 +218,14 @@ namespace TVTComment
 					throw;
 				}
 
-				//³í‚ÉÚ‘±‚ªŠ®—¹‚µ‚½
+				//æ­£å¸¸ã«æ¥ç¶šãŒå®Œäº†ã—ãŸ
 				PostMessage(this->dialog, WM_USERINTERACTIONREQUEST, (WPARAM)UserInteractionRequestType::ConnectSucceed, 0);
 				this->isConnected = true;
 
 				PostMessage(this->dialog, WM_ONCHANNELLISTCHANGE, 0, 0);
 				PostMessage(this->dialog, WM_ONCHANNELSELECTIONCHANGE, 0, 0);
 				
-				//óMƒ‹[ƒvŠJn
+				//å—ä¿¡ãƒ«ãƒ¼ãƒ—é–‹å§‹
 				this->receiveLoop();
 			}, cancel.get_token());
 			break;
@@ -241,36 +241,36 @@ namespace TVTComment
 			case UserInteractionRequestType::ConnectFail:
 			{
 				wchar_t *t = (wchar_t *)lParam;
-				std::wstring text = L"TVTCommentİ’èƒEƒBƒ“ƒhƒE‚Æ‚ÌÚ‘±‚É¸”s‚µ‚Ü‚µ‚½Bƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‰»‚µ‚Ü‚·B";
+				std::wstring text = L"TVTCommentè¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã¨ã®æ¥ç¶šã«å¤±æ•—ã—ã¾ã—ãŸã€‚ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹åŒ–ã—ã¾ã™ã€‚";
 				/*if (t != nullptr)
 				{
 					text += L"\n\n";
 					text += t;
 					delete[] t;
 				}*/
-				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment•\¦‘¤ƒGƒ‰[", 0);
+				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTCommentè¡¨ç¤ºå´ã‚¨ãƒ©ãƒ¼", 0);
 				break;
 			}
 			case UserInteractionRequestType::InvalidMessage:
-				this->commentWindow->AddChat(TEXT("[TVTCommentŠÔ’ÊM‚Å–³Œø‚ÈƒƒbƒZ[ƒW‚ğóM‚µ‚Ü‚µ‚½]"), RGB(255, 0, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
+				this->commentWindow->AddChat(TEXT("[TVTCommenté–“é€šä¿¡ã§ç„¡åŠ¹ãªãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å—ä¿¡ã—ã¾ã—ãŸ]"), RGB(255, 0, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
 				break;
 			case UserInteractionRequestType::ReceiveError:
-				this->commentWindow->AddChat(TEXT("[TVTCommentŠÔ’ÊM‚ÅƒƒbƒZ[ƒW‚ÌóM‚É¸”s‚µ‚Ü‚µ‚½]"), RGB(255, 0, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
+				this->commentWindow->AddChat(TEXT("[TVTCommenté–“é€šä¿¡ã§ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å—ä¿¡ã«å¤±æ•—ã—ã¾ã—ãŸ]"), RGB(255, 0, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
 				break;
 			case UserInteractionRequestType::SendError:
-				this->commentWindow->AddChat(TEXT("[TVTCommentŠÔ’ÊM‚ÅƒƒbƒZ[ƒW‚Ì‘—M‚É¸”s‚µ‚Ü‚µ‚½]"), RGB(255, 0, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
+				this->commentWindow->AddChat(TEXT("[TVTCommenté–“é€šä¿¡ã§ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®é€ä¿¡ã«å¤±æ•—ã—ã¾ã—ãŸ]"), RGB(255, 0, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
 				break;
 			case UserInteractionRequestType::FetalErrorInTask:
 			{
 				wchar_t *t = (wchar_t *)lParam;
-				std::wstring text = L"TVTCommentİ’èƒEƒBƒ“ƒhƒE‚©‚ç‚ÌóMˆ—‚Å’v–½“I‚È–â‘è‚ª”­¶‚µ‚Ü‚µ‚½B\nƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‰»‚µ‚Ü‚·B";
+				std::wstring text = L"TVTCommentè¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‹ã‚‰ã®å—ä¿¡å‡¦ç†ã§è‡´å‘½çš„ãªå•é¡ŒãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚\nãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹åŒ–ã—ã¾ã™ã€‚";
 				/*if (t != nullptr)
 				{
 					text += L"\n\n";
 					text += t;
 					delete[] t;
 				}*/
-				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment•\¦‘¤ƒGƒ‰[", 0);
+				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTCommentè¡¨ç¤ºå´ã‚¨ãƒ©ãƒ¼", 0);
 				break;
 			}
 			}
@@ -354,22 +354,22 @@ namespace TVTComment
 		sendCurrentChannelIPCMessage(ci, pi);
 	}
 
-	//TOT‚ÌXVŠÔŠu‚æ‚è’Z‚¢ŠÔŠu‚Å’èŠú“I‚ÉŒÄ‚Ô
+	//TOTæ™‚åˆ»ã®æ›´æ–°é–“éš”ã‚ˆã‚ŠçŸ­ã„é–“éš”ã§å®šæœŸçš„ã«å‘¼ã¶
 	void TVTComment::OnForward(std::time_t tot)
 	{
 		if (!this->isConnected)
 			return;
 
-		//Event(”Ô‘g)‚ª•Ï‚í‚Á‚Ä‚½‚ç’Ê’m
+		//Event(ç•ªçµ„)ãŒå¤‰ã‚ã£ã¦ãŸã‚‰é€šçŸ¥
 		TVTest::ProgramInfo pi;
 		pi.Size = sizeof(pi);
 		pi.pszEventName = NULL;
 		pi.pszEventText = NULL;
 		pi.pszEventExtText = NULL;
-		this->tvtest->GetCurrentProgramInfo(&pi);//EventID‚¾‚¯æ‚ê‚ê‚Î‚¢‚¢
+		this->tvtest->GetCurrentProgramInfo(&pi);//EventIDã ã‘å–ã‚Œã‚Œã°ã„ã„
 		if (pi.EventID != lastEventId)
 		{
-			//EventID‚ª•Ï‚í‚Á‚Ä‚¢‚½‚ç
+			//EventIDãŒå¤‰ã‚ã£ã¦ã„ãŸã‚‰
 			TVTest::ChannelInfo ci;
 			ci.Size = sizeof(ci);
 			this->tvtest->GetCurrentChannelInfo(&ci);
@@ -389,7 +389,7 @@ namespace TVTComment
 			sendCurrentChannelIPCMessage(ci, pi);
 		}
 		
-		//Tot‚ª•Ï‚í‚Á‚Ä‚½‚ç’Ê’m
+		//TotãŒå¤‰ã‚ã£ã¦ãŸã‚‰é€šçŸ¥
 		if (tot != lastTOT)
 		{
 			this->lastTOT = tot;
@@ -413,17 +413,17 @@ namespace TVTComment
 	}
 
 #pragma warning(push)
-#pragma warning(disable: 4701)//–¢‰Šú‰»‚Ìƒ[ƒJƒ‹•Ï”si‚ğg‚Á‚Ä‚¢‚é‚Æ‚·‚éŒx‚Ì—}~
+#pragma warning(disable: 4701)//æœªåˆæœŸåŒ–ã®ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°siã‚’ä½¿ã£ã¦ã„ã‚‹ã¨ã™ã‚‹è­¦å‘Šã®æŠ‘æ­¢
 	void TVTComment::sendCurrentChannelIPCMessage(const TVTest::ChannelInfo &ci, const TVTest::ProgramInfo &pi)
 	{
 		if (!this->isConnected)
 			return;
-
 		TVTest::ServiceInfo si;
 		si.Size = sizeof(si);
 		int serviceIdx=this->tvtest->GetService();
-		if (serviceIdx != -1)
-			this->tvtest->GetServiceInfo(serviceIdx, &si);
+		if (serviceIdx < 0) //ãƒãƒ£ãƒ³ãƒãƒ«å¤‰æ›´ä¸­ãªã©ã«ã¯æƒ…å ±ãŒå£Šã‚Œã¦ã‚‹ã®ã§å£Šã‚Œã¦ã‚‹ã¨ãã¯æŠœã‘ã‚‹ã‚ˆã†ã«å¤‰æ›´
+			return;
+		this->tvtest->GetServiceInfo(serviceIdx, &si);
 
 		CurrentChannelIPCMessage msg;
 		msg.SpaceIndex = ci.Space;
@@ -435,9 +435,9 @@ namespace TVTComment
 		msg.ServiceId = serviceIdx == -1 ? ci.ServiceID : si.ServiceID;
 		msg.EventId = pi.EventID;
 
-		if(ci.NetworkID!=0)//ƒ`ƒƒƒ“ƒlƒ‹ƒXƒLƒƒƒ“‚µ‚Ä‚È‚¢iFileŒnBonDriver‚È‚Çj‚ÆNID==0‚ÅNetworkName‚à³‚µ‚¢’l‚ğ•Ô‚³‚È‚¢
+		if(ci.NetworkID!=0)//ãƒãƒ£ãƒ³ãƒãƒ«ã‚¹ã‚­ãƒ£ãƒ³ã—ã¦ãªã„ï¼ˆFileç³»BonDriverãªã©ï¼‰ã¨NID==0ã§NetworkNameã‚‚æ­£ã—ã„å€¤ã‚’è¿”ã•ãªã„
 			msg.NetworkName.assign(utf8_utf16_conv.to_bytes(ci.szNetworkName));
-		if(ci.TransportStreamID!=0)//ƒ`ƒƒƒ“ƒlƒ‹ƒXƒLƒƒƒ“‚µ‚Ä‚È‚¢iFileŒnBonDriver‚È‚Çj‚ÆTSID==0‚ÅTransportStreamName‚à³‚µ‚¢’l‚ğ•Ô‚³‚È‚¢
+		if(ci.TransportStreamID!=0)//ãƒãƒ£ãƒ³ãƒãƒ«ã‚¹ã‚­ãƒ£ãƒ³ã—ã¦ãªã„ï¼ˆFileç³»BonDriverãªã©ï¼‰ã¨TSID==0ã§TransportStreamNameã‚‚æ­£ã—ã„å€¤ã‚’è¿”ã•ãªã„
 			msg.TransportstreamName.assign(utf8_utf16_conv.to_bytes(ci.szTransportStreamName));
 		if(serviceIdx!=-1)
 			msg.ServiceName.assign(utf8_utf16_conv.to_bytes(si.szServiceName));
@@ -450,7 +450,7 @@ namespace TVTComment
 		msg.StartTime = SystemTimeToUnixTime(pi.StartTime);
 		msg.Duration = pi.Duration;
 
-		//ÅŒã‚É‘—‚Á‚½EventID‚ğ‹L‰¯
+		//æœ€å¾Œã«é€ã£ãŸEventIDã‚’è¨˜æ†¶
 		this->lastEventId = pi.EventID;
 
 		this->sendMessage(msg);

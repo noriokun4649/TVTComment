@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdexcept>
 #include "SetChatOpacityIPCMessage.h"
 #include "../IPCMessageDecodeError.h"
@@ -16,7 +16,7 @@ namespace TVTComment
 	void SetChatOpacityIPCMessage::Decode(const std::vector<std::string> &contents)
 	{
 		if (contents.size() != 1)
-			throw IPCMessageDecodeError("SetChatOpacity‚Ìcontents‚Ì”‚ª1ˆÈŠO‚Å‚·");
+			throw IPCMessageDecodeError("SetChatOpacityã®contentsã®æ•°ãŒ1ä»¥å¤–ã§ã™");
 		int val;
 		try
 		{
@@ -24,11 +24,11 @@ namespace TVTComment
 		}
 		catch (std::invalid_argument)
 		{
-			throw IPCMessageDecodeError("SetChatOpacity‚ÌƒtƒH[ƒ}ƒbƒg‚ª•s³‚Å‚·");
+			throw IPCMessageDecodeError("SetChatOpacityã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒä¸æ­£ã§ã™");
 		}
 		if (0 <= val && val <= 255)
 			this->Opacity = (unsigned char)val;
 		else
-			throw IPCMessageDecodeError("SetChatOpacity‚Ì“§‰ß“x‚ª0`255‚Ì”ÍˆÍŠO‚Å‚·");
+			throw IPCMessageDecodeError("SetChatOpacityã®é€éåº¦ãŒ0ï½255ã®ç¯„å›²å¤–ã§ã™");
 	}
 }

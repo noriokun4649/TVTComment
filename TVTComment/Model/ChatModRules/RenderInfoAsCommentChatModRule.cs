@@ -26,15 +26,23 @@ namespace TVTComment.Model.ChatModRules
             var type = int.Parse(match.Groups["type"].Value);
             var text = match.Groups["text"].Value;
 
-            // /info 8 第xx位にランクインしました
-            if (type == 8)
+            switch (type)
             {
-                chat.SetPosition(Chat.PositionType.Top);
-                chat.SetText(text);
-                return true;
+                // /info 2 1人（プレミアム1人）がコミュニティをフォローしました。
+                case 2:
+                    chat.SetPosition(Chat.PositionType.Top);
+                    chat.SetText(text);
+                    return true;
+                // /info 8 第xx位にランクインしました
+                case 8:
+                    chat.SetPosition(Chat.PositionType.Top);
+                    chat.SetText(text);
+                    return true;
+                default:
+                    chat.SetPosition(Chat.PositionType.Top);
+                    chat.SetText(text);
+                    return true;
             }
-
-            return true;
         }
     }
 }

@@ -23,9 +23,8 @@ namespace Nichan
         /// ただしスレッドのURIはnull。
         /// </summary>
         /// <exception cref="BoardSubjectParserException">解析エラーの場合</exception>
-        public static async Task<IEnumerable<Thread>> ParseFromStream(TextReader reader)
+        public static async IAsyncEnumerable<Thread> ParseFromStream(TextReader reader)
         {
-            var ret = new List<Thread>();
             while (true)
             {
                 string line = await reader.ReadLineAsync();
@@ -60,9 +59,8 @@ namespace Nichan
 
                 title = title[..start].Trim();
 
-                ret.Add(new Thread() { Name = dat, Title = title, ResCount = resCount });
+                yield return new Thread() { Name = dat, Title = title, ResCount = resCount };
             }
-            return ret;
         }
     }
 }

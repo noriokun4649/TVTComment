@@ -118,14 +118,6 @@
                                     <ContextMenu x:Key="ItemContextMenu">
                                         <MenuItem Header="選局" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"
                                   CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu},Path=PlacementTarget.Content.Channel}"/>
-                                        <MenuItem Header="詳細">
-                                            <i:Interaction.Triggers>
-                                                <i:EventTrigger EventName="Click">
-                                                    <behaviors:ShowWindowAction AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True">
-                                                    </behaviors:ShowWindowAction>
-                                                </i:EventTrigger>
-                                            </i:Interaction.Triggers>
-                                        </MenuItem>
                                     </ContextMenu>
                                 </ListView.Resources>
 

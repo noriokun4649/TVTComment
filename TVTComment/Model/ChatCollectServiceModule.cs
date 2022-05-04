@@ -68,8 +68,9 @@ namespace TVTComment.Model
         private void TimerCallback(object state)
         {
             var channel = channelInformationManager.CurrentChannel.Value;
+            var events = channelInformationManager.CurrentEvent.Value;
             var time = channelInformationManager.CurrentTime.Value;
-            if (channel != null && time.HasValue)
+            if (channel != null && time.HasValue && events != null)
             {
                 SynchronizationContext.Post((_) =>
                 {
@@ -78,7 +79,7 @@ namespace TVTComment.Model
                         ChatCollectService.IChatCollectService service = RegisteredServices[i];
                         try
                         {
-                            NewChatProduced?.Invoke(service.GetChats(channel, time.Value + TimeAdjustment.Value).Select(chat =>
+                            NewChatProduced?.Invoke(service.GetChats(channel, events, time.Value + TimeAdjustment.Value).Select(chat =>
                               {
                                   chat.SetSourceService(service.ServiceEntry);
                                   return chat;

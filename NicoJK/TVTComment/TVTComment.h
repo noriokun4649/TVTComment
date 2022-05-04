@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "../TVTestPlugin.h"
 #include "../CommentWindow.h"
 #include "../Util.h"
@@ -23,9 +23,9 @@ namespace TVTComment
 		ShowWindow,
 	};
 
-	//TVTComment‚ÌÅãˆÊƒNƒ‰ƒX
-	//‚±‚ÌƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚Ì¶‘¶ŠúŠÔ‚Í¨‚¢ƒEƒBƒ“ƒhƒE‚Ì‚æ‚è’·‚¢•K—v‚ª‚ ‚é
-	//ƒGƒ‰[‚Éƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‰»‚·‚é‚±‚Æ‚ª‚ ‚é
+	//TVTCommentã®æœ€ä¸Šä½ã‚¯ãƒ©ã‚¹
+	//ã“ã®ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ç”Ÿå­˜æœŸé–“ã¯å‹¢ã„ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚ˆã‚Šé•·ã„å¿…è¦ãŒã‚ã‚‹
+	//ã‚¨ãƒ©ãƒ¼æ™‚ã«ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹åŒ–ã™ã‚‹ã“ã¨ãŒã‚ã‚‹
 	class TVTComment
 	{
 	private:
@@ -36,20 +36,20 @@ namespace TVTComment
 		std::time_t lastTOT;
 		uint16_t lastEventId;
 
-		int errorCount;//óMƒGƒ‰[‚ª‹N‚«‚½‰ñ”
-		static constexpr int FETALERROR_COUNT = 10;//errorCount‚ª‚±‚Ì’lˆÈã‚É‚È‚é‚Æƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‰»‚·‚é
+		int errorCount;//å—ä¿¡ã‚¨ãƒ©ãƒ¼ãŒèµ·ããŸå›æ•°
+		static constexpr int FETALERROR_COUNT = 10;//errorCountãŒã“ã®å€¤ä»¥ä¸Šã«ãªã‚‹ã¨ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹åŒ–ã™ã‚‹
 
-		std::atomic<bool> isClosing;//ClosingIPCMessage‚ğó‚¯æ‚èƒvƒ‰ƒOƒCƒ“‚ğ•Â‚¶‚æ‚¤‚Æ‚µ‚Ä‚¢‚é
+		std::atomic<bool> isClosing;//ClosingIPCMessageã‚’å—ã‘å–ã‚Šãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’é–‰ã˜ã‚ˆã†ã¨ã—ã¦ã„ã‚‹
 
 		std::atomic<bool> isConnected;
 		std::unique_ptr<IPCTunnel> ipcTunnel;
 
 		std::vector<ChannelInfo> channelList;
 
-		concurrency::cancellation_token_source cancel;//‚±‚ÌTVTCommentƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğdelete‚·‚é‚Æ‚«‚Ég‚¤
+		concurrency::cancellation_token_source cancel;//ã“ã®TVTCommentã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’deleteã™ã‚‹ã¨ãã«ä½¿ã†
 		concurrency::task<void> asyncTask;
 
-		std::wstring collectExePath;//‹N“®‚·‚éEXE‚ÌƒpƒX
+		std::wstring collectExePath;//èµ·å‹•ã™ã‚‹EXEã®ãƒ‘ã‚¹
 
 		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> utf8_utf16_conv;
 
@@ -63,11 +63,11 @@ namespace TVTComment
 		void sendCurrentChannelIPCMessage(const TVTest::ChannelInfo &ci,const TVTest::ProgramInfo &pi);
 
 	public:
-		static constexpr int WM_USERINTERACTIONREQUEST = WM_APP + 1001;//ƒ_ƒCƒAƒƒOƒ{ƒbƒNƒX‚Ì•\¦‚È‚Çƒ†[ƒU[‚Ö‚ÌƒƒbƒZ[ƒW‚ğ•\¦‚·‚é
-		static constexpr int WM_DISABLEPLUGIN = WM_APP + 1002;//ƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‰»‚·‚éi•ÊƒXƒŒƒbƒh‚©‚ç–³Œø‰»‚·‚é‚Æ‚«‚Ég‚¤j
-		static constexpr int WM_ONCHANNELLISTCHANGE = WM_APP + 1003;//ƒƒ“ƒoŠÖ”OnChannelListChange‚ğŒÄ‚Ôi•ÊƒXƒŒƒbƒh‚©‚ç‘—‚é‚Æ‚«‚Ég‚¤j
-		static constexpr int WM_ONCHANNELSELECTIONCHANGE = WM_APP + 1004;//ƒƒ“ƒoŠÖ”OnChannelSelectionChange‚ğŒÄ‚Ôi•ÊƒXƒŒƒbƒh‚©‚ç‘—‚é‚Æ‚«‚Ég‚¤j
-		static constexpr int WM_SETCHATOPACITY = WM_APP + 1005;//ƒRƒƒ“ƒg“§‰ß“x‚ğİ’è‚·‚é wParam‚É“§‰ß“x‚ğ“n‚·(0~255)
+		static constexpr int WM_USERINTERACTIONREQUEST = WM_APP + 1001;//ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒœãƒƒã‚¯ã‚¹ã®è¡¨ç¤ºãªã©ãƒ¦ãƒ¼ã‚¶ãƒ¼ã¸ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã™ã‚‹
+		static constexpr int WM_DISABLEPLUGIN = WM_APP + 1002;//ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹åŒ–ã™ã‚‹ï¼ˆåˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã‹ã‚‰ç„¡åŠ¹åŒ–ã™ã‚‹ã¨ãã«ä½¿ã†ï¼‰
+		static constexpr int WM_ONCHANNELLISTCHANGE = WM_APP + 1003;//ãƒ¡ãƒ³ãƒé–¢æ•°OnChannelListChangeã‚’å‘¼ã¶ï¼ˆåˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã‹ã‚‰é€ã‚‹ã¨ãã«ä½¿ã†ï¼‰
+		static constexpr int WM_ONCHANNELSELECTIONCHANGE = WM_APP + 1004;//ãƒ¡ãƒ³ãƒé–¢æ•°OnChannelSelectionChangeã‚’å‘¼ã¶ï¼ˆåˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã‹ã‚‰é€ã‚‹ã¨ãã«ä½¿ã†ï¼‰
+		static constexpr int WM_SETCHATOPACITY = WM_APP + 1005;//ã‚³ãƒ¡ãƒ³ãƒˆé€éåº¦ã‚’è¨­å®šã™ã‚‹ wParamã«é€éåº¦ã‚’æ¸¡ã™(0~255)
 
 		enum class UserInteractionRequestType{ConnectSucceed,ConnectFail,InvalidMessage,ReceiveError,SendError, FetalErrorInTask};
 
@@ -77,7 +77,7 @@ namespace TVTComment
 		INT_PTR DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void OnChannelListChange();
 		void OnChannelSelectionChange();
-		void OnForward(std::time_t tot);//TOT‚ÌXVŠÔŠu‚æ‚è×‚©‚¢ŠÔŠu‚ÅŒÄ‚Ô
+		void OnForward(std::time_t tot);//TOTæ™‚åˆ»ã®æ›´æ–°é–“éš”ã‚ˆã‚Šç´°ã‹ã„é–“éš”ã§å‘¼ã¶
 		void OnCommandInvoked(TVTCommentCommand command);
 		~TVTComment() noexcept;
 	};

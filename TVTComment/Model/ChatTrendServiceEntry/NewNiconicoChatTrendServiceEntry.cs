@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using ObservableUtils;
+using System.Threading.Tasks;
 using TVTComment.Model.ChatTrendService;
 
 namespace TVTComment.Model
@@ -9,15 +10,17 @@ namespace TVTComment.Model
         public string Description => "ニコニコ実況の勢いを表示します";
 
         private readonly NiconicoUtils.LiveIdResolver liveIdResolver;
+        private readonly ObservableValue<NiconicoUtils.NiconicoLoginSession> session;
 
-        public NewNiconicoChatTrendServiceEntry(NiconicoUtils.LiveIdResolver liveIdResolver)
+        public NewNiconicoChatTrendServiceEntry(NiconicoUtils.LiveIdResolver liveIdResolver, ObservableValue<NiconicoUtils.NiconicoLoginSession> session)
         {
             this.liveIdResolver = liveIdResolver;
+            this.session = session;
         }
 
         public Task<IChatTrendService> GetNewService()
         {
-            return Task.FromResult((IChatTrendService)new NewNiconicoChatTrendService(liveIdResolver));
+            return Task.FromResult((IChatTrendService)new NewNiconicoChatTrendService(liveIdResolver, session != null ? session.Value : null));
         }
     }
 }

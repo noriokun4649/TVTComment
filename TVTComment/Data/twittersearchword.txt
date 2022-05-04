@@ -1,0 +1,109 @@
+﻿# Twitterリアルタイム実況の検索ワード設定
+
+# GR: NHK 総合
+flags	1	nhktv
+# GR: Eテレ
+flags	2	Eテレ etv
+# GR: 日テレ
+flags	4	ntv
+# GR: テレビ朝日
+flags	32	tvasahi
+# GR: TBS
+flags	8	tbs
+# GR: テレビ東京
+flags	64	tvtokyo
+# GR: フジテレビ
+flags	16	fujitv
+# GR: TOKYO MX
+nsid	0xf5c38	tokyomx
+nsid	0xf5c39	tokyomx
+nsid	0xf5c3a	tokyomx
+# GR: 放送大学
+nsid	0xf0440	放送大学
+nsid	0xf0441	放送大学
+nsid	0xf0442	放送大学
+# GR: テレ玉
+nsid	0xf7438	テレ玉
+nsid	0xf7439	テレ玉
+nsid	0xf743a	テレ玉
+# GR: tvk
+nsid	0xf6038	tvk
+nsid	0xf6039	tvk
+nsid	0xf603a	tvk
+# GR: チバテレビ
+nsid	0xf6c38	チバテレ
+nsid	0xf6c39	チバテレ
+nsid	0xf6c3a	チバテレ
+# BS: NHKBS1
+nsid	0x40065	nhkbs1
+nsid	0x40066	nhkbs1
+# BS: NHKBSプレミアム
+nsid	0x40067	nhkbsp
+nsid	0x40068	nhkbsp
+# BS: BS日テレ
+nsid	0x4008d	BS日テレ
+nsid	0x4008e	BS日テレ
+nsid	0x4008f	BS日テレ
+# BS: BS朝日
+nsid	0x40097	BS朝日
+nsid	0x40098	BS朝日
+nsid	0x40099	BS朝日
+# BS: BS-TBS
+nsid	0x400a1	bstbs
+nsid	0x400a2	bstbs
+nsid	0x400a3	bstbs
+# BS: BSテレ東
+nsid	0x400ab	BSテレ東 BSジャパン
+nsid	0x400ac	BSテレ東 BSジャパン
+nsid	0x400ad	BSテレ東 BSジャパン
+# BS: BSフジ
+nsid	0x400b5	BSフジ
+nsid	0x400b6	BSフジ
+nsid	0x400b7	BSフジ
+# BS: WOWOWプライム
+nsid	0x400bf	WOWOW
+# BS: WOWOWライブ
+nsid	0x400c0	WOWOW
+# BS: WOWOWシネマ
+nsid	0x400c1	WOWOW
+# BS: スターチャンネル1
+nsid	0x400c8	スターチャンネル
+# BS: スターチャンネル2
+nsid	0x400c9	スターチャンネル
+# BS: スターチャンネル3
+nsid	0x400ca	スターチャンネル
+# BS: BS11イレブン
+nsid	0x400d3	BS11
+# BS: BS12トゥエルビ
+nsid	0x400de	BS12
+# BS: 放送大学ex
+nsid	0x400e7	放送大学
+# BS: 放送大学on
+nsid	0x400e8	放送大学
+nsid	0x400e9	放送大学
+# BS: グリーンチャンネル
+nsid	0x400ea	グリーンチャンネル
+# BS: BSアニマックス
+nsid	0x400ec	アニマックス
+# BS: J SPORTS 1
+nsid	0x400f2	jsports
+# BS: J SPORTS 2
+nsid	0x400f3	jsports
+# BS: J SPORTS 3
+nsid	0x400f4	jsports
+# BS: J SPORTS 4
+nsid	0x400f5	jsports
+# BS: BS釣りビジョン
+nsid	0x400fb	釣りビジョン
+# BS: WOWOWプラス
+nsid	0x400fc	WOWOW
+# BS: 日本映画専門ch
+nsid	0x400ff	日本映画専門CH
+# BS: ディズニーch
+nsid	0x40100	ディズニーチャンネル
+# BS: Dlife
+nsid	0x40102	Dlife
+# BS: 放送大学ラジオ
+nsid	0x40213	放送大学
+# CS: AT-X
+nsid	0x7014d	at_x

@@ -29,6 +29,8 @@
             <RowDefinition Height="auto" MinHeight="20"/>
             <RowDefinition Height="auto" MinHeight="20"/>
             <RowDefinition Height="auto" MinHeight="20"/>
+            <RowDefinition Height="auto" MinHeight="20"/>
+            <RowDefinition Height="auto" MinHeight="20"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -42,15 +44,19 @@
             </TextBox.InputBindings>
         </TextBox>
         <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,0,5">Twitterでリアルタイムに取得するコメントを絞り込む検索ワード</TextBlock>
-        <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,0,5" Foreground="Red">※自動の場合、短いスパンでチャンネルを変えるとTwitterAPI制限に引っかかります。</TextBlock>
+        <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,0,5" Foreground="Red">※プリセット・自動の場合、短いスパンでチャンネルを変えるとTwitterAPI制限に引っかかります。</TextBlock>
         <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,0,5" Foreground="Red">　手動の場合でも、短いスパンで追加・削除を繰り返すと同様に制限に引っかかります。</TextBlock>
-        <Grid Grid.ColumnSpan="2" Margin="0,0,0,1">
+        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,0,5" Foreground="Red">※ただしTwitter API V2版ではチャンネル切替などでAPI制限に引っかかる回数は減ります。</TextBlock>
+        <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,0,5" Foreground="Red">※自動ではAnnictからハッシュタグを取得出来なかった場合はプリセットの内容が取得されます。</TextBlock>
+        <Grid Grid.ColumnSpan="3" Margin="0,0,0,1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <RadioButton x:Name="AutoRadio" Content="自動" IsChecked="{Binding Method,Converter={StaticResource EnumToBoolConverter},ConverterParameter=Auto}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-            <RadioButton x:Name="ManualRadio" Content="手動" IsChecked="{Binding Method,Converter={StaticResource EnumToBoolConverter},ConverterParameter=Manual}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+            <RadioButton x:Name="PresetRadio" Content="プリセット" IsChecked="{Binding Method,Converter={StaticResource EnumToBoolConverter},ConverterParameter=Preset}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+            <RadioButton x:Name="AutoRadio" Content="自動(アニメ用・Annictからハッシュタグ取得)" IsChecked="{Binding Method,Converter={StaticResource EnumToBoolConverter},ConverterParameter=Auto}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+            <RadioButton x:Name="ManualRadio" Content="手動" IsChecked="{Binding Method,Converter={StaticResource EnumToBoolConverter},ConverterParameter=Manual}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Column="2"/>
         </Grid>
     </Grid>
 </UserControl>

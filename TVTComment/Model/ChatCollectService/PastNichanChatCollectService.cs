@@ -116,25 +116,25 @@ namespace TVTComment.Model.ChatCollectService
                     continue;
                 }
 
-                string[] threadUrls = (await threadSelector.Get(
-                    lastGetChannel, lastGetTime, cancellationToken
-                ).ConfigureAwait(false)).ToArray();
-
-                currentThreadUrls = threadUrls;
-
                 IEnumerable<string> existingThreadUrls;
                 lock (threadList)
                     existingThreadUrls = threadList.Select(x => x.Uri.ToString()).ToArray();
-                IEnumerable<string> newThreadUrls = threadUrls.Where(x => !existingThreadUrls.Contains(x));
 
-                foreach (var newThreadUrl in newThreadUrls)
+                var urls = new List<string>();
+                await foreach (var url in threadSelector.Get(lastGetChannel, lastGetTime, cancellationToken))
                 {
-                    var (server, board_, threadId) = GetServerBoardThreadFromThreadUrl(newThreadUrl);
-                    Nichan.Thread thread = await GetThread(server, board_, threadId, cancellationToken).ConfigureAwait(false);
-                    thread.Uri = new Uri(newThreadUrl); // キャッシュにヒットするようにthreadSelectorの返したUriで記憶する
+                    if (!existingThreadUrls.Contains(url))
+                    {
+                        var (server, board_, threadId) = GetServerBoardThreadFromThreadUrl(url);
+                        var thread = await GetThread(server, board_, threadId, cancellationToken).ConfigureAwait(false);
+                        thread.Uri = new Uri(url); // キャッシュにヒットするようにthreadSelectorの返したUriで記憶する
 
-                    lock (threadList)
-                        threadList.Add(thread);
+                        lock (threadList)
+                            threadList.Add(thread);
+                    }
+
+                    urls.Add(url);
+                    currentThreadUrls = urls.ToArray();
                 }
 
                 await Task.Delay(threadSelectionUpdateInterval, cancellationToken);

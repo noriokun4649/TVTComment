@@ -33,6 +33,17 @@ namespace TVTComment.Model.ChatCollectService
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
+    [System.Serializable]
+    public class ChatPostSessionException : Exception
+    {
+        public ChatPostSessionException() { }
+        public ChatPostSessionException(string message) : base(message) { }
+        public ChatPostSessionException(string message, Exception inner) : base(message, inner) { }
+        protected ChatPostSessionException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// 投稿するコメントを表すオブジェクトのベース
     /// </summary>
@@ -68,7 +79,7 @@ namespace TVTComment.Model.ChatCollectService
         /// <param name="channel">コメントを取得したい対象チャンネル</param>
         /// <param name="time">コメントを取得したい対象時刻</param>
         /// <returns>取得したコメント</returns>
-        IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time);
+        IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo events , DateTime time);
 
         /// <summary>
         /// コメント投稿に対応しているか

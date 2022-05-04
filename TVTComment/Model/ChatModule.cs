@@ -28,12 +28,15 @@ namespace TVTComment.Model
 
         public ObservableValue<int> ChatPreserveCount { get; } = new ObservableValue<int>();
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> UiFlashingDeterrence { get; } = new ObservableValue<bool>();
 
         private readonly ObservableCollection<Chat> chats = new ObservableCollection<Chat>();
         public ReadOnlyObservableCollection<Chat> Chats { get; }
 
         private readonly ObservableCollection<ChatModRuleEntry> chatModRules = new ObservableCollection<ChatModRuleEntry>();
         public ReadOnlyObservableCollection<ChatModRuleEntry> ChatModRules { get; }
+
+        private const string ReplaceRegexExpressionDelimiter = "@@@@@";
 
         public ChatModule(
             TVTCommentSettings settings, IEnumerable<ChatService.IChatService> chatServices,
@@ -128,6 +131,7 @@ namespace TVTComment.Model
         {
             ChatPreserveCount.Value = settings.ChatPreserveCount;
             ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
+            UiFlashingDeterrence.Value = settings.UiFlashingDeterrence;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
             var entities = settings.ChatModRules;
             foreach (var entity in entities)
@@ -194,6 +198,22 @@ namespace TVTComment.Model
                     case "RemoveMention":
                         entry.ChatModRule = new ChatModRules.RemoveMentionChatModRule(targetServices);
                         break;
+                    case "RenderNicoadAsComment":
+                        entry.ChatModRule = new ChatModRules.RenderNicoadAsCommentChatModRule(targetServices);
+                        break;
+                    case "ReplaceRegex":
+                        var components2 = entity.Expression.Split(ReplaceRegexExpressionDelimiter, 2);
+                        entry.ChatModRule = new ChatModRules.ReplaceRegexChatModRule(targetServices, components2[0], components2[1]);
+                        break;
+                    case "RegexNg":
+                        entry.ChatModRule = new ChatModRules.RegexNgChatModRule(targetServices, entity.Expression);
+                        break;
+                    case "UrlNg":
+                        entry.ChatModRule = new ChatModRules.UrlNgChatModRule(targetServices);
+                        break;
+                    case "MentionNg":
+                        entry.ChatModRule = new ChatModRules.MentionNgChatModRule(targetServices);
+                        break;
                     default:
                         continue;
                 }
@@ -205,6 +225,7 @@ namespace TVTComment.Model
         {
             settings.ChatPreserveCount = ChatPreserveCount.Value;
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
+            settings.UiFlashingDeterrence = UiFlashingDeterrence.Value;
             settings.ChatModRules = chatModRules.Select(x =>
             {
                 var entity = new Serialization.ChatModRuleEntity
@@ -266,6 +287,23 @@ namespace TVTComment.Model
                         entity.Type = "SetColor";
                         Color color = setColor.Color;
                         entity.Expression = $"{color.A},{color.R},{color.G},{color.B}";
+                        break;
+                    case ChatModRules.RenderNicoadAsCommentChatModRule _:
+                        entity.Type = "RenderNicoadAsComment";
+                        break;
+                    case ChatModRules.ReplaceRegexChatModRule replaceRegex:
+                        entity.Type = "ReplaceRegex";
+                        entity.Expression = $"{replaceRegex.Regex}{ReplaceRegexExpressionDelimiter}{replaceRegex.Replacement}";
+                        break;
+                    case ChatModRules.RegexNgChatModRule regexNg:
+                        entity.Type = "RegexNg";
+                        entity.Expression = regexNg.Regex;
+                        break;
+                    case ChatModRules.UrlNgChatModRule _:
+                        entity.Type = "UrlNg";
+                        break;
+                    case ChatModRules.MentionNgChatModRule _:
+                        entity.Type = "MentionNg";
                         break;
                     default:
                         throw new Exception();

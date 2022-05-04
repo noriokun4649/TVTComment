@@ -14,7 +14,12 @@ namespace TVTComment.Model.ChatCollectService
             this.continuousCallLimit = continuousCallLimit;
         }
 
-        public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
+        {
+            return GetChats(channel, time);
+        }
+
+            public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
             List<Chat> ret = new List<Chat>();
             if (lastTime <= time && time < lastTime + continuousCallLimit)

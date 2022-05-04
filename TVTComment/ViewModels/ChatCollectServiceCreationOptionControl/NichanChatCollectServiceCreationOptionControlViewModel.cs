@@ -88,7 +88,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);
-            List<Nichan.Thread> threadsInBoard = (await Nichan.SubjecttxtParser.ParseFromStream(textReader)).ToList();
+            List<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader).ToListAsync();
 
             foreach (var thread in threadsInBoard)
                 thread.Uri = new Uri($"{boardHost}/test/read.cgi/{boardName}/{thread.Name}/l50");

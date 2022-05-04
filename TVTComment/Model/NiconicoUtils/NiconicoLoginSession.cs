@@ -108,6 +108,10 @@ namespace TVTComment.Model.NiconicoUtils
             {
                 throw new NetworkNiconicoLoginSessionException(e);
             }
+            catch(InvalidOperationException e)
+            {
+                throw new NetworkNiconicoLoginSessionException(e);
+            }
             
             CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
             if (cookieCollection.All(x => x.Name != "user_session"))

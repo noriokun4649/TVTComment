@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,26 +44,35 @@ namespace Nichan
         /// 指定した時間範囲に存在したスレッドのリストを返す。 
         /// 返り値の<see cref="Thread"/>のインスタンスはキャッシュされて過去の呼び出し時と同じものが返るので注意。
         /// </summary>
-        public async Task<IEnumerable<Thread>> GetBetween(DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<Thread> GetBetween(
+            DateTimeOffset startTime,
+            DateTimeOffset endTime,
+            string[] keywords,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var start = startTime - backTime;
-            var threads = await threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken).ConfigureAwait(false);
+            var threads = (await threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken).ConfigureAwait(false))
+                .Where(x => keywords.Length == 0 || keywords.Any(keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)));
 
-            var ret = new List<Thread>();
-            foreach (Thread thread in threads)
+            foreach (var thread in threads)
             {
                 if (!threadTimeRangeCache.TryGetValue(thread.Uri.ToString(), out var range))
                 {
-                    range = await GetThreadTimeRange(thread.Uri.ToString(), cancellationToken).ConfigureAwait(false);
-                    threadTimeRangeCache.Add(thread.Uri.ToString(), range);
+                    try {
+                        range = await GetThreadTimeRange(thread.Uri.ToString(), cancellationToken).ConfigureAwait(false);
+                        threadTimeRangeCache.Add(thread.Uri.ToString(), range);
+                    }
+                    catch (HttpRequestException)
+                    {
+                        continue;
+                    }
                 }
 
                 if (startTime <= range.lastResTime && range.firstResTime < endTime)
                 {
-                    ret.Add(thread);
+                    yield return thread;
                 }
             }
-            return ret;
         }
 
         private static readonly HttpClient httpClient = new HttpClient();

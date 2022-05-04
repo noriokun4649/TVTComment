@@ -30,7 +30,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
         public TwitterLiveChatCollectServiceCreationOptionControlViewModel()
         {
             OkCommand = new DelegateCommand(() => Finished(this, new EventArgs()));
-            Method = ModeSelectMethod.Auto;
+            Method = ModeSelectMethod.Preset;
         }
 
         public override IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()
