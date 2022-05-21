@@ -29,6 +29,7 @@
     <PackageReference Include="Prism.Core" Version="6.3.0-pre1" />
     <PackageReference Include="Prism.Unity" Version="6.3.0-pre1" />
     <PackageReference Include="Prism.Wpf" Version="6.3.0-pre1" />
+    <PackageReference Include="ReactiveProperty.WPF" Version="8.1.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
