@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatService
 {
     class NiconicoChatServiceSettings
     {
-        public string UserId { get; set; } = "";
-        public string Password { get; set; } = "";
+        public string OAuthToken { get; set; } = string.Empty;
     }
 
     class NiconicoChatService : IChatService
@@ -26,15 +26,11 @@ namespace TVTComment.Model.ChatService
         private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private readonly NiconicoChatServiceSettings settings;
 
-        public string UserId
+        public string OAuthToken
         {
-            get { return settings.UserId; }
+            get { return settings.OAuthToken; }
+            set { settings.OAuthToken = value; }
         }
-        public string UserPassword
-        {
-            get { return settings.Password; }
-        }
-        public bool IsLoggedin { get; private set; }
         public bool IsAuthorization { get; private set; }
 
         public NiconicoChatService(
@@ -42,14 +38,14 @@ namespace TVTComment.Model.ChatService
             string jikkyouIdTableFilePath, string liveIdTableFilePath
         )
         {
-            this.settings = settings; this.settings = settings;
+            this.settings = settings;
             jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));
             liveIdResolver = new NiconicoUtils.LiveIdResolver(channelDatabase, new NiconicoUtils.LiveIdTable(liveIdTableFilePath));
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(UserId) && !string.IsNullOrWhiteSpace(UserPassword))
-                    SetUser(UserId, UserPassword).Wait();
+                if (!string.IsNullOrWhiteSpace(OAuthToken))
+                    SetToken(OAuthToken).ConfigureAwait(false);
             }
             catch (AggregateException e)
             when (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is NiconicoUtils.NiconicoLoginSessionException)
@@ -64,38 +60,6 @@ namespace TVTComment.Model.ChatService
         }
 
         /// <summary>
-        /// ニコニコのユーザーを指定しログインする
-        /// 失敗した場合オブジェクトの状態は変化しない
-        /// </summary>
-        /// <param name="userId">ニコニコのユーザーID</param>
-        /// <param name="userPassword">ニコニコのパスワード</param>
-        /// <exception cref="ArgumentException"><paramref name="userId"/>または<paramref name="userPassword"/>がnull若しくはホワイトスペースだった時</exception>
-        /// <exception cref="NiconicoUtils.NiconicoLoginSessionException">ログインに失敗した時</exception>
-        public async Task SetUser(string userId, string userPassword)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new ArgumentException($"{nameof(userId)} must not be null nor white space", nameof(userId));
-            if (string.IsNullOrWhiteSpace(userPassword))
-                throw new ArgumentException($"{nameof(userPassword)} must not be null nor white space", nameof(userPassword));
-
-            //ログインしてみる
-            var tmpSession = new NiconicoUtils.NiconicoLoginSession(userId, userPassword);
-            await tmpSession.Login().ConfigureAwait(false);
-
-            //成功したら設定、セッションを置き換える
-            IsLoggedin = true;
-            settings.UserId = userId;
-            settings.Password = userPassword;
-            try
-            {
-                await (loginSession.Value?.Logout() ?? Task.CompletedTask);
-            }
-            catch (NiconicoUtils.NiconicoLoginSessionException)
-            { }
-            loginSession.Value = tmpSession;
-        }
-
-        /// <summary>
         /// ニコニコの認可トークンを指定し検証する
         /// 失敗した場合オブジェクトの状態は変化しない
         /// </summary>
@@ -106,29 +70,17 @@ namespace TVTComment.Model.ChatService
         {
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException($"{nameof(token)} must not be null nor white space", nameof(token));
-
+            loginSession.Value = new NiconicoLoginSession();
             //検証してみる
             await loginSession.Value.Authorization(token).ConfigureAwait(false);
 
             //成功したら設定
             IsAuthorization = true;
-            IsLoggedin = true;
+            OAuthToken = token;
         }
 
         public void Dispose()
         {
-            if(this.loginSession.Value?.IsLoggedin ?? false)
-            {
-                try
-                {
-                    this.loginSession.Value.Logout().Wait();
-                }
-                catch (AggregateException e) when (e.InnerExceptions.All(
-                    x => x is NiconicoUtils.NiconicoLoginSessionException
-                ))
-                {
-                }
-            }
         }
     }
 }
