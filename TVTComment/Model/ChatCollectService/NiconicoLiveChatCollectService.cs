@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -49,6 +50,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly NiconicoUtils.NicoLiveCommentSender commentSender;
         private DateTime lastHeartbeatTime = DateTime.MinValue;
         private readonly CancellationTokenSource cancel = new CancellationTokenSource();
+        private readonly NiconicoLoginSession loginSession;
 
         public NiconicoLiveChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string liveId,
@@ -57,6 +59,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             ServiceEntry = serviceEntry;
             originalLiveId = liveId;
+            loginSession = session;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
@@ -126,14 +129,10 @@ namespace TVTComment.Model.ChatCollectService
             {
                 if (!originalLiveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
                 {
-                    var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{originalLiveId}/program", cancel).ConfigureAwait(false);
-                    var liveIdJson = await JsonDocument.ParseAsync(getLiveId, cancellationToken: cancel).ConfigureAwait(false);
-                    var liveIdRoot = liveIdJson.RootElement;
-                    if (!liveIdRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new ChatReceivingException("コミュニティ・チャンネルが見つかりませんでした");
-                    originalLiveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
+                    originalLiveId = await OAuthApiUtils.GetProgramIdFromChAsync(httpClient, cancel, originalLiveId).ConfigureAwait(false);
 
                 }
-                playerStatusStr = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{originalLiveId}/programinfo", cancel).ConfigureAwait(false);
+                liveId = await OAuthApiUtils.GetProgramInfoFromCommunityId(httpClient, cancel, originalLiveId, loginSession.UserId).ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
@@ -146,14 +145,6 @@ namespace TVTComment.Model.ChatCollectService
 
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
-
-            var playerStatus = await JsonDocument.ParseAsync(playerStatusStr, cancellationToken: cancel).ConfigureAwait(false);
-            var playerStatusRoot = playerStatus.RootElement;
-
-            if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
-                throw new ChatReceivingException("コメント取得できませんでした以下の原因が考えられます\n\n・放送されていない\n・視聴権がない\n・コミュニティフォロワー限定番組");
-            
-            liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
 
             try
             {

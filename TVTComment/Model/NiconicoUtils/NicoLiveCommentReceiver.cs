@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using static TVTComment.Model.NiconicoUtils.OAuthApiUtils;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -64,6 +65,7 @@ namespace TVTComment.Model.NiconicoUtils
             var assembly = Assembly.GetExecutingAssembly().GetName();
             ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {niconicoLoginSession.Token}");
             count = Environment.TickCount;
         }
 
@@ -88,16 +90,14 @@ namespace TVTComment.Model.NiconicoUtils
             {
                 var random = new Random();
                 await Task.Delay((disconnectedCount * 5000) + random.Next(0, 101)); //再試行時に立て続けのリクエストにならないようにする
-                Stream str;
+                Room room;
                 try
                 {
                     if (comId != "") { //コミュIDが取得済みであればlvを再取得　24時間放送のコミュニティ・チャンネル用
-                        var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{comId}/program", cancellationToken).ConfigureAwait(false);
-                        var liveIdJson = await JsonDocument.ParseAsync(getLiveId, cancellationToken: cancellationToken).ConfigureAwait(false);
-                        if (!liveIdJson.RootElement.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new InvalidPlayerStatusNicoLiveCommentReceiverException("コミュニティ・チャンネルが見つかりませんでした");
-                        liveId = liveIdJson.RootElement.GetProperty("data").GetProperty("nicoliveProgramId").GetString();
+                        liveId = await OAuthApiUtils.GetProgramIdFromChAsync(httpClient, cancellationToken, comId).ConfigureAwait(false);
                     }
-                    str = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo", cancellationToken).ConfigureAwait(false);
+                    room = await OAuthApiUtils.GetRoomFromProgramId(httpClient, cancellationToken, liveId, NiconicoLoginSession.UserId).ConfigureAwait(false);
+                    
                 }
                 // httpClient.CancelPendingRequestsが呼ばれた、もしくはタイムアウト
                 catch (TaskCanceledException e)
@@ -110,19 +110,6 @@ namespace TVTComment.Model.NiconicoUtils
                 {
                     throw new NetworkNicoLiveCommentReceiverException(e);
                 }
-                var playerStatus = await JsonDocument.ParseAsync(str, cancellationToken: cancellationToken).ConfigureAwait(false);
-                var playerStatusRoot = playerStatus.RootElement;
-                comId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString(); //コメント受信ループ内でbreakされたあとにコミュからlvを取得するためにコミュを取得しておく
-                if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0) //roomsが無かったら放送終了扱い
-                    throw new ConnectionDisconnectNicoLiveCommentReceiverException();
-                var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("webSocketUri").GetString();
-                var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
-                if (threadId == null || msUriStr == null)
-                {
-                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
-                }
-                var msUri = new Uri(msUriStr);
-
                 using var ws = new ClientWebSocket();
 
                 ws.Options.SetRequestHeader("User-Agent", ua);
@@ -130,7 +117,7 @@ namespace TVTComment.Model.NiconicoUtils
 
                 try
                 {
-                    await ws.ConnectAsync(msUri, cancellationToken);
+                    await ws.ConnectAsync(room.webSocketUri, cancellationToken);
                 }
                 catch (Exception e) when (e is ObjectDisposedException || e is WebSocketException || e is IOException)
                 {
@@ -146,7 +133,7 @@ namespace TVTComment.Model.NiconicoUtils
                     ws.Dispose();
                 });
 
-                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ room.threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
                 try
                 {

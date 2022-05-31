@@ -62,29 +62,33 @@ namespace TVTComment.Model.NiconicoUtils
         private BlockingCollection<string[]> messageColl = new();
         private BlockingCollection<string> errorMesColl = new();
         private readonly string ua;
-        private int openTime;
+        private readonly NiconicoLoginSession session;
+        private long vposBase;
         private ClientWebSocket clientWebSocket;
 
         public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
         {
+            clientWebSocket = new ClientWebSocket();
             var handler = new HttpClientHandler();
+            session = niconicoSession;
             handler.CookieContainer.Add(niconicoSession.Cookie);
             httpClient = new HttpClient(handler);
             var assembly = Assembly.GetExecutingAssembly().GetName();
             ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {niconicoSession.Token}");
         }
 
 
         public async Task ConnectWatchSession(string liveId, CancellationToken cancellationToken)
         {
-            var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
-            var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
-            var webScoketUri = new Uri(webSocketUrl);
-            int.TryParse(Regex.Matches(resp, @"&quot;beginTime&quot;:(?<time>[0-9]+),").First().Groups["time"].Value, out var openTime);
-            this.openTime = openTime;
+            if (!liveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
+            {
+                liveId = await OAuthApiUtils.GetProgramIdFromChAsync(httpClient, cancellationToken, liveId).ConfigureAwait(false);
+            }
+            var webScoketUri = await OAuthApiUtils.GetWatchWebSocketUri(httpClient, cancellationToken, liveId, session.UserId).ConfigureAwait(false);
+            var vposBase = await OAuthApiUtils.GetProgramInfoFromVposBaseTime(httpClient, cancellationToken, liveId, session.UserId).ConfigureAwait(false);
 
-            clientWebSocket = new ClientWebSocket();
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
 
             await clientWebSocket.ConnectAsync(webScoketUri, cancellationToken);
@@ -202,7 +206,7 @@ namespace TVTComment.Model.NiconicoUtils
             var font = arrayMail.FirstOrDefault(x => IsFont(x)) ?? "defont";
             var color = arrayMail.FirstOrDefault(x => IsColor(x) || Regex.IsMatch(x, @"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")) ?? "white";
             var isAnonymous = arrayMail.Contains("184") ? "true" : "false"; //C#はTrue Falseの頭文字が大文字なので
-            long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
+            long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - vposBase * 100; // vposは10ミリ秒単位
             await WsSend("{\"type\":\"postComment\",\"data\":{" +
                 "\"text\":\"" + message + "\"," +
                 "\"vpos\":" + vpos + "," +

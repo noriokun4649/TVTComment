@@ -8,7 +8,9 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TVTComment.Model.ChatCollectServiceEntry;
 using TVTComment.Model.NiconicoUtils;
+using static TVTComment.Model.NiconicoUtils.OAuthApiUtils;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -56,6 +58,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly NiconicoUtils.NicoLiveCommentReceiver commentReceiver;
         private readonly NiconicoUtils.NicoLiveCommentSender commentSender;
         private readonly ConcurrentQueue<NiconicoUtils.NiconicoCommentXmlTag> commentTagQueue = new ConcurrentQueue<NiconicoUtils.NiconicoCommentXmlTag>();
+        private readonly NiconicoLoginSession session;
 
         private string originalLiveId = "";
         private string liveId = "";
@@ -70,6 +73,7 @@ namespace TVTComment.Model.ChatCollectService
             NiconicoUtils.NiconicoLoginSession niconicoLoginSession
         )
         {
+            session = niconicoLoginSession;
             ServiceEntry = serviceEntry;
             this.liveIdResolver = liveIdResolver;
 
@@ -80,9 +84,16 @@ namespace TVTComment.Model.ChatCollectService
             handler.CookieContainer.Add(niconicoLoginSession.Cookie);
             httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
-
-            commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(niconicoLoginSession);
-            commentSender = new NiconicoUtils.NicoLiveCommentSender(niconicoLoginSession);
+            try
+            {
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {niconicoLoginSession.Token}");
+                commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(niconicoLoginSession);
+                commentSender = new NiconicoUtils.NicoLiveCommentSender(niconicoLoginSession);
+            }
+            catch(InvalidOperationException e)
+            {
+                throw new ChatCollectServiceCreationException(e.Message);
+            }
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
@@ -154,24 +165,20 @@ namespace TVTComment.Model.ChatCollectService
 
         private async Task CollectChat(string originalLiveId, CancellationToken cancellationToken)
         {
-            Stream playerStatusStr;
             try
             {
                 if (!originalLiveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
                 {
-                    var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{originalLiveId}/program", cancellationToken).ConfigureAwait(false);
-                    var liveIdJson = await JsonDocument.ParseAsync(getLiveId, cancellationToken: cancellationToken).ConfigureAwait(false);
-                    var liveIdRoot = liveIdJson.RootElement;
-                    if (!liveIdRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new ChatReceivingException("コミュニティ・チャンネルが見つかりませんでした");
-                    originalLiveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
-
+                    originalLiveId = await OAuthApiUtils.GetProgramIdFromChAsync(httpClient, cancellationToken, originalLiveId).ConfigureAwait(false);
                 }
-                playerStatusStr = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{originalLiveId}/programinfo", cancellationToken).ConfigureAwait(false);
+                liveId = await OAuthApiUtils.GetProgramInfoFromCommunityId(httpClient, cancellationToken, originalLiveId, session.UserId).ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
                     throw new LiveNotFoundChatReceivingException();
+                if (e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    throw new ChatReceivingException("OAuth認可の有効期限が切れたか、アプリケーション連携から許可が解除された可能性があります");
                 if (e.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                     throw new ChatReceivingException("ニコニコのサーバーがメンテナンス中の可能性があります");
                 if (e.StatusCode == System.Net.HttpStatusCode.InternalServerError)
@@ -179,15 +186,6 @@ namespace TVTComment.Model.ChatCollectService
 
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
-
-            var playerStatus = await JsonDocument.ParseAsync(playerStatusStr, cancellationToken: cancellationToken).ConfigureAwait(false);
-            var playerStatusRoot = playerStatus.RootElement;
-
-            if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
-                throw new LiveNotFoundChatReceivingException();
-
-            liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
-            
 
             try
             {
