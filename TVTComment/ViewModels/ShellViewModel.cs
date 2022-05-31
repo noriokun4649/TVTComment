@@ -263,8 +263,6 @@ namespace TVTComment.ViewModels
             {
                 switch (item.ServiceEntry)
                 {
-                    case Model.ChatCollectServiceEntry.NiconicoChatCollectServiceEntry _:
-                    case Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry _:
