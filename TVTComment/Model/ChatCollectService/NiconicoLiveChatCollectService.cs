@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TVTComment.Model.ChatCollectServiceEntry;
 using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatCollectService
@@ -68,10 +69,16 @@ namespace TVTComment.Model.ChatCollectService
             handler.CookieContainer.Add(session.Cookie);
             httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
-
-            commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(session);
-            commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
-
+            try
+            {
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {loginSession.Token}");
+                commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(loginSession);
+                commentSender = new NiconicoUtils.NicoLiveCommentSender(loginSession);
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new ChatCollectServiceCreationException(e.Message);
+            }
             chatCollectTask = CollectChat(cancel.Token);
             chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancel.Token);
         }
