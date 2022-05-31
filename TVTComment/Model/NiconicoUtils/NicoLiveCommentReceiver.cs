@@ -59,9 +59,7 @@ namespace TVTComment.Model.NiconicoUtils
         {
             NiconicoLoginSession = niconicoLoginSession;
 
-            var handler = new HttpClientHandler();
-            handler.CookieContainer.Add(niconicoLoginSession.Cookie);
-            httpClient = new HttpClient(handler);
+            httpClient = new HttpClient();
             var assembly = Assembly.GetExecutingAssembly().GetName();
             ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);

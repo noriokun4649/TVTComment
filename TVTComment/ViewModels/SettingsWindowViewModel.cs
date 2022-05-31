@@ -15,9 +15,6 @@ namespace TVTComment.ViewModels
     {
         public ObservableValue<int> ChatPreserveCount { get; }
         public ShellContents.DefaultChatCollectServicesViewModel DefaultChatCollectServices { get; }
-        public ObservableValue<string> NiconicoLoginStatus { get; } = new ObservableValue<string>();
-        public ObservableValue<string> NiconicoUserId { get; } = new ObservableValue<string>();
-        public ObservableValue<string> NiconicoPassword { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanResCollectInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanApiHmKey { get; } = new ObservableValue<string>();
@@ -75,22 +72,6 @@ namespace TVTComment.ViewModels
 
             AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
             AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
-
-            LoginNiconicoCommand = new DelegateCommand(async () =>
-              {
-                  if (string.IsNullOrWhiteSpace(NiconicoUserId.Value) || string.IsNullOrWhiteSpace(NiconicoPassword.Value))
-                      return;
-
-                  try
-                  {
-                      await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value);
-                      SyncNiconicoUserStatus();
-                  }
-                  catch (Model.NiconicoUtils.NiconicoLoginSessionException)
-                  {
-                      AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "ニコニコへのログインに失敗しました" });
-                  }
-              });
 
             ApplyNichanSettingsCommand = new DelegateCommand(() =>
               {
@@ -218,17 +199,9 @@ namespace TVTComment.ViewModels
 
             ChatPreserveCount = model.ChatModule.ChatPreserveCount;
 
-            SyncNiconicoUserStatus();
             SyncNichanSettings();
             SyncTwitterStatus();
             SyncAnnictStatus();
-        }
-
-        private void SyncNiconicoUserStatus()
-        {
-            NiconicoLoginStatus.Value = niconico.IsLoggedin ? "ログイン済" : "未ログイン";
-            NiconicoUserId.Value = niconico.UserId;
-            NiconicoPassword.Value = niconico.UserPassword;
         }
 
         private void SyncNichanSettings()

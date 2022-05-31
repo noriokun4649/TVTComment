@@ -69,10 +69,8 @@ namespace TVTComment.Model.NiconicoUtils
         public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
         {
             clientWebSocket = new ClientWebSocket();
-            var handler = new HttpClientHandler();
             session = niconicoSession;
-            handler.CookieContainer.Add(niconicoSession.Cookie);
-            httpClient = new HttpClient(handler);
+            httpClient = new HttpClient();
             var assembly = Assembly.GetExecutingAssembly().GetName();
             ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
@@ -87,7 +85,7 @@ namespace TVTComment.Model.NiconicoUtils
                 liveId = await OAuthApiUtils.GetProgramIdFromChAsync(httpClient, cancellationToken, liveId).ConfigureAwait(false);
             }
             var webScoketUri = await OAuthApiUtils.GetWatchWebSocketUri(httpClient, cancellationToken, liveId, session.UserId).ConfigureAwait(false);
-            var vposBase = await OAuthApiUtils.GetProgramInfoFromVposBaseTime(httpClient, cancellationToken, liveId, session.UserId).ConfigureAwait(false);
+            vposBase = await OAuthApiUtils.GetProgramInfoFromVposBaseTime(httpClient, cancellationToken, liveId, session.UserId).ConfigureAwait(false);
 
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
 

@@ -65,9 +65,7 @@ namespace TVTComment.Model.ChatCollectService
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
 
-            var handler = new HttpClientHandler();
-            handler.CookieContainer.Add(session.Cookie);
-            httpClient = new HttpClient(handler);
+            httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
             try
             {
