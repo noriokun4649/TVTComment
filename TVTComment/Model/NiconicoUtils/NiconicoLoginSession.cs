@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.NiconicoUtils
@@ -41,9 +42,11 @@ namespace TVTComment.Model.NiconicoUtils
         private readonly string mail;
         private readonly string password;
         private CookieCollection cookie = null;
+        private string token = null;
         private string userid = null;
 
         public bool IsLoggedin => cookie != null;
+        public bool IsAuthorization => token != null;
         /// <summary>
         /// 送信するべき認証情報を含んだクッキー
         /// </summary>
@@ -67,6 +70,17 @@ namespace TVTComment.Model.NiconicoUtils
                     return userid;
                 else
                     throw new InvalidOperationException("UserIDが取得できてません");
+            }
+        }
+
+        public string Token
+        {
+            get
+            {
+                if (IsAuthorization)
+                    return token;
+                else
+                    throw new InvalidOperationException("認可トークンがありません\n設定からOAuth認可を行ってください");
             }
         }
 
@@ -143,6 +157,47 @@ namespace TVTComment.Model.NiconicoUtils
                 throw new NetworkNiconicoLoginSessionException(e);
             }
             cookie = null;
+            userid = null;
+        }
+
+        public async Task Authorization(string token)
+        {
+            this.token = token;
+            const string openidUserinfoUrl = "https://oauth.nicovideo.jp/open_id/userinfo";
+
+            using var client = new HttpClient();
+
+            var request = new HttpRequestMessage(HttpMethod.Get, openidUserinfoUrl);
+            request.Headers.Add("ContentType", "application/json");
+            request.Headers.Add("Authorization", $"Bearer {token}");
+
+            try
+            {
+                var res = await client.SendAsync(request);
+                var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
+                userid = json.GetProperty("sub").ToString();
+            }
+            catch (HttpRequestException e)
+            {
+                throw new NetworkNiconicoLoginSessionException(e);
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new NetworkNiconicoLoginSessionException(e);
+            }
+            catch (KeyNotFoundException e)
+            {
+                throw new NetworkNiconicoLoginSessionException(e);
+            }
+
+        }
+
+        public void Disapproved()
+        {
+            if (!IsAuthorization)
+                throw new InvalidOperationException("認可情報取得していません");
+            token = null;
+            userid = null;
         }
     }
 }

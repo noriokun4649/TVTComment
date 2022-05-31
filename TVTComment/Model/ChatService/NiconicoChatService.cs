@@ -35,6 +35,7 @@ namespace TVTComment.Model.ChatService
             get { return settings.Password; }
         }
         public bool IsLoggedin { get; private set; }
+        public bool IsAuthorization { get; private set; }
 
         public NiconicoChatService(
             NiconicoChatServiceSettings settings, ChannelDatabase channelDatabase,
@@ -92,6 +93,26 @@ namespace TVTComment.Model.ChatService
             catch (NiconicoUtils.NiconicoLoginSessionException)
             { }
             loginSession.Value = tmpSession;
+        }
+
+        /// <summary>
+        /// ニコニコの認可トークンを指定し検証する
+        /// 失敗した場合オブジェクトの状態は変化しない
+        /// </summary>
+        /// <param name="token">ニコニコの認可トークン</param>
+        /// <exception cref="ArgumentException"><paramref name="token"/>がnull若しくはホワイトスペースだった時</exception>
+        /// <exception cref="NiconicoUtils.NiconicoLoginSessionException">認可トークンの検証に失敗した時</exception>
+        public async Task SetToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException($"{nameof(token)} must not be null nor white space", nameof(token));
+
+            //検証してみる
+            await loginSession.Value.Authorization(token).ConfigureAwait(false);
+
+            //成功したら設定
+            IsAuthorization = true;
+            IsLoggedin = true;
         }
 
         public void Dispose()
