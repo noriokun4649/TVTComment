@@ -55,7 +55,6 @@ namespace TVTComment.ViewModels.ShellContents
             });
             IsShowingNiconicoPostForm = new ReadOnlyObservableValue<bool>(
                 SelectedPostService.Select(x =>
-                    x is Model.ChatCollectService.NiconicoChatCollectService ||
                     x is Model.ChatCollectService.NiconicoLiveChatCollectService ||
                     x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService ||
                     x is Model.ChatCollectService.TwitterLiveChatCollectService
@@ -94,16 +93,7 @@ namespace TVTComment.ViewModels.ShellContents
             else
                 mail184 += " 184";
 
-            if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
-            {
-                if (string.IsNullOrWhiteSpace(PostText.Value))
-                    return;
-                model.ChatCollectServiceModule.PostChat(
-                    SelectedPostService.Value,
-                    new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, mail184)
-                );
-            }
-            else if (SelectedPostService.Value is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService)
+            if (SelectedPostService.Value is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService)
             {
                 if (string.IsNullOrWhiteSpace(PostText.Value))
                     return;
