@@ -144,6 +144,9 @@
     <ClInclude Include="TVTComment\IPC\IPCMessage\CommandIPCMessage.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="PanelResource.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -248,6 +251,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Viewer.rc">
+      <Filter>リソース ファイル</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="Panel.rc">
       <Filter>リソース ファイル</Filter>
     </ResourceCompile>
   </ItemGroup>
