@@ -9,6 +9,7 @@
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "NicoJK/TVTestPlugin.h"
 #include "resource.h"
+#include "PanelResource.h"
 #include "Viewer.h"
 #include <dwmapi.h>
 #include <shellapi.h>
@@ -139,6 +140,17 @@ bool CViewer::Initialize()
 		m_pApp->RegisterCommand(ci.ID, ci.pszText, ci.pszName);
 	}
 	DeleteObject(ci.hbmIcon);
+
+	TVTest::PanelItemInfo panel = {};
+	panel.Size = sizeof(panel);
+	panel.Style = TVTest::PANEL_ITEM_STYLE_NEEDFOCUS;
+	panel.pszIDText = L"TvTCommentPanel";
+	panel.pszTitle = L"TvTComment";
+	panel.ID = static_cast<int>(TVTComment::Panel::TvTComment);
+	panel.hbmIcon = (HBITMAP)LoadImageW(g_hinstDLL, MAKEINTRESOURCEW(bSmallIcon ? IDB_TVTCICON16 : IDB_TVTCICON), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+	m_pApp->RegisterPanelItem(&panel);
+	DeleteObject(panel.hbmIcon);
+
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback, this);
@@ -443,6 +455,19 @@ LRESULT CALLBACK CViewer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 		// フィルタグラフの終了処理開始
 		pThis->commentWindow_.OnFilterGraphFinalize(reinterpret_cast<const TVTest::FilterGraphInfo*>(lParam1)->pGraphBuilder);
 		break;
+#pragma region TVTComment
+	case TVTest::EVENT_PANELITEM_NOTIFY:
+		// パネル項目の通知
+	{
+		pThis->m_pApp->AddLog(L"パネル項目の通知。");
+
+		TVTest::PanelItemEventInfo* pInfo =
+			reinterpret_cast<TVTest::PanelItemEventInfo*>(lParam1);
+		return pThis->OnPanelItemNotify(pInfo);
+	}
+	break;
+#pragma endregion
+
 	}
 	return 0;
 }
@@ -777,6 +802,104 @@ BOOL CALLBACK CViewer::StreamCallback(BYTE *pData, void *pClientData)
 	}
 	return TRUE;
 }
+
+#pragma region TVTComment
+// パネル変更イベント通知
+bool CViewer::OnPanelItemNotify(TVTest::PanelItemEventInfo* pInfo) {
+	switch (pInfo->Event) {
+	case TVTest::PANEL_ITEM_EVENT_CREATE:
+		// パネル項目を作成する
+	{
+		auto createEventInfo = CONTAINING_RECORD(pInfo, TVTest::PanelItemCreateEventInfo, EventInfo);
+
+		TVTest::ShowDialogInfo Info;
+		Info.Flags = TVTest::SHOW_DIALOG_FLAG_MODELESS;
+		Info.hinst = g_hinstDLL;
+		Info.pszTemplate = MAKEINTRESOURCE(IDD_TVTCOM_PANEL);//メインパネルテンプレート使用
+		Info.pMessageFunc = PanelTvTComDlgProc;// パネルプロシージャ登録
+		Info.pClientData = this;
+		Info.hwndOwner = createEventInfo->hwndParent;
+		auto hwnd = (HWND) this->m_pApp-> ShowDialog(&Info);
+		ShowWindow(hwnd, SW_SHOW);
+		if (hwnd == nullptr) {
+			return FALSE;
+		}
+		createEventInfo->hwndItem = hwnd;
+	}
+	return TRUE;
+	}
+}
+/*
+INT_PTR CALLBACK CViewer::PanelLogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
+
+	return TRUE;
+}
+
+INT_PTR CALLBACK CViewer::PanelSelectProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
+
+	return TRUE;
+}
+*/
+
+// パネルプロシージャ
+INT_PTR CALLBACK CViewer::PanelTvTComDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
+	HWND hTab;
+	HWND hLogPage;
+	HWND hSelectPage;
+	RECT rc;
+	CViewer* pThis = static_cast<CViewer*>(pClientData);
+	switch (uMsg)
+	{
+	case WM_INITDIALOG:
+		{
+		hTab = GetDlgItem(hDlg, IDC_TVTCOM_TAB);
+		TCITEM tc_item;
+		tc_item.mask = TCIF_TEXT;
+		tc_item.pszText = _TEXT("ログ");
+		TabCtrl_InsertItem(hTab, 0, &tc_item);
+
+		tc_item.pszText = _TEXT("コメント元");
+		TabCtrl_InsertItem(hTab, 1, &tc_item);
+		/*
+		hLogPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_LOG_TAB), hDlg, (DLGPROC)PanelLogProc);
+		hSelectPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_SELECT_TAB), hDlg, (DLGPROC)PanelSelectProc);
+		ShowWindow(hLogPage, SW_SHOW);
+		ShowWindow(hSelectPage, SW_HIDE);
+		GetClientRect(hDlg, &rc);
+		SendMessage(hDlg, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+		*/
+		}
+		return TRUE;
+	case WM_NOTIFY:
+		switch (((NMHDR*)lParam)->code) {
+		case TCN_SELCHANGE: {    //タブの切り替え
+			int num = TabCtrl_GetCurSel(hTab);
+			if (num == 0) {
+				ShowWindow(hLogPage, SW_SHOW);
+				ShowWindow(hSelectPage, SW_HIDE);
+			}
+			else {
+				ShowWindow(hLogPage, SW_HIDE);
+				ShowWindow(hSelectPage, SW_SHOW);
+			}
+			break;
+		}
+		}
+		return FALSE;
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_ADD_BUTTON:
+			return TRUE;
+		case IDC_DELETE_BUTTON:
+			return TRUE;
+		}
+	default:
+		break;
+		return FALSE;
+	}
+	return FALSE;
+}
+#pragma endregion
 
 TVTest::CTVTestPlugin *CreatePluginClass()
 {

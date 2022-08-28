@@ -24,6 +24,11 @@ namespace TVTComment
 		HideComment
 	};
 
+	enum class Panel
+	{
+		TvTComment,
+	};
+
 	//TVTCommentの最上位クラス
 	//このクラスのインスタンスの生存期間は勢いウィンドウのより長い必要がある
 	//エラー時にプラグインを無効化することがある

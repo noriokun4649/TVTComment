@@ -7,6 +7,12 @@
 // プラグインクラス
 class CViewer : public TVTest::CTVTestPlugin
 {
+	virtual bool OnPanelItemNotify(TVTest::PanelItemEventInfo* pInfo);
+	static INT_PTR CALLBACK PanelTvTComDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData);
+	/*
+	static INT_PTR CALLBACK PanelLogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData);
+	static INT_PTR CALLBACK PanelSelectProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData);
+	*/
 public:
 	// チャンネル変更などの後に適当な実況IDのチェックを行うまでの猶予
 	static const int SETUP_CURJK_DELAY = 3000;
