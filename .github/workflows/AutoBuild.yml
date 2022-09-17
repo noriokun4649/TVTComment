@@ -1,0 +1,94 @@
+name: TVTComment build
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  exe-build:
+    name: TVTComment.exe build
+    runs-on: windows-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Include CoreTweet Nuget
+        run: nuget sources add -name CoreTweetSource -source ${{ github.workspace }}\CoreTweetNuget
+
+      - name: Replace id & secret
+        shell: powershell
+        run: |
+          $data=Get-Content TVTComment/ViewModels/SettingsWindowViewModel.cs | % { $_ -replace 'secrets\["Annict:ClientId"\]','"${{ secrets.CLIENT_ID }}"' }
+          $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
+          $data=Get-Content TVTComment/ViewModels/SettingsWindowViewModel.cs | % { $_ -replace 'secrets\["Annict:ClientSecret"\]','"${{ secrets.CLIENT_SECRET }}"' }
+          $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
+
+      - name: Build (TVTComment.exe)
+        run: dotnet publish -m -c Release /p:PublishProfile="TVTComment/Properties/PublishProfiles/ReleaseProfile.pubxml"
+
+      - name: Copy asset (TVTComment.exe)
+        shell: powershell
+        run: |
+          New-Item -Path Asset -ItemType Directory
+          New-Item -Path Asset/misc -ItemType Directory
+          Copy-Item -Path TVTComment/bin/Release/net5.0-windows/publish/TvtComment.exe -Destination Asset/
+          Copy-Item -Path TVTComment/Data/* -Destination Asset/
+          Copy-Item -Path CHANGELOG.md -Destination Asset/misc/CHANGELOG.txt
+          Copy-Item -Path LICENSE -Destination Asset/misc/LICENSE.txt
+          Copy-Item -Path README.md -Destination "Asset/misc/README edit noriokun4649.txt"
+
+      - name: Upload asset to Artifacts (TVTComment.exe)
+        uses: actions/upload-artifact@v2
+        with:
+          name: TvtComment
+          if-no-files-found: error
+          path: Asset/
+
+  tvtp-build:
+    name: tvtcomment.tvtp build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - x64
+          - Win32
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Build (tvtcomment.tvtp)
+        run: msbuild Viewer/Viewer.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}" /p:CodePage=932
+
+      - name: Copy asset (tvtcomment.tvtp)
+        shell: powershell
+        run: |
+          New-Item -Path Asset -ItemType Directory
+          Copy-Item -Path Viewer/${{ matrix.platform }}/Release/TvtComment.tvtp -Destination Asset/
+
+      - name: Upload asset to Artifacts (tvtcomment.tvtp)
+        uses: actions/upload-artifact@v2
+        with:
+          name: TvtComment_${{ matrix.platform }}
+          if-no-files-found: error
+          path: Asset/
