@@ -22,7 +22,7 @@ namespace TVTComment.Model.ChatTrendService
         {
             this.liveIdResolver = liveIdResolver;
             var handler = new HttpClientHandler();
-            if (session != null) handler.CookieContainer.Add(session.Cookie);
+            //if (session != null) handler.CookieContainer.Add(session.Cookie);
             httpClient = new HttpClient(handler);
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
