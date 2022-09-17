@@ -18,6 +18,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NiconicoLoginStatus { get; } = new ObservableValue<string>();
         public ObservableValue<string> NiconicoUserId { get; } = new ObservableValue<string>();
         public ObservableValue<string> NiconicoPassword { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NiconicoOneTimePassword { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanResCollectInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanApiHmKey { get; } = new ObservableValue<string>();
@@ -83,7 +84,7 @@ namespace TVTComment.ViewModels
 
                   try
                   {
-                      await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value);
+                      await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value, NiconicoOneTimePassword.Value);
                       SyncNiconicoUserStatus();
                   }
                   catch (Model.NiconicoUtils.NiconicoLoginSessionException)

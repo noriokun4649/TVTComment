@@ -70,7 +70,7 @@ namespace TVTComment.Model.ChatService
         /// <param name="userPassword">ニコニコのパスワード</param>
         /// <exception cref="ArgumentException"><paramref name="userId"/>または<paramref name="userPassword"/>がnull若しくはホワイトスペースだった時</exception>
         /// <exception cref="NiconicoUtils.NiconicoLoginSessionException">ログインに失敗した時</exception>
-        public async Task SetUser(string userId, string userPassword)
+        public async Task SetUser(string userId, string userPassword, string onetimePassword = "")
         {
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException($"{nameof(userId)} must not be null nor white space", nameof(userId));
@@ -78,7 +78,7 @@ namespace TVTComment.Model.ChatService
                 throw new ArgumentException($"{nameof(userPassword)} must not be null nor white space", nameof(userPassword));
 
             //ログインしてみる
-            var tmpSession = new NiconicoUtils.NiconicoLoginSession(userId, userPassword);
+            var tmpSession = new NiconicoUtils.NiconicoLoginSession(userId, userPassword, onetimePassword);
             await tmpSession.Login().ConfigureAwait(false);
 
             //成功したら設定、セッションを置き換える
