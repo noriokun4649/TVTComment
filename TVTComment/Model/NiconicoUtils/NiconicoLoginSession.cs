@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Prism.Interactivity.InteractionRequest;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -40,6 +41,7 @@ namespace TVTComment.Model.NiconicoUtils
     {
         private readonly string mail;
         private readonly string password;
+        private readonly string onetimepassword;
         private CookieCollection cookie = null;
         private string userid = null;
 
@@ -70,10 +72,11 @@ namespace TVTComment.Model.NiconicoUtils
             }
         }
 
-        public NiconicoLoginSession(string mail, string password)
+        public NiconicoLoginSession(string mail, string password,string onetimePassword = "")
         {
             this.mail = mail;
             this.password = password;
+            this.onetimepassword = onetimePassword;
         }
 
         /// <summary>
@@ -87,22 +90,45 @@ namespace TVTComment.Model.NiconicoUtils
             if (IsLoggedin)
                 throw new InvalidOperationException("すでにログインしています");
 
-            const string loginUrl = "https://secure.nicovideo.jp/secure/login?site=niconico";
+            const string loginUrl = "https://account.nicovideo.jp/login/redirector?site=niconico";
 
             var handler = new HttpClientHandler();
+            handler.AllowAutoRedirect = false;
             using var client = new HttpClient(handler);
 
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "next_url", "" },
-                { "mail", mail },
+                { "mail_tel", mail },
                 { "password", password }
             });
 
             try
             {
                 var res = await client.PostAsync(loginUrl, content).ConfigureAwait(false);
-                userid = res.Headers.GetValues("x-niconico-id").FirstOrDefault();
+                var location = res.Headers.GetValues("Location").FirstOrDefault();
+                if (location == "https://www.nicovideo.jp/")
+                {
+                    var twofactorRes = await client.GetAsync(location).ConfigureAwait(false);
+                    userid = twofactorRes.Headers.GetValues("x-niconico-id").FirstOrDefault();
+                }
+                else
+                {
+                    var loginCookie = handler.CookieContainer.GetCookies(new Uri(loginUrl));
+                    var twofactorContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        { "loginBtn", "ログイン" },
+                        { "device_name", "TvTComment" },
+                        { "otp", onetimepassword}
+                    });
+
+                    var twofactorHandler = new HttpClientHandler();
+                    twofactorHandler.CookieContainer.Add(loginCookie);
+                    using var twofactor = new HttpClient(twofactorHandler);
+                    var twofactorRes = await twofactor.PostAsync(location,twofactorContent).ConfigureAwait(false);
+                    userid = twofactorRes.Headers.GetValues("x-niconico-id").FirstOrDefault();
+                    handler.CookieContainer.Add(twofactorHandler.CookieContainer.GetCookies(new Uri(location)));
+                }
             }
             catch (HttpRequestException e)
             {
