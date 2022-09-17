@@ -119,7 +119,7 @@ bool CViewer::Initialize()
 	ci.Size = sizeof(ci);
 	ci.Flags = 0;
 	ci.Flags = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE; 
-	ci.State = 0;
+	ci.State = TVTest::PLUGIN_COMMAND_STATE_DISABLED;
 
 	ci.ID = static_cast<int>(TVTComment::Command::ShowWindow);
 	ci.pszText = L"ShowWindow";
@@ -509,6 +509,8 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 		// TVTest起動直後はVideo Containerウィンドウの配置が定まっていないようなので再度整える
 		SetTimer(hwnd, TIMER_DONE_SIZE, 500, nullptr);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), 0);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), 0);
 		return TRUE;
 	case WM_DESTROY:
 		commentWindow_.Destroy();
@@ -520,6 +522,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		ToggleStreamCallback(false);
 		m_pApp->SetWindowMessageCallback(nullptr);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
 		hDummy_ = nullptr;
 		break;
 #pragma region TVTComment
