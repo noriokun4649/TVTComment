@@ -130,7 +130,7 @@ namespace TVTComment
 			
 			commentWindow->AddChat(utf8_utf16_conv.from_bytes(chat.text).c_str(), chat.color.GetColorRef(),
 				(chat.position == Chat::Position::Default) ? CCommentWindow::CHAT_POS_DEFAULT : (chat.position == Chat::Position::Bottom) ? CCommentWindow::CHAT_POS_SHITA : CCommentWindow::CHAT_POS_UE,
-				(chat.size == Chat::Size::Small) ? CCommentWindow::CHAT_SIZE_SMALL : CCommentWindow::CHAT_SIZE_DEFAULT);
+				(chat.size == Chat::Size::Small) ? CCommentWindow::CHAT_SIZE_SMALL : CCommentWindow::CHAT_SIZE_DEFAULT,chat.self);
 			commentWindow->ScatterLatestChats(1000);
 		}
 		else if (auto message = dynamic_cast<const ChannelSelectIPCMessage *>(&msg))
