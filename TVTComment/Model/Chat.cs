@@ -24,7 +24,7 @@ namespace TVTComment.Model
 
         public ChatCollectServiceEntry.IChatCollectServiceEntry SourceService { get; private set; }
 
-        public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number, bool isSelfComment)
+        public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number, bool isSelfComment = false)
         {
             Time = time;
             Text = text;
