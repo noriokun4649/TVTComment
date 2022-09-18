@@ -15,8 +15,9 @@ namespace TVTComment
 		Size size = Size::Default;
 		Position position=Position::Default;
 		Color color;
+		bool self;
 		
 		Chat() = default;
-		Chat(const std::string &text, const Color &color, Position position=Position::Default,Size size=Size::Default);
+		Chat(const std::string &text, const Color &color, Position position=Position::Default,Size size=Size::Default,bool self=false);
 	};
 }

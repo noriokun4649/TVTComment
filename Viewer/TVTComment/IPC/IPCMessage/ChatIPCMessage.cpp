@@ -40,12 +40,17 @@ namespace TVTComment
 		}
 		ret.push_back(std::to_string(this->Chat.color.R) + "," + std::to_string(this->Chat.color.G) + "," + std::to_string(this->Chat.color.B));
 
+		if (this->Chat.self)
+			ret.push_back("true");
+		else if (!this->Chat.self)
+			ret.push_back("false");
+
 		return ret;
 	}
 	
 	void ChatIPCMessage::Decode(const std::vector<std::string> &contents)
 	{
-		if (contents.size() != 4)
+		if (contents.size() != 5)
 			throw IPCMessageDecodeError("Chatのcontentsの数が4以外です");
 
 		this->Chat.text = contents[0];
@@ -89,5 +94,12 @@ namespace TVTComment
 		//フォーマットがR,G,BでもR,G,B,でもないなら
 		if (count != 3 && count != 4)
 			throw IPCMessageDecodeError("ChatのColorのフォーマットが不正です: " + contents[3]);
+
+		if (contents[4] == "true")
+			this->Chat.self = true;
+		else if(contents[4] == "false")
+			this->Chat.self = false;
+		else
+			throw IPCMessageDecodeError("ChatのSelfの値が不正です: " + contents[4]);
 	}
 }
