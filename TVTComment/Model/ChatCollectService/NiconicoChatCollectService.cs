@@ -41,7 +41,7 @@ namespace TVTComment.Model.ChatCollectService
 
         private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private int lastJkId = 0;
-        private readonly NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
+        private readonly NiconicoUtils.NiconicoCommentXmlParser parser;
         private NetworkStream socketStream;
         private NiconicoUtils.ThreadNiconicoCommentXmlTag lastThreadTag;
         private int lastResNum = -1;
@@ -67,6 +67,7 @@ namespace TVTComment.Model.ChatCollectService
                 handler.CookieContainer.Add(session.Cookie);
                 httpClient = new HttpClient(handler);
                 CanPost = true;
+                parser = new NiconicoUtils.NiconicoCommentXmlParser(true,session.UserId);
             }
             else
             {

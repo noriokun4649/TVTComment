@@ -27,7 +27,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly List<NiconicoUtils.ChatAndVpos> chats = new List<NiconicoUtils.ChatAndVpos>();
         private Task chatCollectTask;
         private readonly HttpClient client;
-
+        private readonly NiconicoUtils.NiconicoCommentXmlParser parser;
         public override string Name => "ニコニコ実況過去ログ";
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
 
@@ -41,6 +41,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public NiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, NiconicoUtils.JkIdResolver jkIdResolver, NiconicoUtils.NiconicoLoginSession session) : base(new TimeSpan(0, 0, 10))
         {
+            parser = new NiconicoUtils.NiconicoCommentXmlParser(false, session.UserId);
             ServiceEntry = serviceEntry;
             this.jkIdResolver = jkIdResolver;
             var handler = new HttpClientHandler();
@@ -139,7 +140,7 @@ namespace TVTComment.Model.ChatCollectService
 
             string data = await client.GetStringAsync($"http://{ms}:{http_port}/api/thread?thread={thread_id}&res_from={resFrom}&version=20061206&when={endTimeStr}&user_id={user_id}&waybackkey={waybackkey}&scores=1").ConfigureAwait(false);
 
-            NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false);
+            
             parser.Push(data);
             lock (chats)
             {
