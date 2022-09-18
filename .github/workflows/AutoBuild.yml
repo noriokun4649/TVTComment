@@ -44,7 +44,7 @@ jobs:
         run: |
           New-Item -Path Asset -ItemType Directory
           New-Item -Path Asset/misc -ItemType Directory
-          Copy-Item -Path TVTComment/bin/Release/net5.0-windows/publish/TvtComment.exe -Destination Asset/
+          Copy-Item -Path TVTComment/bin/Release/net6.0-windows/publish/TvtComment.exe -Destination Asset/
           Copy-Item -Path TVTComment/Data/* -Destination Asset/
           Copy-Item -Path CHANGELOG.md -Destination Asset/misc/CHANGELOG.txt
           Copy-Item -Path LICENSE -Destination Asset/misc/LICENSE.txt
