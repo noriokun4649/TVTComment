@@ -16,7 +16,7 @@ namespace TVTComment.Model.IPC.IPCMessage
 
         public IEnumerable<string> Encode()
         {
-            string[] ret = new string[4];
+            string[] ret = new string[5];
             ret[0] = Chat.Text;
             switch (Chat.Position)
             {
@@ -43,6 +43,15 @@ namespace TVTComment.Model.IPC.IPCMessage
                     break;
             }
             ret[3] = $"{Chat.Color.R},{Chat.Color.G},{Chat.Color.B}";
+
+            if (Chat.IsSelfComment)
+            {
+                ret[4] = "true";
+            }
+            else
+            {
+                ret[4] = "false";
+            }
             return ret;
         }
     }
