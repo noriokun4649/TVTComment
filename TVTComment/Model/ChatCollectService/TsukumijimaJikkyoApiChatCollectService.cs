@@ -35,7 +35,7 @@ namespace TVTComment.Model.ChatCollectService
         ) : base(TimeSpan.FromSeconds(10))
         {
             ServiceEntry = serviceEntry;
-            myUserId = session.UserId;
+            myUserId = session?.UserId ?? "";
             this.jkIdResolver = jkIdResolver;
         }
 
