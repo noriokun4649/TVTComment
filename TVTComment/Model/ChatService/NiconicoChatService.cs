@@ -10,6 +10,7 @@ namespace TVTComment.Model.ChatService
     {
         public string UserId { get; set; } = "";
         public string Password { get; set; } = "";
+        public bool Always184 { get; set; } = true;
     }
 
     class NiconicoChatService : IChatService
@@ -33,6 +34,11 @@ namespace TVTComment.Model.ChatService
         public string UserPassword
         {
             get { return settings.Password; }
+        }
+        public bool Always184
+        {
+            get { return settings.Always184; }
+            set { settings.Always184 = value; }
         }
         public bool IsLoggedin { get; private set; }
 

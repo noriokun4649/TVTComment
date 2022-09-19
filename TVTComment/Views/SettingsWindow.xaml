@@ -9,7 +9,7 @@
         xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         mc:Ignorable="d"
         prism:ViewModelLocator.AutoWireViewModel="True"
-        Title="SettingWindow" Height="550" Width="400" WindowStyle="ToolWindow">
+        Title="SettingWindow" Height="580" Width="400" WindowStyle="ToolWindow">
 
     <Window.Resources>
         <converters:ColorToStringConverter x:Key="StringToColorConverter"/>
@@ -74,7 +74,7 @@
             <settingswindowcontents:ChatCollectServiceCreationPresetSettingControl DataContext="{Binding ChatCollectServiceCreationPresetSettingControlViewModel}"/>
         </TabItem>-->
         <TabItem Header="ニコニコ実況">
-            <Grid local:Grid.Shape="*:auto,auto,*,*">
+            <Grid local:Grid.Shape="*:auto,auto,auto,*,*">
                 <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
 
 
@@ -95,13 +95,18 @@
                         </StackPanel>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="新実況生放送ID設定" Grid.Row="2">
+                <GroupBox Header="コメント投稿" Grid.Row="2">
+                    <Grid local:Grid.Shape="*:*">
+                        <CheckBox IsChecked="{Binding Always184.Value}" Content="常に184コメントとして投稿をする"  Grid.Row="1"/>
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="新実況生放送ID設定" Grid.Row="3">
                     <TextBlock>
                         設定はniconicoliveids.txtから行ってください<LineBreak/>
                         設定変更はプラグイン再起動後に適用されます
                     </TextBlock>
                 </GroupBox>
-                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="3">
+                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="4">
                     <TextBlock>
                         設定はniconicojikkyouids.txtから行ってください<LineBreak/>
                         設定変更はプラグイン再起動後に適用されます

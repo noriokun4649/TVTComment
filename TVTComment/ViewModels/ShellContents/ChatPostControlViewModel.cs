@@ -89,11 +89,13 @@ namespace TVTComment.ViewModels.ShellContents
             }
 
             string mail184 = PostMailText.Value;
-            if (mail184 == "")
-                mail184 = "184";
-            else
-                mail184 += " 184";
-
+            if (model.Settings.Niconico.Always184)
+            {
+                if (mail184 == "")
+                    mail184 = "184";
+                else
+                    mail184 += " 184";
+            }
             if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
             {
                 if (string.IsNullOrWhiteSpace(PostText.Value))
@@ -136,7 +138,7 @@ namespace TVTComment.ViewModels.ShellContents
                     return;
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
-                    new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, mail184.Replace("184", ""))
+                    new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
                 );
             }
             else
