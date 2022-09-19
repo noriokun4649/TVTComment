@@ -37,6 +37,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> AnnictAccessToken { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
         public ObservableValue<bool> AnnictAutoEnable { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> Always184 { get; } = new ObservableValue<bool>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -76,6 +77,9 @@ namespace TVTComment.ViewModels
 
             AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
             AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
+
+            Always184.Value = niconico.Always184;
+            Always184.Subscribe(state => niconico.Always184 = state);
 
             LoginNiconicoCommand = new DelegateCommand(async () =>
               {

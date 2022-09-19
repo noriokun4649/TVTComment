@@ -144,7 +144,7 @@ namespace TVTComment.Model.ChatCollectService
             var list = new List<Chat>();
             while (statusQueue.TryDequeue(out var status))
             {
-                list.Add(ChatTwitterStatusToChat.Convert(status));
+                list.Add(ChatTwitterStatusToChat.Convert(status, Twitter.Token.ScreenName));
             }
             return list;
         }

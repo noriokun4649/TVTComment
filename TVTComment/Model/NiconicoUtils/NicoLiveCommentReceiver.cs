@@ -57,7 +57,7 @@ namespace TVTComment.Model.NiconicoUtils
         public NicoLiveCommentReceiver(NiconicoLoginSession niconicoLoginSession)
         {
             NiconicoLoginSession = niconicoLoginSession;
-
+            parser = new NiconicoCommentJsonParser(NiconicoLoginSession.UserId);
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoLoginSession.Cookie);
             httpClient = new HttpClient(handler);
@@ -232,6 +232,6 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
         private readonly HttpClient httpClient;
-        private readonly NiconicoCommentJsonParser parser = new NiconicoCommentJsonParser();
+        private readonly NiconicoCommentJsonParser parser;
     }
 }
