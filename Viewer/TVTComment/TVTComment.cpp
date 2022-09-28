@@ -187,7 +187,7 @@ namespace TVTComment
 	{
 	}
 
-	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM /* lParam */)
 	{
 		switch (uMsg)
 		{
@@ -242,14 +242,7 @@ namespace TVTComment
 			{
 			case UserInteractionRequestType::ConnectFail:
 			{
-				wchar_t *t = (wchar_t *)lParam;
 				std::wstring text = L"TVTComment設定ウィンドウとの接続に失敗しました。プラグインを無効化します。";
-				/*if (t != nullptr)
-				{
-					text += L"\n\n";
-					text += t;
-					delete[] t;
-				}*/
 				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment表示側エラー", 0);
 				break;
 			}
@@ -264,14 +257,7 @@ namespace TVTComment
 				break;
 			case UserInteractionRequestType::FetalErrorInTask:
 			{
-				wchar_t *t = (wchar_t *)lParam;
 				std::wstring text = L"TVTComment設定ウィンドウからの受信処理で致命的な問題が発生しました。\nプラグインを無効化します。";
-				/*if (t != nullptr)
-				{
-					text += L"\n\n";
-					text += t;
-					delete[] t;
-				}*/
 				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment表示側エラー", 0);
 				break;
 			}
@@ -475,14 +461,10 @@ namespace TVTComment
 		try
 		{
 			this->isClosing = true;
-			//sendMessage(CloseIPCMessage());
 		}
 		catch (...) {}
 		try
 		{
-			//cancel.cancel();
-			//if (this->ipcTunnel)
-			//	this->ipcTunnel->Cancel();
 			while (!this->asyncTask.is_done())
 			{
 				sendMessage(CloseIPCMessage());
