@@ -286,6 +286,7 @@ void CViewer::LoadFromIni()
 	} else {
 		s_.tvtCommentPath = path;
 	}
+	s_.hideCommentHighlight = GetPrivateProfileInt(TEXT("TvtComment"), TEXT("hideCommentHighlight"), 0, iniFileName_.c_str()) != 0;
 #pragma endregion
 }
 
@@ -492,6 +493,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		commentWindow_.SetDisplayDuration(s_.commentDuration);
 		commentWindow_.SetDrawLineCount(s_.commentDrawLineCount);
 		commentWindow_.SetOpacity(static_cast<BYTE>(s_.commentOpacity));
+		commentWindow_.SetCommentHighlight(s_.hideCommentHighlight);
 		if (commentWindow_.GetOpacity() != 0 && m_pApp->GetPreview()) {
 			HWND hwndContainer = FindVideoContainer();
 			commentWindow_.Create(hwndContainer);
