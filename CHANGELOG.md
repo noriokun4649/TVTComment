@@ -312,3 +312,10 @@
     - ログイン画面の下に追加しました
 - 以下の機能追加・修正を適用　これらは [Nep](https://github.com/SlashNephy) さん提供ですありがとうございます。
     - dotnet publish でビルドした際に .NET 5.0 ランタイムが含まれてしまうのを修正 #69 
+
+## v2.2.1 (2022-09-29)
+2chDATが利用出来ないようですが、現在調査中です。
+このバージョンでは2chDATに関する修正は行われていません。
+
+- 自分のコメントを黄色い枠で囲うよう機能を無効化できる設定を追加
+    - TvtComment.iniで設定可能 (設定サンプルファイルは [こちら](https://github.com/noriokun4649/TVTComment/blob/master/Viewer/TvtComment.ini))
