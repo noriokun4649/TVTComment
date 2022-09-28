@@ -137,7 +137,7 @@ jobs:
       - name: Repack assets
         run: |
           cd Asset
-          7z a -r ../TvtComment_${{ env.RELEASE_VERSION }}.zip *
+          7z a -r ../TvtComment_v${{ env.RELEASE_VERSION }}.zip *
 
       - name: Create release
         uses: softprops/action-gh-release@v1
@@ -147,6 +147,6 @@ jobs:
           body: ${{ env.CHANGELOG }}
           draft: false
           prerelease: false
-          files: TvtComment_${{ env.RELEASE_VERSION }}.zip
+          files: TvtComment_v${{ env.RELEASE_VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
