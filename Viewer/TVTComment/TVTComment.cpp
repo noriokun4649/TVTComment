@@ -336,9 +336,9 @@ namespace TVTComment
 			pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
 			pi.pszEventExtText = eventExtText;
 			pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
-			this->tvtest->GetCurrentProgramInfo(&pi);
-
-			sendCurrentChannelIPCMessage(ci, pi);
+			if (this->tvtest->GetCurrentProgramInfo(&pi)) {
+				sendCurrentChannelIPCMessage(ci, pi);
+			}
 		}
 	}
 
@@ -371,9 +371,9 @@ namespace TVTComment
 				pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
 				pi.pszEventExtText = eventExtText;
 				pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
-				this->tvtest->GetCurrentProgramInfo(&pi);
-
-				sendCurrentChannelIPCMessage(ci, pi);
+				if (this->tvtest->GetCurrentProgramInfo(&pi)){
+					sendCurrentChannelIPCMessage(ci, pi);
+				}
 			}
 		}
 		
