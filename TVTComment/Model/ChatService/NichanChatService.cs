@@ -22,6 +22,7 @@ namespace TVTComment.Model.ChatService
         public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
         public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
         public TimeSpan PastCollectServiceBackTime { get; set; } = new TimeSpan(3, 0, 0);
+        public string PastUserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36";
         public GochanApiSettings GochanApi { get; set; } = new GochanApiSettings();
 
         // 以下は旧設定移行用
@@ -62,6 +63,7 @@ namespace TVTComment.Model.ChatService
         public string GochanApiAuthUserAgent => nichanApiClient.Value.AuthUserAgent;
         public string GochanApiAuthX2UA => nichanApiClient.Value.AuthX2chUA;
         public string GochanApiUserAgent => nichanApiClient.Value.UserAgent;
+        public string GochanPastUserAgent => pastUserAgent.Value;
         public TimeSpan PastCollectServiceBackTime => pastCollectServiceBackTime.Value;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
@@ -69,6 +71,7 @@ namespace TVTComment.Model.ChatService
         private readonly ObservableValue<TimeSpan> threadSearchInterval = new ObservableValue<TimeSpan>();
         private readonly ObservableValue<Nichan.ApiClient> nichanApiClient = new ObservableValue<Nichan.ApiClient>();
         private readonly ObservableValue<TimeSpan> pastCollectServiceBackTime = new ObservableValue<TimeSpan>();
+        private readonly ObservableValue<string> pastUserAgent = new ObservableValue<string>();
 
         private readonly NichanUtils.BoardDatabase boardDatabase;
         private readonly NichanUtils.ThreadResolver threadResolver;
@@ -116,10 +119,11 @@ namespace TVTComment.Model.ChatService
                 settings.GochanApi.AuthUserAgent, settings.GochanApi.AuthX2chUA, settings.GochanApi.UserAgent
             );
             pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
+            pastUserAgent.Value = settings.PastUserAgent;
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
-                new ChatCollectServiceEntry.PastNichanChatCollectServiceEntry(this, threadResolver, pastCollectServiceBackTime),
+                new ChatCollectServiceEntry.PastNichanChatCollectServiceEntry(this, threadResolver, pastCollectServiceBackTime, pastUserAgent),
             };
             ChatTrendServiceEntries = Array.Empty<IChatTrendServiceEntry>();
 
@@ -155,6 +159,9 @@ namespace TVTComment.Model.ChatService
                     authUserAgent, authX2chUA, userAgent
                 );
             }
+        }
+        public void SetPastUserAgent(string val) { 
+            settings.PastUserAgent = val; 
         }
 
         public void SetPastCollectServiceBackTime(TimeSpan value)

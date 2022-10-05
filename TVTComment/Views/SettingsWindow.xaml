@@ -231,9 +231,11 @@
                 </GroupBox>
                 <GroupBox Header="「2ch過去ログ」コメント元設定" Grid.Row="3">
                     <StackPanel>
-                        <Grid local:Grid.Shape="auto,*:auto">
+                        <Grid local:Grid.Shape="auto,*:auto,auto">
                             <Label Content="さかのぼる時間(分)" ToolTip="放送時刻からこの時間だけ前の時刻以降に作成されたスレッドからレスを収集します" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                             <TextBox Text="{Binding NichanPastCollectServiceBackTime.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                            <Label Content="UserAgent" ToolTip="放送時刻からこの時間だけ前の時刻以降に作成されたスレッドからレスを収集します" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
+                            <TextBox Text="{Binding NichanPastUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                         </Grid>
                     </StackPanel>
                 </GroupBox>
