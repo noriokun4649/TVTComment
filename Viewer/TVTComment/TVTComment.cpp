@@ -324,22 +324,22 @@ namespace TVTComment
 
 		TVTest::ChannelInfo ci;
 		ci.Size = sizeof(ci);
-		this->tvtest->GetCurrentChannelInfo(&ci);
-
-		TVTest::ProgramInfo pi;
-		wchar_t eventName[128];
-		wchar_t eventText[512];
-		wchar_t eventExtText[2048];
-		pi.Size = sizeof(pi);
-		pi.pszEventName = eventName;
-		pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
-		pi.pszEventText = eventText;
-		pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
-		pi.pszEventExtText = eventExtText;
-		pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
-		this->tvtest->GetCurrentProgramInfo(&pi);
-
-		sendCurrentChannelIPCMessage(ci, pi);
+		if (this->tvtest->GetCurrentChannelInfo(&ci)) { //正常に取得出来た時のみ実行
+			TVTest::ProgramInfo pi;
+			wchar_t eventName[128];
+			wchar_t eventText[512];
+			wchar_t eventExtText[2048];
+			pi.Size = sizeof(pi);
+			pi.pszEventName = eventName;
+			pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
+			pi.pszEventText = eventText;
+			pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
+			pi.pszEventExtText = eventExtText;
+			pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
+			if (this->tvtest->GetCurrentProgramInfo(&pi)) {
+				sendCurrentChannelIPCMessage(ci, pi);
+			}
+		}
 	}
 
 	//TOT時刻の更新間隔より短い間隔で定期的に呼ぶ
@@ -360,21 +360,21 @@ namespace TVTComment
 			//EventIDが変わっていたら
 			TVTest::ChannelInfo ci;
 			ci.Size = sizeof(ci);
-			this->tvtest->GetCurrentChannelInfo(&ci);
-
-			wchar_t eventName[128];
-			wchar_t eventText[512];
-			wchar_t eventExtText[2048];
-			pi.Size = sizeof(pi);
-			pi.pszEventName = eventName;
-			pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
-			pi.pszEventText = eventText;
-			pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
-			pi.pszEventExtText = eventExtText;
-			pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
-			this->tvtest->GetCurrentProgramInfo(&pi);
-
-			sendCurrentChannelIPCMessage(ci, pi);
+			if (this->tvtest->GetCurrentChannelInfo(&ci)) { //正常に取得出来た時のみ実行
+				wchar_t eventName[128];
+				wchar_t eventText[512];
+				wchar_t eventExtText[2048];
+				pi.Size = sizeof(pi);
+				pi.pszEventName = eventName;
+				pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
+				pi.pszEventText = eventText;
+				pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
+				pi.pszEventExtText = eventExtText;
+				pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
+				if (this->tvtest->GetCurrentProgramInfo(&pi)){
+					sendCurrentChannelIPCMessage(ci, pi);
+				}
+			}
 		}
 		
 		//Totが変わってたら通知
@@ -420,39 +420,37 @@ namespace TVTComment
 		TVTest::ServiceInfo si;
 		si.Size = sizeof(si);
 		int serviceIdx=this->tvtest->GetService();
-		if (serviceIdx < 0) //チャンネル変更中などには情報が壊れてるので壊れてるときは抜けるように変更
-			return;
-		this->tvtest->GetServiceInfo(serviceIdx, &si);
+		if (serviceIdx >= 0 && this->tvtest->GetServiceInfo(serviceIdx, &si)){ //GetServiceInfoが正常に取得出来た時のみメッセージを送信するように変更
+			CurrentChannelIPCMessage msg;
+			msg.SpaceIndex = ci.Space;
+			msg.ChannelIndex = ci.Channel;
+			msg.RemotecontrolkeyId = ci.RemoteControlKeyID;
 
-		CurrentChannelIPCMessage msg;
-		msg.SpaceIndex = ci.Space;
-		msg.ChannelIndex = ci.Channel;
-		msg.RemotecontrolkeyId = ci.RemoteControlKeyID;
+			msg.NetworkId = ci.NetworkID;
+			msg.TransportstreamId = ci.TransportStreamID;
+			msg.ServiceId = serviceIdx == -1 ? ci.ServiceID : si.ServiceID;
+			msg.EventId = pi.EventID;
 
-		msg.NetworkId = ci.NetworkID;
-		msg.TransportstreamId = ci.TransportStreamID;
-		msg.ServiceId = serviceIdx == -1 ? ci.ServiceID : si.ServiceID;
-		msg.EventId = pi.EventID;
+			if(ci.NetworkID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とNID==0でNetworkNameも正しい値を返さない
+				msg.NetworkName.assign(utf8_utf16_conv.to_bytes(ci.szNetworkName));
+			if(ci.TransportStreamID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とTSID==0でTransportStreamNameも正しい値を返さない
+				msg.TransportstreamName.assign(utf8_utf16_conv.to_bytes(ci.szTransportStreamName));
+			if(serviceIdx!=-1)
+				msg.ServiceName.assign(utf8_utf16_conv.to_bytes(si.szServiceName));
+			msg.ChannelName.assign(utf8_utf16_conv.to_bytes(ci.szChannelName));
 
-		if(ci.NetworkID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とNID==0でNetworkNameも正しい値を返さない
-			msg.NetworkName.assign(utf8_utf16_conv.to_bytes(ci.szNetworkName));
-		if(ci.TransportStreamID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とTSID==0でTransportStreamNameも正しい値を返さない
-			msg.TransportstreamName.assign(utf8_utf16_conv.to_bytes(ci.szTransportStreamName));
-		if(serviceIdx!=-1)
-			msg.ServiceName.assign(utf8_utf16_conv.to_bytes(si.szServiceName));
-		msg.ChannelName.assign(utf8_utf16_conv.to_bytes(ci.szChannelName));
+			msg.EventName.assign(utf8_utf16_conv.to_bytes(pi.pszEventName));
+			msg.EventText.assign(utf8_utf16_conv.to_bytes(pi.pszEventText));
+			msg.EventExtText.assign(utf8_utf16_conv.to_bytes(pi.pszEventExtText));
 
-		msg.EventName.assign(utf8_utf16_conv.to_bytes(pi.pszEventName));
-		msg.EventText.assign(utf8_utf16_conv.to_bytes(pi.pszEventText));
-		msg.EventExtText.assign(utf8_utf16_conv.to_bytes(pi.pszEventExtText));
+			msg.StartTime = SystemTimeToUnixTime(pi.StartTime);
+			msg.Duration = pi.Duration;
 
-		msg.StartTime = SystemTimeToUnixTime(pi.StartTime);
-		msg.Duration = pi.Duration;
+			//最後に送ったEventIDを記憶
+			this->lastEventId = pi.EventID;
 
-		//最後に送ったEventIDを記憶
-		this->lastEventId = pi.EventID;
-
-		this->sendMessage(msg);
+			this->sendMessage(msg);
+		}
 	}
 #pragma warning(pop)
 	
