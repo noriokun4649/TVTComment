@@ -27,6 +27,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NichanApiAuthX2chUA { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanApiUserAgent { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanPastUserAgent { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiSecret { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterBearerToken { get; } = new ObservableValue<string>();
@@ -246,6 +247,7 @@ namespace TVTComment.ViewModels
             NichanApiAuthX2chUA.Value = nichan.GochanApiAuthX2UA;
             NichanApiUserAgent.Value = nichan.GochanApiUserAgent;
             NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
+            NichanPastUserAgent.Value = nichan.GochanPastUserAgent;
         }
 
         private void SyncTwitterStatus()
