@@ -18,6 +18,9 @@ TVTest ニコニコ & 5ch コメント表示プラグイン
     - NG設定にハッシュタグ、メンションの改変実装
     - Annictからハッシュタグを自動取得する機能を実装
 - NG設定に指定文字数以上をNGにする設定の実装
+- 絵文字表示への対応
+- サイドパネルへアイコンの追加
+- ニコニコ動画の2段階認証への対応
 - ニコニコ生放送・実況のコメント受信をWebSocketへ移行
     - コミュニティ・チャンネルにおける自動再接続実装
 - その他バグ修正等（幾つかは本家にマージ済み）
@@ -29,9 +32,9 @@ TVTest ニコニコ & 5ch コメント表示プラグイン
 [GitHub](https://github.com/noriokun4649/TVTComment)
 
 ## 開発環境
-- TVTest 0.10.0 a7040cdコミット分 ツールセットv142に再ターゲットしてMSVC 19.28.29335.0でコンパイル
-- LiblSDB 6e794bcコミット分 ツールセットv142に再ターゲットしてMSVC 19.28.29335.0でコンパイル
-- Microsoft Visual Studio Community 2019
+- TVTest 0.10.0 783c133コミット分 ツールセットv143に再ターゲットしてMSVC 19.33.31630.0でコンパイル
+- LiblSDB 7769294コミット分 ツールセットv143に再ターゲットしてMSVC 19.33.31630.0でコンパイル
+- Microsoft Visual Studio Community 2022
 
 ## 謝辞
 このソフトは[TvtComment](https://github.com/silane/TVTComment)から改造して作られました。また過去ログの取得は[非公式過去ログAPI](https://jikkyo.tsukumijima.net)より取得しております。
