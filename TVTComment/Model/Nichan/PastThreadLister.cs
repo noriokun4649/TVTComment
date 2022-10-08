@@ -116,6 +116,7 @@ namespace Nichan
                     {
                         Res res = datParser.PopRes();
                         if (res == null) break;
+                        if (res.Date == null) continue;
                         reses.Add(res);
                     }
                 }
