@@ -114,6 +114,7 @@ namespace TVTComment.ViewModels
                       );
 
                       nichan.SetPastCollectServiceBackTime(TimeSpan.FromMinutes(double.Parse(NichanPastCollectServiceBackTime.Value)));
+                      nichan.SetPastUserAgent(NichanPastUserAgent.Value);
 
                       SyncNichanSettings();
                   }

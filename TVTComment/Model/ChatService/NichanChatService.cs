@@ -161,7 +161,8 @@ namespace TVTComment.Model.ChatService
             }
         }
         public void SetPastUserAgent(string val) { 
-            settings.PastUserAgent = val; 
+            settings.PastUserAgent = val;
+            pastUserAgent.Value = val;
         }
 
         public void SetPastCollectServiceBackTime(TimeSpan value)
