@@ -74,7 +74,7 @@
             <settingswindowcontents:ChatCollectServiceCreationPresetSettingControl DataContext="{Binding ChatCollectServiceCreationPresetSettingControlViewModel}"/>
         </TabItem>-->
         <TabItem Header="ニコニコ実況">
-            <Grid local:Grid.Shape="*:auto,auto,auto,*,*">
+            <Grid local:Grid.Shape="*:auto,auto,auto,auto,*,*">
                 <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
 
 
@@ -100,13 +100,23 @@
                         <CheckBox IsChecked="{Binding Always184.Value}" Content="常に184コメントとして投稿をする"  Grid.Row="1"/>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="新実況生放送ID設定" Grid.Row="3">
+                <GroupBox Header="勢い設定" Grid.Row="3">
+                    <Grid local:Grid.Shape="*:*,auto,auto">
+                        <CheckBox IsChecked="{Binding EnableThirdForce.Value}" Content="旧ニコニコ実況互換の勢いAPIを利用する" Grid.Row="0"/>
+                        <Grid local:Grid.Shape="auto,*:*" Grid.Row="1" IsEnabled="{Binding EnableThirdForce.Value}">
+                            <Label Content="URI (必須)" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
+                            <TextBox Text="{Binding ThirdForceApiUri.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                        </Grid>
+                        <Button Content="適用" Command="{Binding ThirdForceApplyCommand}" HorizontalAlignment="Right" Grid.Row="2" />
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="新実況生放送ID設定" Grid.Row="4">
                     <TextBlock>
                         設定はniconicoliveids.txtから行ってください<LineBreak/>
                         設定変更はプラグイン再起動後に適用されます
                     </TextBlock>
                 </GroupBox>
-                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="4">
+                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="5">
                     <TextBlock>
                         設定はniconicojikkyouids.txtから行ってください<LineBreak/>
                         設定変更はプラグイン再起動後に適用されます

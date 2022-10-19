@@ -3,9 +3,13 @@ using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Windows.Input;
+using System.Xml;
+using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
 using TVTComment.Model.TwitterUtils.AnnictUtils;
 
@@ -39,6 +43,8 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
         public ObservableValue<bool> AnnictAutoEnable { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> Always184 { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> EnableThirdForce { get; } = new ObservableValue<bool>();
+        public ObservableValue<string> ThirdForceApiUri { get; } = new ObservableValue<string>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -53,6 +59,7 @@ namespace TVTComment.ViewModels
         public ICommand AnnictOAuthOpenCommand { get; }
         public ICommand AnnictOAuthCertificationCommand { get; }
         public ICommand AnnictAccessTokenApplyCommand { get; }
+        public ICommand ThirdForceApplyCommand { get; }
 
         public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
 
@@ -97,6 +104,57 @@ namespace TVTComment.ViewModels
                       AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "ニコニコへのログインに失敗しました" });
                   }
               });
+
+            ThirdForceApplyCommand = new DelegateCommand(async () =>
+            {
+                if (EnableThirdForce.Value)
+                {
+                    if (string.IsNullOrWhiteSpace(ThirdForceApiUri.Value))
+                    {
+                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "URIが空腹です" });
+                        return;
+                    }
+                    try
+                    {
+                        await NiconicoForceValidation.CheckAsync(ThirdForceApiUri.Value);
+
+                        niconico.EnableThirdForce = EnableThirdForce.Value;
+                        niconico.ThirdForceApiUri = ThirdForceApiUri.Value;
+                        AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "無効なURIのため適用できません\n\n" + e.Message });
+                        niconico.EnableThirdForce = false;
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "HTTPリクエストエラーが発生したため適用できません\n\n" + e.Message });
+                        niconico.EnableThirdForce = false;
+                    }
+                    catch (XmlException e)
+                    {
+                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "XMLデータとして扱えない情報のため適用できません\n\n" + e.Message });
+                        niconico.EnableThirdForce = false;
+                    }
+                    catch (ValidationException e)
+                    {
+                        AlertRequest.Raise(new Notification
+                        {
+                            Title = "TVTCommentエラー",
+                            Content = "XMLデータのバリデーションチェックに失敗しました\n形式が違うため旧ニコニコ実況互換の勢いAPIとして利用出来ません\n\n" + e.Message
+                        });
+                        niconico.EnableThirdForce = false;
+                    }
+                }
+                else
+                {
+                    niconico.EnableThirdForce = EnableThirdForce.Value;
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
+                }
+                SyncThirdForceStatus();
+
+            });
 
             ApplyNichanSettingsCommand = new DelegateCommand(() =>
               {
@@ -228,6 +286,7 @@ namespace TVTComment.ViewModels
             SyncNichanSettings();
             SyncTwitterStatus();
             SyncAnnictStatus();
+            SyncThirdForceStatus();
         }
 
         private void SyncNiconicoUserStatus()
@@ -263,6 +322,12 @@ namespace TVTComment.ViewModels
         private void SyncAnnictStatus()
         {
             AnnictAccessToken.Value = twitter.AnnictAccessToken;
+        }
+
+        private void SyncThirdForceStatus()
+        {
+            EnableThirdForce.Value = niconico.EnableThirdForce;
+            ThirdForceApiUri.Value = niconico.ThirdForceApiUri;
         }
     }
 }
