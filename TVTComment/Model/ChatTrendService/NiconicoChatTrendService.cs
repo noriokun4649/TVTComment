@@ -8,7 +8,7 @@ namespace TVTComment.Model
 {
     class NiconicoChatTrendService : IChatTrendService
     {
-        public string Name => "ニコニコ実況";
+        public string Name => "ニコニコ実況互換";
         public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 50);
 
         private readonly NiconicoUtils.JkIdResolver jkIdResolver;
@@ -24,7 +24,7 @@ namespace TVTComment.Model
             XDocument doc;
             try
             {
-                Stream stream = await httpClient.GetStreamAsync(@"http://jk.nicovideo.jp/api/v2_app/getchannels");
+                Stream stream = await httpClient.GetStreamAsync(@"https://force.norikun.jp/api/v2_app/getchannels");
                 doc = XDocument.Load(stream);
             }
             catch (HttpRequestException e)
