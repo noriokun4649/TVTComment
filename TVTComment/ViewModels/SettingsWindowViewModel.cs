@@ -125,17 +125,14 @@ namespace TVTComment.ViewModels
                     catch (InvalidOperationException e)
                     {
                         AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "無効なURIのため適用できません\n\n" + e.Message });
-                        niconico.EnableThirdForce = false;
                     }
                     catch (HttpRequestException e)
                     {
                         AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "HTTPリクエストエラーが発生したため適用できません\n\n" + e.Message });
-                        niconico.EnableThirdForce = false;
                     }
                     catch (XmlException e)
                     {
                         AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "XMLデータとして扱えない情報のため適用できません\n\n" + e.Message });
-                        niconico.EnableThirdForce = false;
                     }
                     catch (ValidationException e)
                     {
@@ -144,7 +141,6 @@ namespace TVTComment.ViewModels
                             Title = "TVTCommentエラー",
                             Content = "XMLデータのバリデーションチェックに失敗しました\n形式が違うため旧ニコニコ実況互換の勢いAPIとして利用出来ません\n\n" + e.Message
                         });
-                        niconico.EnableThirdForce = false;
                     }
                 }
                 else
