@@ -11,6 +11,8 @@ namespace TVTComment.Model.ChatService
         public string UserId { get; set; } = "";
         public string Password { get; set; } = "";
         public bool Always184 { get; set; } = true;
+        public bool EnableThirdForce { get; set; } = false;
+        public string ThirdForceApiUri { get; set; } = "";
     }
 
     class NiconicoChatService : IChatService
@@ -40,6 +42,16 @@ namespace TVTComment.Model.ChatService
             get { return settings.Always184; }
             set { settings.Always184 = value; }
         }
+        public bool EnableThirdForce
+        {
+            get { return settings.EnableThirdForce; }
+            set { settings.EnableThirdForce = value; }
+        }
+        public string ThirdForceApiUri
+        {
+            get { return settings.ThirdForceApiUri; }
+            set { settings.ThirdForceApiUri = value; }
+        }
         public bool IsLoggedin { get; private set; }
 
         public NiconicoChatService(
@@ -65,7 +77,7 @@ namespace TVTComment.Model.ChatService
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, loginSession),
                 new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver, loginSession)
             };
-            ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NewNiconicoChatTrendServiceEntry(liveIdResolver, loginSession) };
+            ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NiconicoChatTrendServiceEntry(jkIdResolver, settings) };
         }
 
         /// <summary>
