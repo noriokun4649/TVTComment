@@ -244,6 +244,12 @@ namespace TVTComment.ViewModels
         private void CloseApplication()
         {
             Window window = Application.Current.MainWindow;
+            //最小化時は最小化前のBoundsを保存
+            if (window.WindowState == WindowState.Minimized)
+            {
+                WindowPosition.Width = window.RestoreBounds.Width;
+                WindowPosition.Height = window.RestoreBounds.Height;
+            }
             window.Close();
         }
 
