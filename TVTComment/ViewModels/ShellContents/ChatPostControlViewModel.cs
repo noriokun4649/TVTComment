@@ -15,6 +15,8 @@ namespace TVTComment.ViewModels.ShellContents
     {
         private readonly Model.TVTComment model;
 
+        public ObservableValue<string> PostSplitterLeftSize => model.ChatPostSplitterLeftSize;
+        public ObservableValue<string> PostSplitterRightSize => model.ChatPostSplitterRightSize;
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableValue<string> PostText { get; } = new ObservableValue<string>("");
         public ObservableValue<string> PostMailText { get; } = new ObservableValue<string>("");

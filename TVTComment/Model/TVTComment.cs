@@ -55,6 +55,8 @@ namespace TVTComment.Model
         public ReadOnlyCollection<ChatService.IChatService> ChatServices { get; private set; }
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableCollection<string> ChatPostMailTextExamples { get; } = new ObservableCollection<string>();
+        public ObservableValue<string> ChatPostSplitterLeftSize { get; private set; }
+        public ObservableValue<string> ChatPostSplitterRightSize { get; private set; }
 
         /// <summary>
         /// アプリを閉じたいときに<see cref="Initialize"/>を呼んだのと同じ同期コンテキスト上で呼ばれるので、絶対に登録し、thisのDisposeを呼ぶようにする
@@ -171,6 +173,12 @@ namespace TVTComment.Model
             var chatPostMailTextExamples = Settings.ChatPostMailTextExamples;
             ChatPostMailTextExamples.AddRange(chatPostMailTextExamples);
 
+            //スプリッター幅設定
+            var chatPostSplitterRightSize = Settings.ChatPostSplitterRightSize;
+            var chatPostSplitterLeftSize = Settings.ChatPostSplitterLeftSize;
+            ChatPostSplitterRightSize = new ObservableValue<string>(Settings.ChatPostSplitterRightSize);
+            ChatPostSplitterLeftSize = new ObservableValue<string>(Settings.ChatPostSplitterLeftSize);
+
             ipcModule.StartReceiving();
             State = TVTCommentState.Working;
         }
@@ -238,6 +246,10 @@ namespace TVTComment.Model
 
             //メール欄例保存
             Settings.ChatPostMailTextExamples = ChatPostMailTextExamples.ToArray();
+            
+            //スプリッター幅保存
+            Settings.ChatPostSplitterRightSize = ChatPostSplitterRightSize.Value;
+            Settings.ChatPostSplitterLeftSize = ChatPostSplitterLeftSize.Value;
 
             //各種SubModule破棄
             CommandModule?.Dispose();
