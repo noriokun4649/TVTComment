@@ -61,11 +61,21 @@ namespace TVTComment.Model.NiconicoUtils
             var httpClient = new HttpClient();
             var stream = await httpClient.GetStreamAsync(uri);
             var doc = XDocument.Load(stream);
-            doc.Validate(schemas, (o, e) =>
-            {
-                message = e.Message;
+            var xrs = new XmlReaderSettings();
+            xrs.ValidationType = ValidationType.Schema;
+            xrs.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
+            xrs.Schemas = schemas;
+            xrs.ValidationEventHandler += (o, s) => {
+                message = s.Message;
                 errors = true;
-            });
+            };
+
+            using (XmlReader xr = XmlReader.Create(doc.CreateReader(), xrs))
+            {
+                while (xr.Read()) { }
+
+            }
+
             if (errors)
             {
                 throw new ValidationException(message);
