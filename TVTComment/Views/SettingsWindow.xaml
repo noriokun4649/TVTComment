@@ -102,12 +102,16 @@
                 </GroupBox>
                 <GroupBox Header="勢い設定" Grid.Row="3">
                     <Grid local:Grid.Shape="*:*,auto,auto">
-                        <CheckBox IsChecked="{Binding EnableThirdForce.Value}" Content="旧ニコニコ実況互換の勢いAPIを利用する" Grid.Row="0"/>
-                        <Grid local:Grid.Shape="auto,*:*" Grid.Row="1" IsEnabled="{Binding EnableThirdForce.Value}">
+                        <TextBlock  Grid.Row="0">
+                        「勢い」欄が空欄の場合、既定のAPIに異常がある可能性があります<LineBreak/>
+                         この設定で参照する勢いAPIを変更出来ます
+                        </TextBlock>
+                        <CheckBox IsChecked="{Binding EnableThirdForce.Value}" Content="旧ニコニコ実況互換の勢いAPIを利用する" Grid.Row="1"/>
+                        <Grid local:Grid.Shape="auto,*:*" Grid.Row="2" IsEnabled="{Binding EnableThirdForce.Value}">
                             <Label Content="URI (必須)" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                             <TextBox Text="{Binding ThirdForceApiUri.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
                         </Grid>
-                        <Button Content="適用" Command="{Binding ThirdForceApplyCommand}" HorizontalAlignment="Right" Grid.Row="2" />
+                        <Button Content="適用" Command="{Binding ThirdForceApplyCommand}" HorizontalAlignment="Right" Grid.Row="3" />
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="新実況生放送ID設定" Grid.Row="4">
