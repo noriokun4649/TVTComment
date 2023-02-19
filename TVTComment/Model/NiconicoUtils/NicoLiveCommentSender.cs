@@ -283,7 +283,7 @@ namespace TVTComment.Model.NiconicoUtils
             httpClient.Dispose();
             messageColl.Dispose();
             errorMesColl.Dispose();
-            clientWebSocket.Dispose();
+            if (clientWebSocket != null) clientWebSocket.Dispose();
         }
     }
 }
