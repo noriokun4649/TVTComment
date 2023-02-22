@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace TVTComment.Model.NiconicoUtils
 {
     class NiconicoCommentJsonParser
     {
-        private string MyUserId;
 
-        public NiconicoCommentJsonParser(string myUserId)
+        public NiconicoCommentJsonParser()
         {
-            MyUserId = myUserId;
         }
 
         private readonly Queue<NiconicoCommentXmlTag> chats = new Queue<NiconicoCommentXmlTag>();
@@ -45,9 +44,10 @@ namespace TVTComment.Model.NiconicoUtils
             string userId = chat.GetProperty("user_id").ToString();
             int premium = chat.TryGetProperty("premium", out var pre) ? pre.GetInt32() : 0 ;
             int anonymity = chat.TryGetProperty("anonymity", out var ano) ? ano.GetInt32() : 0;
+            bool myPost = chat.TryGetProperty("yourpost", out var my) ? my.GetInt32() == 1 : false;
             if (premium == 2 && text.Equals("/disconnect")) //放送のAlertで切断メッセージが来たらException
                 throw new ConnectionDisconnectNicoLiveCommentReceiverException();
-            return new ChatNiconicoCommentXmlTag(text,thread,no,vpos,date,dateUsec,mail,userId,premium,anonymity,0,userId.Equals(MyUserId));
+            return new ChatNiconicoCommentXmlTag(text,thread,no,vpos,date,dateUsec,mail,userId,premium,anonymity,0, myPost);
         }
     }
 }

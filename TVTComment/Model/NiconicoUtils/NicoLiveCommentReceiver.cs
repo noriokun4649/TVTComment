@@ -57,7 +57,7 @@ namespace TVTComment.Model.NiconicoUtils
         public NicoLiveCommentReceiver(NiconicoLoginSession niconicoLoginSession)
         {
             NiconicoLoginSession = niconicoLoginSession;
-            parser = new NiconicoCommentJsonParser(NiconicoLoginSession.UserId);
+            parser = new NiconicoCommentJsonParser();
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoLoginSession.Cookie);
             httpClient = new HttpClient(handler);
@@ -74,7 +74,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="InvalidPlayerStatusNicoLiveCommentReceiverException"></exception>
         /// <exception cref="NetworkNicoLiveCommentReceiverException"></exception>
         /// <exception cref="ConnectionClosedNicoLiveCommentReceiverException"></exception>
-        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation] CancellationToken cancellationToken, string postKey)
         {
             using var timer = new System.Timers.Timer(60000);
             using var _ = cancellationToken.Register(() =>
@@ -146,7 +146,7 @@ namespace TVTComment.Model.NiconicoUtils
                     ws.Dispose();
                 });
 
-                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0 ,\"threadkey\":\""+ postKey +"\"}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
                 try
                 {

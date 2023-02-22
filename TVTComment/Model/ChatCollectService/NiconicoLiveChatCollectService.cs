@@ -40,6 +40,7 @@ namespace TVTComment.Model.ChatCollectService
 
         private string originalLiveId;
         private string liveId = "";
+        private BlockingCollection<String> myPostKey = new();
 
         private readonly HttpClient httpClient;
         private readonly Task chatCollectTask;
@@ -70,7 +71,7 @@ namespace TVTComment.Model.ChatCollectService
             commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
 
             chatCollectTask = CollectChat(cancel.Token);
-            chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancel.Token);
+            chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancel.Token, myPostKey);
         }
 
         public string GetInformationText()
@@ -157,7 +158,10 @@ namespace TVTComment.Model.ChatCollectService
 
             try
             {
-                await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancel))
+                //コメント投稿(視聴)セッションのRoomメッセージでPostKeyを取得出来るまでロックして待機
+                myPostKey.TryTake(out var postKey, Timeout.Infinite);
+                
+                await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancel, postKey))
                 {
                     commentTagQueue.Enqueue(tag);
                 }

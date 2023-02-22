@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ObservableUtils;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -63,6 +64,8 @@ namespace TVTComment.Model.ChatCollectService
         private Task chatCollectTask = null;
         private Task chatSessionTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
+
+        private BlockingCollection<String> myPostKey = new();
 
         public NewNiconicoJikkyouChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
@@ -129,8 +132,8 @@ namespace TVTComment.Model.ChatCollectService
                 if (this.originalLiveId != "")
                 {
                     cancellationTokenSource = new CancellationTokenSource();
+                    chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancellationTokenSource.Token, myPostKey);
                     chatCollectTask = CollectChat(originalLiveId, cancellationTokenSource.Token);
-                    chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancellationTokenSource.Token);
                 }
             }
 
@@ -191,7 +194,10 @@ namespace TVTComment.Model.ChatCollectService
 
             try
             {
-                await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancellationToken))
+                //コメント投稿(視聴)セッションのRoomメッセージでPostKeyを取得出来るまでロックして待機
+                myPostKey.TryTake(out var postKey, Timeout.Infinite);
+
+                await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancellationToken, postKey))
                 {
                     commentTagQueue.Enqueue(tag);
                 }
@@ -240,6 +246,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public void Dispose()
         {
+            using (myPostKey)
             using (commentReceiver)
             using (commentSender)
             using (httpClient)
