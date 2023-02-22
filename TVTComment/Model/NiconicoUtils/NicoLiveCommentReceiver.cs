@@ -146,7 +146,7 @@ namespace TVTComment.Model.NiconicoUtils
                     ws.Dispose();
                 });
 
-                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0 ,\"threadkey\":\""+ postKey +"\"}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
                 try
                 {

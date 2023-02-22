@@ -76,7 +76,7 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
 
-        public async Task ConnectWatchSession(string liveId, CancellationToken cancellationToken)
+        public async Task ConnectWatchSession(string liveId, CancellationToken cancellationToken, BlockingCollection<String> postKey)
         {
             var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
             var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
@@ -178,6 +178,10 @@ namespace TVTComment.Model.NiconicoUtils
                     case "postCommentResult":
                         var postres = json.GetProperty("data").GetProperty("chat").GetProperty("content").GetString();
                         errorMesColl.Add(postres);
+                        break;
+                    case "room":
+                        var yourPostKey = json.GetProperty("data").GetProperty("yourPostKey").GetString();
+                        postKey.Add(yourPostKey);
                         break;
                 }
             }
