@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace TVTComment.Model
                 Stream stream = await httpClient.GetStreamAsync(apiUri);
                 doc = XDocument.Load(stream);
             }
-            catch (HttpRequestException e)
+            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
             {
                 throw new ChatTrendServiceException("勢い値データのタウンロードに失敗しました", e);
             }
