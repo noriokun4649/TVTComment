@@ -186,7 +186,7 @@ namespace TVTComment.Model.ChatCollectService
             }
 
             // 2ch.scがダメだった場合、5ch.netのスクレイピング
-            string gochanUrl = $"https://{server}.5ch.net/test/read.cgi/{board}/{thread}/";
+            string gochanUrl = $"https://{server}.5ch.net/test/read.cgi/c/{board}/{thread}/";
             string response;
 
             System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {gochanUrl}");
