@@ -198,12 +198,18 @@ namespace TVTComment.Model.ChatCollectService
             if (e != null)
             {
                 errored = true;
-                if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is ChatCollectException)
-                    throw e.InnerExceptions[0];
-                else if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is HttpRequestException)
-                    throw new ChatCollectException($"収集スレッドリストの更新処理でHTTPエラーが発生しました\n{e}", e);
-                else
-                    resCollectTask.Wait();
+                switch (e.InnerExceptions.Count)
+                {
+                    case 1 when e.InnerExceptions[0] is ChatCollectException:
+                        throw e.InnerExceptions[0];
+                    case 1 when e.InnerExceptions[0] is HttpRequestException:
+                        throw new ChatCollectException($"収集スレッドリストの更新処理でHTTPエラーが発生しました\n{e}", e);
+                    case 1 when e.InnerExceptions[0] is InvalidOperationException:
+                        throw new ChatCollectException($"収集スレッドリストの更新処理でHTTPエラーが発生しました\n{e}", e);
+                    default:
+                        resCollectTask.Wait();
+                        break;
+                }
             }
 
             var newChats = chats.Where(x => (time - x.Time).Duration() < TimeSpan.FromSeconds(15)).ToArray();//投稿から15秒以内のレスのみ返す
