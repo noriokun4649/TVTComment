@@ -226,23 +226,6 @@
                         <TextBox Text="{Binding NichanThreadSearchInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="5chAPI設定" Grid.Row="2">
-                    <StackPanel>
-                        <TextBlock>「2chDAT」コメント元で使用</TextBlock>
-                        <Grid local:Grid.Shape="auto,*:auto,auto,auto,auto,auto">
-                            <Label Content="HMKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
-                            <TextBox Text="{Binding NichanApiHmKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
-                            <Label Content="AppKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
-                            <TextBox Text="{Binding NichanApiAppKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
-                            <Label Content="AuthUserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
-                            <TextBox Text="{Binding NichanApiAuthUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
-                            <Label Content="AuthX2chUA" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="3"/>
-                            <TextBox Text="{Binding NichanApiAuthX2chUA.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="3"/>
-                            <Label Content="UserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="4"/>
-                            <TextBox Text="{Binding NichanApiUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="4"/>
-                        </Grid>
-                    </StackPanel>
-                </GroupBox>
                 <GroupBox Header="「2ch過去ログ」コメント元設定" Grid.Row="3">
                     <StackPanel>
                         <Grid local:Grid.Shape="auto,*:auto,auto">
