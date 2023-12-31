@@ -52,10 +52,7 @@ namespace Nichan
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var start = startTime - backTime;
-
-            var test = await threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken)
-                .ConfigureAwait(false);
-
+            
             var threads = (await threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken).ConfigureAwait(false))
                 .Where(x => keywords.Length == 0 || keywords.Any(keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)));
 
