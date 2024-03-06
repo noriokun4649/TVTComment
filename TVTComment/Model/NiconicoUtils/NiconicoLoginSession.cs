@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.NiconicoUtils
@@ -125,6 +126,9 @@ namespace TVTComment.Model.NiconicoUtils
                     var twofactorHandler = new HttpClientHandler();
                     twofactorHandler.CookieContainer.Add(loginCookie);
                     using var twofactor = new HttpClient(twofactorHandler);
+                    var assembly = Assembly.GetExecutingAssembly().GetName();
+                    var ua = assembly.Name + "/" + assembly.Version.ToString(3);
+                    twofactor.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
                     var twofactorRes = await twofactor.PostAsync(location,twofactorContent).ConfigureAwait(false);
                     userid = twofactorRes.Headers.GetValues("x-niconico-id").FirstOrDefault();
                     handler.CookieContainer.Add(twofactorHandler.CookieContainer.GetCookies(new Uri(location)));
