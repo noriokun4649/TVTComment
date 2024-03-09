@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
@@ -51,7 +51,7 @@ jobs:
           Copy-Item -Path README.md -Destination "Asset/misc/README edit noriokun4649.txt"
 
       - name: Upload asset to Artifacts (TVTComment.exe)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TvtComment
           if-no-files-found: error
@@ -69,13 +69,13 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Build (tvtcomment.tvtp)
         run: msbuild Viewer/Viewer.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}" /p:CodePage=932
@@ -87,7 +87,7 @@ jobs:
           Copy-Item -Path Viewer/${{ matrix.platform }}/Release/TvtComment.tvtp -Destination Asset/
 
       - name: Upload asset to Artifacts (tvtcomment.tvtp)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TvtComment_${{ matrix.platform }}
           if-no-files-found: error
