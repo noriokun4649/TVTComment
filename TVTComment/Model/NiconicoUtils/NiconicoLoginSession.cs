@@ -45,6 +45,7 @@ namespace TVTComment.Model.NiconicoUtils
         private readonly string onetimepassword;
         private CookieCollection cookie = null;
         private string userid = null;
+        private readonly string ua;
 
         public bool IsLoggedin => cookie != null;
         /// <summary>
@@ -78,6 +79,8 @@ namespace TVTComment.Model.NiconicoUtils
             this.mail = mail;
             this.password = password;
             this.onetimepassword = onetimePassword;
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            ua = assembly.Name + "/" + assembly.Version.ToString(3);
         }
 
         /// <summary>
@@ -96,6 +99,7 @@ namespace TVTComment.Model.NiconicoUtils
             var handler = new HttpClientHandler();
             handler.AllowAutoRedirect = false;
             using var client = new HttpClient(handler);
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
 
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
@@ -126,8 +130,6 @@ namespace TVTComment.Model.NiconicoUtils
                     var twofactorHandler = new HttpClientHandler();
                     twofactorHandler.CookieContainer.Add(loginCookie);
                     using var twofactor = new HttpClient(twofactorHandler);
-                    var assembly = Assembly.GetExecutingAssembly().GetName();
-                    var ua = assembly.Name + "/" + assembly.Version.ToString(3);
                     twofactor.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
                     var twofactorRes = await twofactor.PostAsync(location,twofactorContent).ConfigureAwait(false);
                     userid = twofactorRes.Headers.GetValues("x-niconico-id").FirstOrDefault();
