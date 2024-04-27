@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="ソース ファイル\zlib1">
-      <UniqueIdentifier>{5a74d873-c2b4-4b00-8ba3-be86276f4237}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\zlib1">
-      <UniqueIdentifier>{9147c1f8-1ffa-4bb7-9223-4c201674d7d9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -44,42 +38,6 @@
     </ClInclude>
     <ClInclude Include="NicoJK\OsdCompositor.h">
       <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\inffast.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\inffixed.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\inflate.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\inftrees.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\ioapi.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\unzip.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\zconf.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\zlib.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\zutil.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\crc32.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\gzguts.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
-    </ClInclude>
-    <ClInclude Include="NicoJK\zlib1\iowin32.h">
-      <Filter>ヘッダー ファイル\zlib1</Filter>
     </ClInclude>
     <ClInclude Include="TVTComment\IPC\IPCMessage\ChannelListIPCMessage.h">
       <Filter>ヘッダー ファイル</Filter>
@@ -160,33 +118,6 @@
     </ClCompile>
     <ClCompile Include="NicoJK\OsdCompositor.cpp">
       <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\inftrees.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\ioapi.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\unzip.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\zutil.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\adler32.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\crc32.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\inffast.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\inflate.c">
-      <Filter>ソース ファイル\zlib1</Filter>
-    </ClCompile>
-    <ClCompile Include="NicoJK\zlib1\iowin32.c">
-      <Filter>ソース ファイル\zlib1</Filter>
     </ClCompile>
     <ClCompile Include="TVTComment\IPC\IPCMessage\ChannelListIPCMessage.cpp">
       <Filter>ソース ファイル</Filter>
