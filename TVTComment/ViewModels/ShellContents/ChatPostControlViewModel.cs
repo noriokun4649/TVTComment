@@ -60,7 +60,8 @@ namespace TVTComment.ViewModels.ShellContents
                     x is Model.ChatCollectService.NiconicoChatCollectService ||
                     x is Model.ChatCollectService.NiconicoLiveChatCollectService ||
                     x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService ||
-                    x is Model.ChatCollectService.TwitterLiveChatCollectService
+                    x is Model.ChatCollectService.TwitterLiveChatCollectService ||
+                    x is Model.ChatCollectService.NxJikkyoChatCollectService
                 )
             );
             IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
@@ -141,6 +142,15 @@ namespace TVTComment.ViewModels.ShellContents
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
                     new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
+                );
+            }
+            else if (SelectedPostService.Value is Model.ChatCollectService.NxJikkyoChatCollectService)
+            {
+                if (string.IsNullOrWhiteSpace(PostText.Value))
+                    return;
+                model.ChatCollectServiceModule.PostChat(
+                    SelectedPostService.Value,
+                    new Model.ChatCollectService.NxJikkyoChatCollectService.ChatPostObject(PostText.Value, mail184)
                 );
             }
             else
