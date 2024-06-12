@@ -45,7 +45,7 @@ namespace TVTComment.Model.NxJikkyoUtils
 
                 var msUri = new Uri("wss://nx-jikkyo.tsukumijima.net/api/v1/channels/jk"+ jkid +"/ws/comment");
 
-                //await Task.Delay(1000, cancellationToken);
+                await Task.Delay(1000).ConfigureAwait(false);
 
                 using var ws = new ClientWebSocket();
 

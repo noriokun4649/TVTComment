@@ -170,6 +170,7 @@ namespace TVTComment.Model.NxJikkyoUtils
                 "\"font\":\"" + font + "\"" +
                 "}}", CancellationToken.None);
 
+            await Task.Delay(1000).ConfigureAwait(false);
             errorMesColl.TryTake(out var text, Timeout.Infinite); //結果を待つ
             switch (text)
             {
