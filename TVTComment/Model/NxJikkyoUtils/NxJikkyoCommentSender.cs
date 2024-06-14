@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -14,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using TVTComment.Model.NiconicoUtils;
+using static TVTComment.Model.ChatCollectService.NxJikkyoChatCollectService;
 
 namespace TVTComment.Model.NxJikkyoUtils
 {
@@ -31,10 +30,10 @@ namespace TVTComment.Model.NxJikkyoUtils
         }
 
 
-        public async Task ConnectWatchSession(int jkid, BlockingCollection<String> postKey, CancellationToken cancellationToken)
+        public async Task ConnectWatchSession(int jkid, BlockingCollection<RoomObject> postKey, CancellationToken cancellationToken)
         {
             var webScoketUri = new Uri("wss://nx-jikkyo.tsukumijima.net/api/v1/channels/jk"+jkid+"/ws/watch");
-            
+
             clientWebSocket = new ClientWebSocket();
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
 
@@ -134,7 +133,8 @@ namespace TVTComment.Model.NxJikkyoUtils
                         var vposBaseTime = json.GetProperty("data").GetProperty("vposBaseTime").GetString();
                         openTime = ((DateTimeOffset)DateTime.Parse(vposBaseTime)).ToUnixTimeSeconds();
                         var yourPostKey = json.GetProperty("data").GetProperty("yourPostKey").GetString();
-                        postKey.Add(yourPostKey);
+                        var threadId = json.GetProperty("data").GetProperty("threadId").GetString();
+                        postKey.Add(new(yourPostKey,threadId));
                         break;
                 }
             }

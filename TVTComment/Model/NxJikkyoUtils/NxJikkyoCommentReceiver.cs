@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using TVTComment.Model.NiconicoUtils;
+using static TVTComment.Model.ChatCollectService.NxJikkyoChatCollectService;
 
 namespace TVTComment.Model.NxJikkyoUtils
 {
@@ -30,7 +31,7 @@ namespace TVTComment.Model.NxJikkyoUtils
         /// <exception cref="InvalidPlayerStatusNicoLiveCommentReceiverException"></exception>
         /// <exception cref="NetworkNicoLiveCommentReceiverException"></exception>
         /// <exception cref="ConnectionClosedNicoLiveCommentReceiverException"></exception>
-        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(int jkid, string postKey, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(int jkid, RoomObject room, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var timer = new System.Timers.Timer(60000);
             using var _ = cancellationToken.Register(() =>
@@ -41,11 +42,9 @@ namespace TVTComment.Model.NxJikkyoUtils
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
                 var random = new Random();
-                await Task.Delay((disconnectedCount * 5000) + random.Next(0, 101)); //再試行時に立て続けのリクエストにならないようにする
+                await Task.Delay((disconnectedCount * 5000) + random.Next(0, 101), cancellationToken).ConfigureAwait(false); //再試行時に立て続けのリクエストにならないようにする
 
                 var msUri = new Uri("wss://nx-jikkyo.tsukumijima.net/api/v1/channels/jk"+ jkid +"/ws/comment");
-
-                await Task.Delay(1000).ConfigureAwait(false);
 
                 using var ws = new ClientWebSocket();
 
@@ -70,7 +69,7 @@ namespace TVTComment.Model.NxJikkyoUtils
                     ws.Dispose();
                 });
 
-                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ jkid + "\",\"version\":\"20061206\",\"user_id\":\"\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0 ,\"threadkey\":\""+ postKey +"\"}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ room.threadId + "\",\"version\":\"20061206\",\"user_id\":\"\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0 ,\"threadkey\":\""+ room.yourPostKey +"\"}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
                 try
                 {

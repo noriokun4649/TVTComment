@@ -1,14 +1,8 @@
-﻿using ObservableUtils;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Reflection;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using TVTComment.Model.NiconicoUtils;
@@ -18,6 +12,17 @@ namespace TVTComment.Model.ChatCollectService
 {
     class NxJikkyoChatCollectService : IChatCollectService
     {
+        public class RoomObject
+        {
+            public string yourPostKey { get; } 
+            public string threadId { get; }
+            public RoomObject(string yourPostKey, string threadId)
+            {
+                this.yourPostKey=yourPostKey;
+                this.threadId=threadId;
+            }
+        }
+
         public class ChatPostObject : BasicChatPostObject
         {
             public string Mail { get; }
@@ -63,7 +68,7 @@ namespace TVTComment.Model.ChatCollectService
         private Task chatSessionTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
 
-        private BlockingCollection<String> myPostKey = new();
+        private BlockingCollection<RoomObject> myPostKey = new();
 
         public NxJikkyoChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
