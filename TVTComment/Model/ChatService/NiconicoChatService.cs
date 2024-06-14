@@ -75,7 +75,8 @@ namespace TVTComment.Model.ChatService
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, liveIdResolver, loginSession),
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, loginSession),
-                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver, loginSession)
+                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver, loginSession),
+                new ChatCollectServiceEntry.NxJikkyoChatCollectServiceEntry(this, jkIdResolver)
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NiconicoChatTrendServiceEntry(jkIdResolver, settings) };
         }

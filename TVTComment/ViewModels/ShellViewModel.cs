@@ -274,6 +274,7 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.NxJikkyoChatCollectServiceEntry _:
                         model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
                         break;
                     case Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _:
