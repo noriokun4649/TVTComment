@@ -11,6 +11,7 @@
         public byte ChatOpacity { get; set; } = 255;
         public int ChatPreserveCount { get; set; } = 10000;
         public bool ClearChatsOnChannelChange { get; set; } = false;
+        public bool NgCommentNotShow { get; set; } = false;
         public bool UiFlashingDeterrence { get; set; } = false;
         public Serialization.ChatModRuleEntity[] ChatModRules { get; set; } = System.Array.Empty<Serialization.ChatModRuleEntity>();
         public bool UseDefaultChatCollectService { get; set; } = false;
