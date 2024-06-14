@@ -82,8 +82,9 @@
         </GroupBox>
 
         <GroupBox Header="ログ設定">
-            <Grid local:Grid.Shape="*:auto">
-                <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="0">チャンネル変更時にログをクリアする</CheckBox>
+            <Grid local:Grid.Shape="*:auto,auto">
+                <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">チャンネル変更時にログをクリアする</CheckBox>
+                <CheckBox IsChecked="{Binding NgCommentNotShow.Value}" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="1">NGコメントのログを非表示にする</CheckBox>
             </Grid>
         </GroupBox>
         <Button Content="その他設定">

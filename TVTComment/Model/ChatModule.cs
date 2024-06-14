@@ -28,6 +28,7 @@ namespace TVTComment.Model
 
         public ObservableValue<int> ChatPreserveCount { get; } = new ObservableValue<int>();
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> NgCommentNotShow { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> UiFlashingDeterrence { get; } = new ObservableValue<bool>();
 
         private readonly ObservableCollection<Chat> chats = new ObservableCollection<Chat>();
@@ -88,7 +89,11 @@ namespace TVTComment.Model
                     while (chats.Count >= ChatPreserveCount.Value)
                         chats.RemoveAt(0);
                 }
-                chats.Add(chat);
+
+                if (!chat.Ng || !NgCommentNotShow.Value)
+                {
+                    chats.Add(chat);
+                }                
 
                 if (!chat.Ng)
                 {
@@ -131,6 +136,7 @@ namespace TVTComment.Model
         {
             ChatPreserveCount.Value = settings.ChatPreserveCount;
             ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
+            NgCommentNotShow.Value = settings.NgCommentNotShow;
             UiFlashingDeterrence.Value = settings.UiFlashingDeterrence;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
             var entities = settings.ChatModRules;
@@ -225,6 +231,7 @@ namespace TVTComment.Model
         {
             settings.ChatPreserveCount = ChatPreserveCount.Value;
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
+            settings.NgCommentNotShow = NgCommentNotShow.Value;
             settings.UiFlashingDeterrence = UiFlashingDeterrence.Value;
             settings.ChatModRules = chatModRules.Select(x =>
             {
