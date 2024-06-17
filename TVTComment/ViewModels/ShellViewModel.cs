@@ -244,6 +244,12 @@ namespace TVTComment.ViewModels
         private void CloseApplication()
         {
             Window window = Application.Current.MainWindow;
+            //最小化時は最小化前のBoundsを保存
+            if (window.WindowState == WindowState.Minimized)
+            {
+                WindowPosition.Width = window.RestoreBounds.Width;
+                WindowPosition.Height = window.RestoreBounds.Height;
+            }
             window.Close();
         }
 
@@ -268,6 +274,7 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.NxJikkyoChatCollectServiceEntry _:
                         model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
                         break;
                     case Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _:

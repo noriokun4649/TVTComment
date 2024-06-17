@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -12,77 +11,28 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using TVTComment.Model.NiconicoUtils;
+using static TVTComment.Model.ChatCollectService.NxJikkyoChatCollectService;
 
-namespace TVTComment.Model.NiconicoUtils
+namespace TVTComment.Model.NxJikkyoUtils
 {
-
-    [Serializable]
-    class NicoLiveCommentSenderException : Exception
+    class NxJikkyoCommentSender : IDisposable
     {
-        public NicoLiveCommentSenderException() { }
-        public NicoLiveCommentSenderException(string message) : base(message) { }
-        public NicoLiveCommentSenderException(string message, Exception inner) : base(message, inner) { }
-        protected NicoLiveCommentSenderException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-    }
-
-    class InvalidPlayerStatusNicoLiveCommentSenderException : NicoLiveCommentSenderException
-    {
-        public string PlayerStatus { get; }
-        public InvalidPlayerStatusNicoLiveCommentSenderException(string playerStatus)
-        {
-            PlayerStatus = playerStatus;
-        }
-    }
-
-    class NetworkNicoLiveCommentSenderException : NicoLiveCommentSenderException
-    {
-        public NetworkNicoLiveCommentSenderException(Exception inner) : base(null, inner)
-        {
-        }
-    }
-    class ResponseFormatNicoLiveCommentSenderException : NicoLiveCommentSenderException
-    {
-        public string Response { get; }
-
-        public ResponseFormatNicoLiveCommentSenderException(string response)
-        {
-            Response = response;
-        }
-    }
-
-    class ResponseErrorNicoLiveCommentSenderException : NicoLiveCommentSenderException
-    {
-    }
-
-    class NicoLiveCommentSender : IDisposable
-    {
-        private readonly HttpClient httpClient;
-        private BlockingCollection<string[]> messageColl = new();
         private BlockingCollection<string> errorMesColl = new();
         private readonly string ua;
-        private int openTime;
+        private long openTime;
         private ClientWebSocket clientWebSocket;
 
-        public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
+        public NxJikkyoCommentSender()
         {
-            var handler = new HttpClientHandler();
-            handler.CookieContainer.Add(niconicoSession.Cookie);
-            httpClient = new HttpClient(handler);
             var assembly = Assembly.GetExecutingAssembly().GetName();
             ua = assembly.Name + "/" + assembly.Version.ToString(3);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
         }
 
 
-        public async Task ConnectWatchSession(string liveId, CancellationToken cancellationToken, BlockingCollection<String> postKey)
+        public async Task ConnectWatchSession(int jkid, BlockingCollection<RoomObject> postKey, CancellationToken cancellationToken)
         {
-            var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
-            var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
-            var webScoketUri = new Uri(webSocketUrl);
-            int.TryParse(Regex.Matches(resp, @"&quot;beginTime&quot;:(?<time>[0-9]+),").First().Groups["time"].Value, out var openTime);
-            this.openTime = openTime;
+            var webScoketUri = new Uri("wss://nx-jikkyo.tsukumijima.net/api/v1/channels/jk"+jkid+"/ws/watch");
 
             clientWebSocket = new ClientWebSocket();
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
@@ -180,8 +130,11 @@ namespace TVTComment.Model.NiconicoUtils
                         errorMesColl.Add(postres);
                         break;
                     case "room":
+                        var vposBaseTime = json.GetProperty("data").GetProperty("vposBaseTime").GetString();
+                        openTime = ((DateTimeOffset)DateTime.Parse(vposBaseTime)).ToUnixTimeSeconds();
                         var yourPostKey = json.GetProperty("data").GetProperty("yourPostKey").GetString();
-                        postKey.Add(yourPostKey);
+                        var threadId = json.GetProperty("data").GetProperty("threadId").GetString();
+                        postKey.Add(new(yourPostKey,threadId));
                         break;
                 }
             }
@@ -197,7 +150,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// <summary>
         /// コメントを投稿する
         /// </summary>
-        public async Task Send(string liveId, string message, string mail)
+        public async Task Send(int jkId, string message, string mail)
         {
             if (clientWebSocket.State == WebSocketState.Closed) throw new NicoLiveCommentSenderException("視聴セッションは切断されています");
             var arrayMail = mail.Split(" ");
@@ -217,6 +170,7 @@ namespace TVTComment.Model.NiconicoUtils
                 "\"font\":\"" + font + "\"" +
                 "}}", CancellationToken.None);
 
+            await Task.Delay(1000).ConfigureAwait(false);
             errorMesColl.TryTake(out var text, Timeout.Infinite); //結果を待つ
             switch (text)
             {
@@ -284,8 +238,6 @@ namespace TVTComment.Model.NiconicoUtils
 
         public void Dispose()
         {
-            httpClient.Dispose();
-            messageColl.Dispose();
             errorMesColl.Dispose();
             if (clientWebSocket != null) clientWebSocket.Dispose();
         }

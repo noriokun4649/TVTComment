@@ -91,7 +91,7 @@ namespace TVTComment.Model
         private void DisposeService(IChatTrendService chatTrendService, Timer timer)
         {
             ManualResetEvent waitHandle = new ManualResetEvent(false);
-            timer.Dispose(waitHandle);//Timer破棄
+            timer?.Dispose(waitHandle);//Timer破棄
             waitHandle.WaitOne();
             chatTrendService.Dispose();//ChatTrendService破棄
         }

@@ -130,7 +130,7 @@ namespace TVTComment
 			
 			commentWindow->AddChat(utf8_utf16_conv.from_bytes(chat.text).c_str(), chat.color.GetColorRef(),
 				(chat.position == Chat::Position::Default) ? CCommentWindow::CHAT_POS_DEFAULT : (chat.position == Chat::Position::Bottom) ? CCommentWindow::CHAT_POS_SHITA : CCommentWindow::CHAT_POS_UE,
-				(chat.size == Chat::Size::Small) ? CCommentWindow::CHAT_SIZE_SMALL : CCommentWindow::CHAT_SIZE_DEFAULT);
+				(chat.size == Chat::Size::Small) ? CCommentWindow::CHAT_SIZE_SMALL : CCommentWindow::CHAT_SIZE_DEFAULT,chat.self);
 			commentWindow->ScatterLatestChats(1000);
 		}
 		else if (auto message = dynamic_cast<const ChannelSelectIPCMessage *>(&msg))
@@ -187,7 +187,7 @@ namespace TVTComment
 	{
 	}
 
-	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM /* lParam */)
 	{
 		switch (uMsg)
 		{
@@ -242,14 +242,7 @@ namespace TVTComment
 			{
 			case UserInteractionRequestType::ConnectFail:
 			{
-				wchar_t *t = (wchar_t *)lParam;
 				std::wstring text = L"TVTComment設定ウィンドウとの接続に失敗しました。プラグインを無効化します。";
-				/*if (t != nullptr)
-				{
-					text += L"\n\n";
-					text += t;
-					delete[] t;
-				}*/
 				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment表示側エラー", 0);
 				break;
 			}
@@ -264,14 +257,7 @@ namespace TVTComment
 				break;
 			case UserInteractionRequestType::FetalErrorInTask:
 			{
-				wchar_t *t = (wchar_t *)lParam;
 				std::wstring text = L"TVTComment設定ウィンドウからの受信処理で致命的な問題が発生しました。\nプラグインを無効化します。";
-				/*if (t != nullptr)
-				{
-					text += L"\n\n";
-					text += t;
-					delete[] t;
-				}*/
 				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment表示側エラー", 0);
 				break;
 			}
@@ -338,22 +324,22 @@ namespace TVTComment
 
 		TVTest::ChannelInfo ci;
 		ci.Size = sizeof(ci);
-		this->tvtest->GetCurrentChannelInfo(&ci);
-
-		TVTest::ProgramInfo pi;
-		wchar_t eventName[128];
-		wchar_t eventText[512];
-		wchar_t eventExtText[2048];
-		pi.Size = sizeof(pi);
-		pi.pszEventName = eventName;
-		pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
-		pi.pszEventText = eventText;
-		pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
-		pi.pszEventExtText = eventExtText;
-		pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
-		this->tvtest->GetCurrentProgramInfo(&pi);
-
-		sendCurrentChannelIPCMessage(ci, pi);
+		if (this->tvtest->GetCurrentChannelInfo(&ci)) { //正常に取得出来た時のみ実行
+			TVTest::ProgramInfo pi;
+			wchar_t eventName[128];
+			wchar_t eventText[512];
+			wchar_t eventExtText[2048];
+			pi.Size = sizeof(pi);
+			pi.pszEventName = eventName;
+			pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
+			pi.pszEventText = eventText;
+			pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
+			pi.pszEventExtText = eventExtText;
+			pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
+			if (this->tvtest->GetCurrentProgramInfo(&pi)) {
+				sendCurrentChannelIPCMessage(ci, pi);
+			}
+		}
 	}
 
 	//TOT時刻の更新間隔より短い間隔で定期的に呼ぶ
@@ -374,21 +360,21 @@ namespace TVTComment
 			//EventIDが変わっていたら
 			TVTest::ChannelInfo ci;
 			ci.Size = sizeof(ci);
-			this->tvtest->GetCurrentChannelInfo(&ci);
-
-			wchar_t eventName[128];
-			wchar_t eventText[512];
-			wchar_t eventExtText[2048];
-			pi.Size = sizeof(pi);
-			pi.pszEventName = eventName;
-			pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
-			pi.pszEventText = eventText;
-			pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
-			pi.pszEventExtText = eventExtText;
-			pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
-			this->tvtest->GetCurrentProgramInfo(&pi);
-
-			sendCurrentChannelIPCMessage(ci, pi);
+			if (this->tvtest->GetCurrentChannelInfo(&ci)) { //正常に取得出来た時のみ実行
+				wchar_t eventName[128];
+				wchar_t eventText[512];
+				wchar_t eventExtText[2048];
+				pi.Size = sizeof(pi);
+				pi.pszEventName = eventName;
+				pi.MaxEventName = sizeof(eventName) / sizeof(eventName[0]);
+				pi.pszEventText = eventText;
+				pi.MaxEventText = sizeof(eventText) / sizeof(eventText[0]);
+				pi.pszEventExtText = eventExtText;
+				pi.MaxEventExtText = sizeof(eventExtText) / sizeof(eventExtText[0]);
+				if (this->tvtest->GetCurrentProgramInfo(&pi)){
+					sendCurrentChannelIPCMessage(ci, pi);
+				}
+			}
 		}
 		
 		//Totが変わってたら通知
@@ -434,39 +420,37 @@ namespace TVTComment
 		TVTest::ServiceInfo si;
 		si.Size = sizeof(si);
 		int serviceIdx=this->tvtest->GetService();
-		if (serviceIdx < 0) //チャンネル変更中などには情報が壊れてるので壊れてるときは抜けるように変更
-			return;
-		this->tvtest->GetServiceInfo(serviceIdx, &si);
+		if (serviceIdx >= 0 && this->tvtest->GetServiceInfo(serviceIdx, &si)){ //GetServiceInfoが正常に取得出来た時のみメッセージを送信するように変更
+			CurrentChannelIPCMessage msg;
+			msg.SpaceIndex = ci.Space;
+			msg.ChannelIndex = ci.Channel;
+			msg.RemotecontrolkeyId = ci.RemoteControlKeyID;
 
-		CurrentChannelIPCMessage msg;
-		msg.SpaceIndex = ci.Space;
-		msg.ChannelIndex = ci.Channel;
-		msg.RemotecontrolkeyId = ci.RemoteControlKeyID;
+			msg.NetworkId = ci.NetworkID;
+			msg.TransportstreamId = ci.TransportStreamID;
+			msg.ServiceId = serviceIdx == -1 ? ci.ServiceID : si.ServiceID;
+			msg.EventId = pi.EventID;
 
-		msg.NetworkId = ci.NetworkID;
-		msg.TransportstreamId = ci.TransportStreamID;
-		msg.ServiceId = serviceIdx == -1 ? ci.ServiceID : si.ServiceID;
-		msg.EventId = pi.EventID;
+			if(ci.NetworkID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とNID==0でNetworkNameも正しい値を返さない
+				msg.NetworkName.assign(utf8_utf16_conv.to_bytes(ci.szNetworkName));
+			if(ci.TransportStreamID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とTSID==0でTransportStreamNameも正しい値を返さない
+				msg.TransportstreamName.assign(utf8_utf16_conv.to_bytes(ci.szTransportStreamName));
+			if(serviceIdx!=-1)
+				msg.ServiceName.assign(utf8_utf16_conv.to_bytes(si.szServiceName));
+			msg.ChannelName.assign(utf8_utf16_conv.to_bytes(ci.szChannelName));
 
-		if(ci.NetworkID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とNID==0でNetworkNameも正しい値を返さない
-			msg.NetworkName.assign(utf8_utf16_conv.to_bytes(ci.szNetworkName));
-		if(ci.TransportStreamID!=0)//チャンネルスキャンしてない（File系BonDriverなど）とTSID==0でTransportStreamNameも正しい値を返さない
-			msg.TransportstreamName.assign(utf8_utf16_conv.to_bytes(ci.szTransportStreamName));
-		if(serviceIdx!=-1)
-			msg.ServiceName.assign(utf8_utf16_conv.to_bytes(si.szServiceName));
-		msg.ChannelName.assign(utf8_utf16_conv.to_bytes(ci.szChannelName));
+			msg.EventName.assign(utf8_utf16_conv.to_bytes(pi.pszEventName));
+			msg.EventText.assign(utf8_utf16_conv.to_bytes(pi.pszEventText));
+			msg.EventExtText.assign(utf8_utf16_conv.to_bytes(pi.pszEventExtText));
 
-		msg.EventName.assign(utf8_utf16_conv.to_bytes(pi.pszEventName));
-		msg.EventText.assign(utf8_utf16_conv.to_bytes(pi.pszEventText));
-		msg.EventExtText.assign(utf8_utf16_conv.to_bytes(pi.pszEventExtText));
+			msg.StartTime = SystemTimeToUnixTime(pi.StartTime);
+			msg.Duration = pi.Duration;
 
-		msg.StartTime = SystemTimeToUnixTime(pi.StartTime);
-		msg.Duration = pi.Duration;
+			//最後に送ったEventIDを記憶
+			this->lastEventId = pi.EventID;
 
-		//最後に送ったEventIDを記憶
-		this->lastEventId = pi.EventID;
-
-		this->sendMessage(msg);
+			this->sendMessage(msg);
+		}
 	}
 #pragma warning(pop)
 	
@@ -475,14 +459,10 @@ namespace TVTComment
 		try
 		{
 			this->isClosing = true;
-			//sendMessage(CloseIPCMessage());
 		}
 		catch (...) {}
 		try
 		{
-			//cancel.cancel();
-			//if (this->ipcTunnel)
-			//	this->ipcTunnel->Cancel();
 			while (!this->asyncTask.is_done())
 			{
 				sendMessage(CloseIPCMessage());

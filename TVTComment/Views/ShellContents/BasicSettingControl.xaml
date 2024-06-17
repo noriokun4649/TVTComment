@@ -17,65 +17,76 @@
                 <behaviors:DisposeDataContextAction/>
             </i:EventTrigger>
         </i:Interaction.Triggers>
-        
-        <DockPanel>
-            <Label DockPanel.Dock="Left">コメント透過度</Label>
-            <TextBlock Text="{Binding ElementName=ChatOpacitySlider,Path=Value}" DockPanel.Dock="Left"/>
-            <Slider Name="ChatOpacitySlider" Value="{Binding Path=ChatOpacity.Value}" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"/>
-        </DockPanel>
 
-        <DockPanel>
-            <Label DockPanel.Dock="Left">ウィンドウ透過度</Label>
-            <TextBlock Text="{Binding ElementName=WindowOpacitySlider,Path=Value,StringFormat={}{0:N1}}" DockPanel.Dock="Left"/>
-            <Slider Name="WindowOpacitySlider" Value="{Binding WindowOpacity.Value}" Minimum="0.3" Maximum="1" LargeChange="0.1" SmallChange="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center" TickFrequency="0.1"/>
-        </DockPanel>
+        <GroupBox Header="コメント設定">
+            <Grid local:Grid.Shape="*:auto,auto">
+                <DockPanel Grid.Row="0">
+                    <Label DockPanel.Dock="Left">コメント透過度</Label>
+                    <TextBlock Text="{Binding ElementName=ChatOpacitySlider,Path=Value}" DockPanel.Dock="Left"/>
+                    <Slider Name="ChatOpacitySlider" Value="{Binding Path=ChatOpacity.Value}" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"/>
+                </DockPanel>
 
-        <CheckBox IsChecked="{Binding WindowTopmost.Value,Mode=TwoWay}" VerticalAlignment="Center">最前面表示</CheckBox>
+                <DockPanel Grid.Row="1">
+                    <Label>コメント表示時刻調整</Label>
+                    <TextBlock Text="{Binding ChatCollectTimeAdjustment.Value}" VerticalAlignment="Center"/>
+                    <Button Command="{Binding AddChatCollectTimeAdjustment}">
+                        <Button.CommandParameter>
+                            <sys:Int32>-60</sys:Int32>
+                        </Button.CommandParameter> -60s
+                    </Button>
+                    <Button Command="{Binding AddChatCollectTimeAdjustment}">
+                        <Button.CommandParameter>
+                            <sys:Int32>-1</sys:Int32>
+                        </Button.CommandParameter> -1s
+                    </Button>
+                    <Button Command="{Binding SetChatCollectTimeAdjustment}">
+                        <Button.CommandParameter>
+                            <sys:Int32>0</sys:Int32>
+                        </Button.CommandParameter> =0
+                    </Button>
+                    <Button Command="{Binding AddChatCollectTimeAdjustment}">
+                        <Button.CommandParameter>
+                            <sys:Int32>+1</sys:Int32>
+                        </Button.CommandParameter> +1s
+                    </Button>
+                    <Button Command="{Binding AddChatCollectTimeAdjustment}">
+                        <Button.CommandParameter>
+                            <sys:Int32>+60</sys:Int32>
+                        </Button.CommandParameter> +60s
+                    </Button>
+                    <FrameworkElement/>
+                </DockPanel>
+            </Grid>
 
-        <DockPanel>
-            <Label>コメント表示時刻調整</Label>
-            <TextBlock Text="{Binding ChatCollectTimeAdjustment.Value}" VerticalAlignment="Center"/>
-            <Button Command="{Binding AddChatCollectTimeAdjustment}">
-                <Button.CommandParameter>
-                    <sys:Int32>-60</sys:Int32>
-                </Button.CommandParameter>-60s
-            </Button>
-            <Button Command="{Binding AddChatCollectTimeAdjustment}">
-                <Button.CommandParameter>
-                    <sys:Int32>-1</sys:Int32>
-                </Button.CommandParameter> -1s
-            </Button>
-            <Button Command="{Binding SetChatCollectTimeAdjustment}">
-                    <Button.CommandParameter>
-                        <sys:Int32>0</sys:Int32>
-                    </Button.CommandParameter>=0
-                </Button>
-            <Button Command="{Binding AddChatCollectTimeAdjustment}">
-                <Button.CommandParameter>
-                    <sys:Int32>+1</sys:Int32>
-                </Button.CommandParameter> +1s
-            </Button>
-            <Button Command="{Binding AddChatCollectTimeAdjustment}">
-                <Button.CommandParameter>
-                    <sys:Int32>+60</sys:Int32>
-                </Button.CommandParameter>+60s
-            </Button>
-            <FrameworkElement/>
-        </DockPanel>
+        </GroupBox>
 
-        <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">チャンネル変更時にログをクリアする</CheckBox>
-
-        <CheckBox IsChecked="{Binding UiFlashingDeterrence.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">UIのチラつきを抑える (タイトルから時間が省略されます)</CheckBox>
-
-        <DockPanel>
-            <Label DockPanel.Dock="Left">ウィンドウフォントサイズ</Label>
-            <Slider
+        <GroupBox Header="ウィンドウ設定">
+            <Grid local:Grid.Shape="*:auto,auto,auto,auto">
+                <CheckBox IsChecked="{Binding WindowTopmost.Value,Mode=TwoWay}" VerticalAlignment="Center" Grid.Row="0">最前面表示</CheckBox>
+                <DockPanel Grid.Row="1">
+                    <Label DockPanel.Dock="Left">ウィンドウ透過度</Label>
+                    <TextBlock Text="{Binding ElementName=WindowOpacitySlider,Path=Value,StringFormat={}{0:N1}}" DockPanel.Dock="Left"/>
+                    <Slider Name="WindowOpacitySlider" Value="{Binding WindowOpacity.Value}" Minimum="0.3" Maximum="1" LargeChange="0.1" SmallChange="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center" TickFrequency="0.1"/>
+                </DockPanel>
+                <DockPanel Grid.Row="2">
+                    <Label DockPanel.Dock="Left">ウィンドウフォントサイズ</Label>
+                    <Slider
                 Name="WindowFontSizeSlider"
                 Value="{Binding WindowFontSize.Value}"
                 Minimum="8" Maximum="30" LargeChange="1" SmallChange="1"
                 TickPlacement="BottomRight" VerticalAlignment="Center"/>
-        </DockPanel>
+                </DockPanel>
 
+                <CheckBox IsChecked="{Binding UiFlashingDeterrence.Value}" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="3">UIのチラつきを抑える (タイトルから時間が省略されます)</CheckBox>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="ログ設定">
+            <Grid local:Grid.Shape="*:auto,auto">
+                <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">チャンネル変更時にログをクリアする</CheckBox>
+                <CheckBox IsChecked="{Binding NgCommentNotShow.Value}" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="1">NGコメントのログを非表示にする</CheckBox>
+            </Grid>
+        </GroupBox>
         <Button Content="その他設定">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="Click">
@@ -88,7 +99,7 @@
             バージョン: <Run Text="{Binding Version, Mode=OneTime}"/>
         </TextBlock>
         <TextBlock>
-            © 2017 silane / © 2020-2021 noriokun4649
+            © 2017 silane / © 2020-2024 noriokun4649
         </TextBlock>
     </StackPanel>
 </UserControl>

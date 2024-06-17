@@ -36,12 +36,14 @@ namespace TVTComment.Model.ChatCollectService
         public PastNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry chatCollectServiceEntry,
             NichanUtils.INichanThreadSelector threadSelector,
-            TimeSpan threadSelectionUpdateInterval
+            TimeSpan threadSelectionUpdateInterval,
+            string pastUserAgent
         ) : base(TimeSpan.FromSeconds(10))
         {
             ServiceEntry = chatCollectServiceEntry;
             this.threadSelector = threadSelector;
             this.threadSelectionUpdateInterval = threadSelectionUpdateInterval;
+            httpClient.DefaultRequestHeaders.Add("User-Agent", pastUserAgent);
 
             resCollectLoopTask = Task.Run(() => ResCollectLoop(resCollectLoopTaskCancellation.Token));
         }
@@ -152,7 +154,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             Nichan.Thread ret;
             // まず2ch.scのdatから取得する
-            string datUrl = $"http://{server}.2ch.sc/{board}/dat/{thread}.dat";
+            string datUrl = $"https://{server}.2ch.sc/{board}/dat/{thread}.dat";
             string datResponse = null;
 
             System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {datUrl}");
@@ -184,7 +186,7 @@ namespace TVTComment.Model.ChatCollectService
             }
 
             // 2ch.scがダメだった場合、5ch.netのスクレイピング
-            string gochanUrl = $"http://{server}.5ch.net/test/read.cgi/{board}/{thread}/";
+            string gochanUrl = $"https://{server}.5ch.net/test/read.cgi/c/{board}/{thread}/";
             string response;
 
             System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {gochanUrl}");

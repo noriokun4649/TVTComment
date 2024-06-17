@@ -1,15 +1,13 @@
-name: TVTComment build and release
+name: TVTComment build
 
 on:
+  pull_request:
+    branches:
+      - master
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
   workflow_dispatch:
-    inputs:
-      manual:
-        description: 'Please type version. Ex:"v*"'
-        required: true
-        default: ""
 
 jobs:
   exe-build:
@@ -52,13 +50,6 @@ jobs:
           Copy-Item -Path LICENSE -Destination Asset/misc/LICENSE.txt
           Copy-Item -Path README.md -Destination "Asset/misc/README edit noriokun4649.txt"
 
-      - name: Before CHANGELOG get
-        shell: powershell
-        run: |
-          $env:before = git log -2 --reverse --format='%H' CHANGELOG.md
-          $env:before = $env:before.Substring(0,40)
-          git checkout $env:before CHANGELOG.md
-          Copy-Item -Path CHANGELOG.md -Destination Asset/misc/OLDCHANGELOG.txt
       - name: Upload asset to Artifacts (TVTComment.exe)
         uses: actions/upload-artifact@v4
         with:
@@ -101,52 +92,3 @@ jobs:
           name: TvtComment_${{ matrix.platform }}
           if-no-files-found: error
           path: Asset/
-
-  release:
-    needs:
-      - exe-build
-      - tvtp-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: Asset/
-
-      - name: Get version from tag
-        id: ver
-        if: github.event.inputs.manual == ''
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/v}" >> $GITHUB_ENV
-
-      - name: Get version from input
-        if: steps.ver.conclusion == 'skipped' && github.event.inputs.manual != ''
-        run: echo "RELEASE_VERSION=${{github.event.inputs.manual}}" >> $GITHUB_ENV
-
-      - name: Get CHANGELOG
-        run: |
-          echo 'CHANGELOG<<EOF' >> $GITHUB_ENV
-          diff -u --strip-trailing-cr Asset/TvtComment/misc/OLDCHANGELOG.txt Asset/TvtComment/misc/CHANGELOG.txt | grep ^+ | grep -v ^+++ | sed s/^+// >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-
-      - name: Move misc files
-        run: |
-          mv Asset/TvtComment/misc/* Asset/ 
-          rm Asset/OLDCHANGELOG.txt
-          rmdir Asset/TvtComment/misc
-
-      - name: Repack assets
-        run: |
-          cd Asset
-          7z a -r ../TvtComment_v${{ env.RELEASE_VERSION }}.zip *
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.RELEASE_VERSION }}
-          name: Release v${{ env.RELEASE_VERSION }}
-          body: ${{ env.CHANGELOG }}
-          draft: false
-          prerelease: false
-          files: TvtComment_v${{ env.RELEASE_VERSION }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

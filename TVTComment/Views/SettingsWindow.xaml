@@ -9,7 +9,7 @@
         xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         mc:Ignorable="d"
         prism:ViewModelLocator.AutoWireViewModel="True"
-        Title="SettingWindow" Height="550" Width="400" WindowStyle="ToolWindow">
+        Title="SettingWindow" Height="580" Width="400" WindowStyle="ToolWindow">
 
     <Window.Resources>
         <converters:ColorToStringConverter x:Key="StringToColorConverter"/>
@@ -74,32 +74,53 @@
             <settingswindowcontents:ChatCollectServiceCreationPresetSettingControl DataContext="{Binding ChatCollectServiceCreationPresetSettingControlViewModel}"/>
         </TabItem>-->
         <TabItem Header="ニコニコ実況">
-            <Grid local:Grid.Shape="*:auto,auto,*,*">
+            <Grid local:Grid.Shape="*:auto,auto,auto,auto,*,*">
                 <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
 
 
                 <GroupBox Header="アカウント" Grid.Row="1">
-                    <Grid local:Grid.Shape="auto,*:*,*,auto">
+                    <Grid local:Grid.Shape="auto,*:*,*,*,auto">
 
                         <Label Content="メールアドレス" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                         <TextBox Text="{Binding NiconicoUserId.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
                         <Label Content="パスワード" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
                         <TextBox Text="{Binding NiconicoPassword.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
+                        <Label Content="ワンタイムパスワード" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
+                        <TextBox Text="{Binding NiconicoOneTimePassword.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
 
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3">
 
                             <TextBlock Text="{Binding NiconicoLoginStatus.Value}" VerticalAlignment="Center"/>
                             <Button Content="ログイン" Command="{Binding LoginNiconicoCommand}" HorizontalAlignment="Right"/>
                         </StackPanel>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="新実況生放送ID設定" Grid.Row="2">
+                <GroupBox Header="コメント投稿" Grid.Row="2">
+                    <Grid local:Grid.Shape="*:*">
+                        <CheckBox IsChecked="{Binding Always184.Value}" Content="常に184コメントとして投稿をする"  Grid.Row="1"/>
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="勢い設定" Grid.Row="3">
+                    <Grid local:Grid.Shape="*:*,auto,auto">
+                        <TextBlock  Grid.Row="0">
+                        「勢い」欄が空欄の場合、既定のAPIに異常がある可能性があります<LineBreak/>
+                         この設定で参照する勢いAPIを変更出来ます
+                        </TextBlock>
+                        <CheckBox IsChecked="{Binding EnableThirdForce.Value}" Content="旧ニコニコ実況互換の勢いAPIを利用する" Grid.Row="1"/>
+                        <Grid local:Grid.Shape="auto,*:*" Grid.Row="2" IsEnabled="{Binding EnableThirdForce.Value}">
+                            <Label Content="URI (必須)" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
+                            <TextBox Text="{Binding ThirdForceApiUri.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                        </Grid>
+                        <Button Content="適用" Command="{Binding ThirdForceApplyCommand}" HorizontalAlignment="Right" Grid.Row="3" />
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="新実況生放送ID設定" Grid.Row="4">
                     <TextBlock>
                         設定はniconicoliveids.txtから行ってください<LineBreak/>
                         設定変更はプラグイン再起動後に適用されます
                     </TextBlock>
                 </GroupBox>
-                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="3">
+                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="5">
                     <TextBlock>
                         設定はniconicojikkyouids.txtから行ってください<LineBreak/>
                         設定変更はプラグイン再起動後に適用されます
@@ -205,28 +226,13 @@
                         <TextBox Text="{Binding NichanThreadSearchInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="5chAPI設定" Grid.Row="2">
-                    <StackPanel>
-                        <TextBlock>「2chDAT」コメント元で使用</TextBlock>
-                        <Grid local:Grid.Shape="auto,*:auto,auto,auto,auto,auto">
-                            <Label Content="HMKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
-                            <TextBox Text="{Binding NichanApiHmKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
-                            <Label Content="AppKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
-                            <TextBox Text="{Binding NichanApiAppKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
-                            <Label Content="AuthUserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
-                            <TextBox Text="{Binding NichanApiAuthUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
-                            <Label Content="AuthX2chUA" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="3"/>
-                            <TextBox Text="{Binding NichanApiAuthX2chUA.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="3"/>
-                            <Label Content="UserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="4"/>
-                            <TextBox Text="{Binding NichanApiUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="4"/>
-                        </Grid>
-                    </StackPanel>
-                </GroupBox>
                 <GroupBox Header="「2ch過去ログ」コメント元設定" Grid.Row="3">
                     <StackPanel>
-                        <Grid local:Grid.Shape="auto,*:auto">
+                        <Grid local:Grid.Shape="auto,*:auto,auto">
                             <Label Content="さかのぼる時間(分)" ToolTip="放送時刻からこの時間だけ前の時刻以降に作成されたスレッドからレスを収集します" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                             <TextBox Text="{Binding NichanPastCollectServiceBackTime.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                            <Label Content="UserAgent" ToolTip="過去ログ取得に利用するUserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
+                            <TextBox Text="{Binding NichanPastUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                         </Grid>
                     </StackPanel>
                 </GroupBox>

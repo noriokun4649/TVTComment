@@ -20,10 +20,11 @@ namespace TVTComment.Model
         public bool Ng { get; private set; }
         public string UserId { get; private set; }
         public int Number { get; private set; }
+        public bool IsSelfComment { get; private set; }
 
         public ChatCollectServiceEntry.IChatCollectServiceEntry SourceService { get; private set; }
 
-        public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number)
+        public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number, bool isSelfComment = false)
         {
             Time = time;
             Text = text;
@@ -32,6 +33,7 @@ namespace TVTComment.Model
             Color = color;
             UserId = userId;
             Number = number;
+            IsSelfComment = isSelfComment;
         }
 
         public void SetText(string text)
@@ -62,6 +64,11 @@ namespace TVTComment.Model
         public void SetSourceService(ChatCollectServiceEntry.IChatCollectServiceEntry sourceService)
         {
             SourceService = sourceService;
+        }
+
+        public void SetSelfComment(bool isSelfComment)
+        {
+            IsSelfComment = isSelfComment;
         }
     }
 }

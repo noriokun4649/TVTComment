@@ -72,7 +72,7 @@ namespace TVTComment.Model.NiconicoUtils
                     color = namedColor.Value.Value;
             }
 
-            return new Chat(time, tag.Text, position, size, color, tag.UserId, tag.No);
+            return new Chat(time, tag.Text, position, size, color, tag.UserId, tag.No, tag.SelfComment);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -38,18 +39,20 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
         public async Task<string> GetTokenAsync(string token)
         {
             const string endpoint = "oauth/token";
-            using var web = new WebClient();
-            web.Headers.Add("User-Agent", UA);
-            var postBodyParameters = new NameValueCollection();
-            postBodyParameters.Add("client_id", ClientId);
-            postBodyParameters.Add("client_secret", ClientSecret);
-            postBodyParameters.Add("grant_type", "authorization_code");
-            postBodyParameters.Add("redirect_uri", RedirectUri);
-            postBodyParameters.Add("code", token);
+            using var web = new HttpClient();
+            var postBodyParameters = new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        {"client_id", ClientId},
+                        {"client_secret", ClientSecret},
+                        {"grant_type", "authorization_code"},
+                        {"redirect_uri", RedirectUri},
+                        {"code", token}
+                    });
+            web.DefaultRequestHeaders.Add("User-Agent", UA);
             try
             {
-                var vs = await web.UploadValuesTaskAsync(@$"{HOST}{endpoint}", postBodyParameters);
-                var json = JsonDocument.Parse(Encoding.UTF8.GetString(vs)).RootElement;
+                var respons = await web.PostAsync(@$"{HOST}{endpoint}", postBodyParameters);
+                var json = JsonDocument.Parse(await respons.Content.ReadAsStringAsync()).RootElement;
                 return json.GetProperty("access_token").GetString();
             }
             catch (WebException e)

@@ -68,7 +68,7 @@ bool CViewer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
 	pInfo->pszPluginName  = L"TvtComment";
-	pInfo->pszCopyright   = L"(c) 2017 silane, 2020-2022 noriokun4649";
+	pInfo->pszCopyright   = L"(c) 2017 silane / 2022-2024 noriokun4649";
 	pInfo->pszDescription = L"実況コメントをオーバーレイ表示";
 	return true;
 }
@@ -120,7 +120,7 @@ bool CViewer::Initialize()
 	ci.Size = sizeof(ci);
 	ci.Flags = 0;
 	ci.Flags = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE; 
-	ci.State = 0;
+	ci.State = TVTest::PLUGIN_COMMAND_STATE_DISABLED;
 
 	ci.ID = static_cast<int>(TVTComment::Command::ShowWindow);
 	ci.pszText = L"ShowWindow";
@@ -298,6 +298,7 @@ void CViewer::LoadFromIni()
 	} else {
 		s_.tvtCommentPath = path;
 	}
+	s_.hideCommentHighlight = GetPrivateProfileInt(TEXT("TvtComment"), TEXT("hideCommentHighlight"), 0, iniFileName_.c_str()) != 0;
 #pragma endregion
 }
 
@@ -517,6 +518,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		commentWindow_.SetDisplayDuration(s_.commentDuration);
 		commentWindow_.SetDrawLineCount(s_.commentDrawLineCount);
 		commentWindow_.SetOpacity(static_cast<BYTE>(s_.commentOpacity));
+		commentWindow_.SetCommentHighlight(s_.hideCommentHighlight);
 		if (commentWindow_.GetOpacity() != 0 && m_pApp->GetPreview()) {
 			HWND hwndContainer = FindVideoContainer();
 			commentWindow_.Create(hwndContainer);
@@ -534,6 +536,8 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 		// TVTest起動直後はVideo Containerウィンドウの配置が定まっていないようなので再度整える
 		SetTimer(hwnd, TIMER_DONE_SIZE, 500, nullptr);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), 0);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), 0);
 		return TRUE;
 	case WM_DESTROY:
 		commentWindow_.Destroy();
@@ -545,6 +549,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		ToggleStreamCallback(false);
 		m_pApp->SetWindowMessageCallback(nullptr);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
 		hDummy_ = nullptr;
 		break;
 #pragma region TVTComment

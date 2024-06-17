@@ -53,9 +53,9 @@
         </Grid>
         <Grid Visibility="{Binding IsShowingNiconicoPostForm.Value, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="{Binding PostSplitterLeftSize.Value,Mode=TwoWay}"/>
                 <ColumnDefinition Width="3"/>
-                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="{Binding PostSplitterRightSize.Value,Mode=TwoWay}"/>
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
             <Grid.Resources>

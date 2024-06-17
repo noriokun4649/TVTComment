@@ -26,12 +26,16 @@ namespace TVTComment.Model.ChatCollectService
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public override bool CanPost => false;
 
+        private readonly string myUserId;
+
         public TsukumijimaJikkyoApiChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
-            NiconicoUtils.JkIdResolver jkIdResolver
+            NiconicoUtils.JkIdResolver jkIdResolver,
+            NiconicoUtils.NiconicoLoginSession session
         ) : base(TimeSpan.FromSeconds(10))
         {
             ServiceEntry = serviceEntry;
+            myUserId = session?.UserId ?? "";
             this.jkIdResolver = jkIdResolver;
         }
 
@@ -194,7 +198,7 @@ namespace TVTComment.Model.ChatCollectService
                     string content = chatObj.GetProperty("content").GetString();
 
                     var chatTag = new NiconicoUtils.ChatNiconicoCommentXmlTag(
-                        content, thread, no, vpos, date, dateUsec, mail, userId, premium, anonymity, abone
+                        content, thread, no, vpos, date, dateUsec, mail, userId, premium, anonymity, abone, userId.Equals(myUserId)
                     );
 
                     lock (chats)

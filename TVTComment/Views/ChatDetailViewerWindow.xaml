@@ -26,6 +26,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
@@ -37,7 +38,8 @@
         <Label Content="大きさ" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="6"/>
         <Label Content="コメ番" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
         <Label Content="NG" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="7"/>
-        <Label Content="コメント" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="8"/>
+        <Label Content="自分" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="8"/>
+        <Label Content="コメント" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="9"/>
 
         <TextBox Text="{Binding Time,Mode=OneTime,StringFormat=yyyy/MM/dd(ddd) HH:mm:ss}" IsReadOnly="True" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
         <TextBox Text="{Binding SourceService.Name,Mode=OneTime}" IsReadOnly="True" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
@@ -52,6 +54,7 @@
         <TextBox Text="{Binding Position,Mode=OneTime}" IsReadOnly="True" VerticalAlignment="Center" Grid.Column="1" Grid.Row="5"/>
         <TextBox Text="{Binding Size,Mode=OneTime}" IsReadOnly="True" VerticalAlignment="Center" Grid.Column="1" Grid.Row="6"/>
         <TextBox Text="{Binding Ng,Mode=OneTime}" IsReadOnly="True" VerticalAlignment="Center" Grid.Column="1" Grid.Row="7"/>
-        <TextBox Text="{Binding Text,Mode=OneTime}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Grid.Column="1" Grid.Row="8"/>
+        <TextBox Text="{Binding IsSelfComment,Mode=OneTime}" IsReadOnly="True" VerticalAlignment="Center" Grid.Column="1" Grid.Row="8"/>
+        <TextBox Text="{Binding Text,Mode=OneTime}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Grid.Column="1" Grid.Row="9"/>
     </Grid>
 </Window>

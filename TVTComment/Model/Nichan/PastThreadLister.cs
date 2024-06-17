@@ -22,11 +22,12 @@ namespace Nichan
         /// <param name="board">板</param>
         /// <param name="oneOfTheServer">板が所属したことがあるサーバーのうちの一つ</param>
         /// <param name="backTime">この値だけ過去に戻った時刻以降に作られたスレから検索する。過去スレ一覧は作成時間からしか取得できないため。</param>
-        public PastThreadLister(string board, string oneOfTheServer, TimeSpan backTime)
+        public PastThreadLister(string board, string oneOfTheServer, TimeSpan backTime, string pastUserAgent)
         {
             if (backTime <= TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(backTime), $"{nameof(backTime)} must be positive");
             this.backTime = backTime;
+            httpClient.DefaultRequestHeaders.Add("User-Agent", pastUserAgent);
             threadListRetriever = new ArchivedThreadListRetriever(board, oneOfTheServer);
         }
 
@@ -51,6 +52,7 @@ namespace Nichan
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var start = startTime - backTime;
+            
             var threads = (await threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken).ConfigureAwait(false))
                 .Where(x => keywords.Length == 0 || keywords.Any(keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)));
 
@@ -115,6 +117,7 @@ namespace Nichan
                     {
                         Res res = datParser.PopRes();
                         if (res == null) break;
+                        if (res.Date == null) continue;
                         reses.Add(res);
                     }
                 }
@@ -126,6 +129,9 @@ namespace Nichan
                 if (!threadUrl.EndsWith('/'))
                     threadUrl += "/";
                 threadUrl += "l3";
+
+                // クラシック版へ
+                threadUrl = threadUrl.Replace("read.cgi", "read.cgi/c");
 
                 string response;
 

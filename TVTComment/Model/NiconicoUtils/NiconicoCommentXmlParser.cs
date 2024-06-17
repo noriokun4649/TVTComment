@@ -13,14 +13,16 @@ namespace TVTComment.Model.NiconicoUtils
         private bool inThreadTag;
         private readonly Queue<NiconicoCommentXmlTag> chats = new Queue<NiconicoCommentXmlTag>();
         private string buffer;
+        private readonly string myUserId;
 
         /// <summary>
         /// <see cref="NiconicoCommentXmlParser"/>を初期化する
         /// </summary>
         /// <param name="socketFormat">ソケットを使うリアルタイムのデータ形式ならtrue 過去ログなどのデータ形式ならfalse</param>
-        public NiconicoCommentXmlParser(bool socketFormat)
+        public NiconicoCommentXmlParser(bool socketFormat,string myUserId)
         {
             this.socketFormat = socketFormat;
+            this.myUserId = myUserId;
             inChatTag = false;
             inThreadTag = false;
         }
@@ -42,7 +44,7 @@ namespace TVTComment.Model.NiconicoUtils
                     }
                     else if (tagStr.StartsWith("<chat"))
                     {
-                        chats.Enqueue(GetChatXmlTag(tagStr));
+                        chats.Enqueue(GetChatXmlTag(tagStr, myUserId));
                     }
                     else if (tagStr.StartsWith("<thread"))
                     {
@@ -67,7 +69,7 @@ namespace TVTComment.Model.NiconicoUtils
                         string tagStr = buffer.Substring(0, idx);
                         buffer = buffer[idx..];
                         inChatTag = false;
-                        chats.Enqueue(GetChatXmlTag(tagStr));
+                        chats.Enqueue(GetChatXmlTag(tagStr, myUserId));
                     }
                     else if (inThreadTag)
                     {
@@ -136,7 +138,7 @@ namespace TVTComment.Model.NiconicoUtils
         private static readonly Regex reAnonymity = new Regex(" abone=\"(\\d+)\"");
         private static readonly Regex reAbone = new Regex(" abone=\"(\\d+)\"");
 
-        private static ChatNiconicoCommentXmlTag GetChatXmlTag(string str)
+        private static ChatNiconicoCommentXmlTag GetChatXmlTag(string str,string myUserId)
         {
             string text = HttpUtility.HtmlDecode(reChat.Match(str).Groups[2].Value);
 
@@ -162,7 +164,7 @@ namespace TVTComment.Model.NiconicoUtils
             match = reAbone.Match(str);
             int abone = match.Success ? int.Parse(match.Groups[1].Value) : 0;
 
-            return new ChatNiconicoCommentXmlTag(text, thread, GetNumberFromChatTag(str), GetVposFromChatTag(str), date, dateUsec, mail, userId, premium, anonymity, abone);
+            return new ChatNiconicoCommentXmlTag(text, thread, GetNumberFromChatTag(str), GetVposFromChatTag(str), date, dateUsec, mail, userId, premium, anonymity, abone, userId.Equals(myUserId));
         }
 
         private static readonly Regex reNo = new Regex(" no=\"(\\d+)\"");

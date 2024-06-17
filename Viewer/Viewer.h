@@ -45,6 +45,7 @@ private:
 		int forwardList[26];
 		int commentOpacity;
 		tstring tvtCommentPath;
+		bool hideCommentHighlight;
 	};
 	bool TogglePlugin(bool bEnabled);
 	void ToggleStreamCallback(bool bSet);

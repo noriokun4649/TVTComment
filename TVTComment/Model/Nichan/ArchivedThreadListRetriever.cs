@@ -26,34 +26,21 @@ namespace Nichan
         public async Task Prepare(CancellationToken cancellationToken)
         {
             string mainDocumentUrl = $"https://{server}.5ch.net/{Board}/kako/";
-            var mainDocument = await GetHtml(mainDocumentUrl, cancellationToken).ConfigureAwait(false);
-            List<string> serverList = mainDocument.XPathSelectElements(
-                @"//*[contains(@class, ""menu"")]/*"
-            ).SkipWhile(x => x.Name != "h2").Skip(1).SkipWhile(x => x.Name != "h2").Skip(1).TakeWhile(x => x.Name != "h2").Where(
-                x => x.Attribute("class")?.Value == "menu_link"
-            ).Select(x => x.Element("a").Attribute("href").Value).Select(x => new Uri(new Uri(mainDocumentUrl), x).ToString()).ToList();
-            // 現在のサーバーではそのURLが含まれない
-            if (!serverList.Contains(mainDocumentUrl))
+            var startTimeToUrlMapping = new SortedList<long, IEnumerable<(string url, (long start, long end) range)>>();
+
+            static (long start, long end) getThreadRange(string str)
             {
-                serverList.Add(mainDocumentUrl);
+                var strs = str.Split('-');
+                if (strs.Length != 2)
+                    return (0, 0);
+                var nums = strs.Select(x => long.TryParse(x.Trim(), out long num) ? num : 0).ToArray();
+                if (nums.Any(x => x == 0))
+                    return (0, 0);
+                return (nums[1], nums[0]);
             }
 
-            var startTimeToUrlMapping = new SortedList<long, IEnumerable<(string url, (long start, long end) range)>>();
-            foreach (var server in serverList)
-            {
-                static (long start, long end) getThreadRange(string str)
-                {
-                    var strs = str.Split('-');
-                    if (strs.Length != 2)
-                        return (0, 0);
-                    var nums = strs.Select(x => long.TryParse(x.Trim(), out long num) ? num : 0).ToArray();
-                    if (nums.Any(x => x == 0))
-                        return (0, 0);
-                    return (nums[1], nums[0]);
-                }
-
-                var otherServerDocument = await GetHtml(server, cancellationToken).ConfigureAwait(false);
-                var urlAndRanges = new List<(string url, (long start, long end) range)>
+            var otherServerDocument = await GetHtml(mainDocumentUrl, cancellationToken).ConfigureAwait(false);
+            var urlAndRanges = new List<(string url, (long start, long end) range)>
                 {
                     (
                     "",
@@ -62,22 +49,21 @@ namespace Nichan
                     ).Nodes().First(x => x.NodeType == XmlNodeType.Text)).Value)
                 )
                 };
-                urlAndRanges.AddRange(otherServerDocument.XPathSelectElements(
-                        @"//*[contains(@class, ""menu"")]/*"
-                    ).SkipWhile(x => x.Name != "h2").Skip(1).TakeWhile(x => x.Name != "h2").Where(
-                        x => x.Attribute("class")?.Value == "menu_link"
-                    ).Select(x => x.Element("a")).Select(x => (x.Attribute("href").Value, getThreadRange(x.Value)))
-                );
-                foreach (var x in urlAndRanges)
+            urlAndRanges.AddRange(otherServerDocument.XPathSelectElements(
+                    @"//*[contains(@class, ""menu"")]/*"
+                ).SkipWhile(x => x.Name != "h2").Skip(1).TakeWhile(x => x.Name != "h2").Where(
+                    x => x.Attribute("class")?.Value == "menu_link"
+                ).Select(x => x.Element("a")).Select(x => (x.Attribute("href").Value, getThreadRange(x.Value)))
+            );
+            foreach (var x in urlAndRanges)
+            {
+                var url = new Uri(new Uri(mainDocumentUrl), x.url).ToString();
+                if (!startTimeToUrlMapping.TryGetValue(x.range.start, out var value))
                 {
-                    var url = new Uri(new Uri(server), x.url).ToString();
-                    if (!startTimeToUrlMapping.TryGetValue(x.range.start, out var value))
-                    {
-                        value = new List<(string url, (long start, long end) range)>();
-                        startTimeToUrlMapping.Add(x.range.start, value);
-                    }
-                    ((List<(string, (long, long))>)value).Add((url, x.range));
+                    value = new List<(string url, (long start, long end) range)>();
+                    startTimeToUrlMapping.Add(x.range.start, value);
                 }
+                ((List<(string, (long, long))>)value).Add((url, x.range));
             }
 
             rangeAndUrls = startTimeToUrlMapping;

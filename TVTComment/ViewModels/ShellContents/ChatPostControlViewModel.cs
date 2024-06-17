@@ -15,6 +15,8 @@ namespace TVTComment.ViewModels.ShellContents
     {
         private readonly Model.TVTComment model;
 
+        public ObservableValue<string> PostSplitterLeftSize => model.ChatPostSplitterLeftSize;
+        public ObservableValue<string> PostSplitterRightSize => model.ChatPostSplitterRightSize;
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableValue<string> PostText { get; } = new ObservableValue<string>("");
         public ObservableValue<string> PostMailText { get; } = new ObservableValue<string>("");
@@ -58,7 +60,8 @@ namespace TVTComment.ViewModels.ShellContents
                     x is Model.ChatCollectService.NiconicoChatCollectService ||
                     x is Model.ChatCollectService.NiconicoLiveChatCollectService ||
                     x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService ||
-                    x is Model.ChatCollectService.TwitterLiveChatCollectService
+                    x is Model.ChatCollectService.TwitterLiveChatCollectService ||
+                    x is Model.ChatCollectService.NxJikkyoChatCollectService
                 )
             );
             IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
@@ -89,11 +92,13 @@ namespace TVTComment.ViewModels.ShellContents
             }
 
             string mail184 = PostMailText.Value;
-            if (mail184 == "")
-                mail184 = "184";
-            else
-                mail184 += " 184";
-
+            if (model.Settings.Niconico.Always184)
+            {
+                if (mail184 == "")
+                    mail184 = "184";
+                else
+                    mail184 += " 184";
+            }
             if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
             {
                 if (string.IsNullOrWhiteSpace(PostText.Value))
@@ -136,7 +141,16 @@ namespace TVTComment.ViewModels.ShellContents
                     return;
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
-                    new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, mail184.Replace("184", ""))
+                    new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
+                );
+            }
+            else if (SelectedPostService.Value is Model.ChatCollectService.NxJikkyoChatCollectService)
+            {
+                if (string.IsNullOrWhiteSpace(PostText.Value))
+                    return;
+                model.ChatCollectServiceModule.PostChat(
+                    SelectedPostService.Value,
+                    new Model.ChatCollectService.NxJikkyoChatCollectService.ChatPostObject(PostText.Value, mail184)
                 );
             }
             else

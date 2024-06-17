@@ -26,10 +26,11 @@ namespace TVTComment.Model.NiconicoUtils
         public int Premium { get; }
         public int Anonymity { get; }
         public int Abone { get; }
+        public bool SelfComment { get; }
 
         public ChatNiconicoCommentXmlTag(
             string text, string thread, int no, int vpos, long date, int dateUsec,
-            string mail, string userId, int premium, int anonymity, int abone
+            string mail, string userId, int premium, int anonymity, int abone, bool selfComment
         )
         {
             Text = text;
@@ -43,6 +44,7 @@ namespace TVTComment.Model.NiconicoUtils
             Premium = premium;
             Anonymity = anonymity;
             Abone = abone;
+            SelfComment = selfComment;
         }
     }
     class ThreadNiconicoCommentXmlTag : NiconicoCommentXmlTag

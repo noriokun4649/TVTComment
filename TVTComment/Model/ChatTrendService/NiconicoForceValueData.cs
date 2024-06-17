@@ -28,7 +28,7 @@ namespace TVTComment.Model
             {
                 return (int)doc.Element("channels").XPathSelectElements("channel|bs_channel").First(item => jkIdStr == item.Element("video").Value).Element("thread").Element("force");
             }
-            catch (InvalidOperationException)
+            catch (Exception e) when (e is ArgumentNullException || e is InvalidOperationException)
             {
                 //（ふつうないが）JKIDが見つからなかった場合
                 return null;

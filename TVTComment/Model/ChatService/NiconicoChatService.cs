@@ -10,6 +10,9 @@ namespace TVTComment.Model.ChatService
     {
         public string UserId { get; set; } = "";
         public string Password { get; set; } = "";
+        public bool Always184 { get; set; } = true;
+        public bool EnableThirdForce { get; set; } = false;
+        public string ThirdForceApiUri { get; set; } = "";
     }
 
     class NiconicoChatService : IChatService
@@ -34,6 +37,21 @@ namespace TVTComment.Model.ChatService
         {
             get { return settings.Password; }
         }
+        public bool Always184
+        {
+            get { return settings.Always184; }
+            set { settings.Always184 = value; }
+        }
+        public bool EnableThirdForce
+        {
+            get { return settings.EnableThirdForce; }
+            set { settings.EnableThirdForce = value; }
+        }
+        public string ThirdForceApiUri
+        {
+            get { return settings.ThirdForceApiUri; }
+            set { settings.ThirdForceApiUri = value; }
+        }
         public bool IsLoggedin { get; private set; }
 
         public NiconicoChatService(
@@ -57,9 +75,10 @@ namespace TVTComment.Model.ChatService
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, liveIdResolver, loginSession),
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, loginSession),
-                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver)
+                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver, loginSession),
+                new ChatCollectServiceEntry.NxJikkyoChatCollectServiceEntry(this, jkIdResolver)
             };
-            ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NewNiconicoChatTrendServiceEntry(liveIdResolver, loginSession) };
+            ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NiconicoChatTrendServiceEntry(jkIdResolver, settings) };
         }
 
         /// <summary>
@@ -70,7 +89,7 @@ namespace TVTComment.Model.ChatService
         /// <param name="userPassword">ニコニコのパスワード</param>
         /// <exception cref="ArgumentException"><paramref name="userId"/>または<paramref name="userPassword"/>がnull若しくはホワイトスペースだった時</exception>
         /// <exception cref="NiconicoUtils.NiconicoLoginSessionException">ログインに失敗した時</exception>
-        public async Task SetUser(string userId, string userPassword)
+        public async Task SetUser(string userId, string userPassword, string onetimePassword = "")
         {
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException($"{nameof(userId)} must not be null nor white space", nameof(userId));
@@ -78,7 +97,7 @@ namespace TVTComment.Model.ChatService
                 throw new ArgumentException($"{nameof(userPassword)} must not be null nor white space", nameof(userPassword));
 
             //ログインしてみる
-            var tmpSession = new NiconicoUtils.NiconicoLoginSession(userId, userPassword);
+            var tmpSession = new NiconicoUtils.NiconicoLoginSession(userId, userPassword, onetimePassword);
             await tmpSession.Login().ConfigureAwait(false);
 
             //成功したら設定、セッションを置き換える

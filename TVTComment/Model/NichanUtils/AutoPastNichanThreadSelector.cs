@@ -10,11 +10,12 @@ namespace TVTComment.Model.NichanUtils
 {
     class AutoPastNichanThreadSelector : INichanThreadSelector
     {
-        public AutoPastNichanThreadSelector(ThreadResolver threadResolver, TimeSpan getTimeSpan, TimeSpan backTime)
+        public AutoPastNichanThreadSelector(ThreadResolver threadResolver, TimeSpan getTimeSpan, TimeSpan backTime, string pastUserAgent)
         {
             this.threadResolver = threadResolver;
             this.getTimeSpan = getTimeSpan;
             this.backTime = backTime;
+            this.pastUserAgent = pastUserAgent;
         }
 
         public async IAsyncEnumerable<string> Get(ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -30,7 +31,7 @@ namespace TVTComment.Model.NichanUtils
 
                 if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
                 {
-                    threadLister = new Nichan.PastThreadLister(board, server, backTime);
+                    threadLister = new Nichan.PastThreadLister(board, server, backTime, pastUserAgent);
                     await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
                     pastThreadListerCache.Add(board, threadLister);
                 }
@@ -47,6 +48,7 @@ namespace TVTComment.Model.NichanUtils
         private readonly ThreadResolver threadResolver;
         private readonly TimeSpan getTimeSpan;
         private readonly TimeSpan backTime;
+        private readonly string pastUserAgent;
         private readonly Dictionary<string, Nichan.PastThreadLister> pastThreadListerCache = new Dictionary<string, Nichan.PastThreadLister>();
 
         private static readonly Regex reBoardUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/(?<board>[^/]*)(^|/.*)");
