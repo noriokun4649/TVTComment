@@ -834,23 +834,31 @@ bool CViewer::OnPanelItemNotify(TVTest::PanelItemEventInfo* pInfo) {
 	return TRUE;
 	}
 }
-/*
-INT_PTR CALLBACK CViewer::PanelLogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
 
-	return TRUE;
+INT_PTR CALLBACK CViewer::PanelLogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
+	switch (uMsg) {
+		default:
+			return FALSE;
+	}
+	return FALSE;
+
 }
 
 INT_PTR CALLBACK CViewer::PanelSelectProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
-
-	return TRUE;
+	switch (uMsg) {
+		default:
+			return FALSE;
+	}
+	return FALSE;
 }
-*/
+
 
 // パネルプロシージャ
 INT_PTR CALLBACK CViewer::PanelTvTComDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void* pClientData) {
 	HWND hTab;
 	HWND hLogPage;
 	HWND hSelectPage;
+	HWND hChannelPage;
 	RECT rc;
 	CViewer* pThis = static_cast<CViewer*>(pClientData);
 	switch (uMsg)
@@ -860,32 +868,64 @@ INT_PTR CALLBACK CViewer::PanelTvTComDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 		hTab = GetDlgItem(hDlg, IDC_TVTCOM_TAB);
 		TCITEM tc_item;
 		tc_item.mask = TCIF_TEXT;
-		tc_item.pszText = _TEXT("ログ");
+		tc_item.pszText = _TEXT("チャンネル");
 		TabCtrl_InsertItem(hTab, 0, &tc_item);
-
-		tc_item.pszText = _TEXT("コメント元");
+		tc_item.pszText = _TEXT("ログ");
 		TabCtrl_InsertItem(hTab, 1, &tc_item);
-		/*
-		hLogPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_LOG_TAB), hDlg, (DLGPROC)PanelLogProc);
-		hSelectPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_SELECT_TAB), hDlg, (DLGPROC)PanelSelectProc);
-		ShowWindow(hLogPage, SW_SHOW);
+		tc_item.pszText = _TEXT("コメント元");
+		TabCtrl_InsertItem(hTab, 2, &tc_item);
+		tc_item.pszText = _TEXT("設定");
+		TabCtrl_InsertItem(hTab, 3, &tc_item);
+		
+		hLogPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_LOG_TAB), hTab, (DLGPROC)PanelLogProc);
+		hSelectPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_SELECT_TAB), hTab, (DLGPROC)PanelSelectProc);
+		hChannelPage = CreateDialog(g_hinstDLL, MAKEINTRESOURCE(IDD_CHANNEL_TAB), hTab, (DLGPROC)PanelSelectProc);
+		ShowWindow(hChannelPage, SW_SHOW);
+		ShowWindow(hLogPage, SW_HIDE);
 		ShowWindow(hSelectPage, SW_HIDE);
-		GetClientRect(hDlg, &rc);
-		SendMessage(hDlg, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
-		*/
+		GetClientRect(hTab, &rc);
+
+		rc.top += 23;
+
+		MoveWindow(hChannelPage, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, false);
+		MoveWindow(hLogPage, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, false);
+		MoveWindow(hSelectPage, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, false);
+
+		SetProp(hDlg, L"tab", hTab);
+		SetProp(hDlg, L"channel", hChannelPage);
+		SetProp(hDlg, L"log", hLogPage);
+		SetProp(hDlg, L"select", hSelectPage);
 		}
 		return TRUE;
 	case WM_NOTIFY:
+		hTab = static_cast<HWND>(GetProp(hDlg, L"tab"));
+		hChannelPage = static_cast<HWND>(GetProp(hDlg, L"channel"));
+		hLogPage = static_cast<HWND>(GetProp(hDlg, L"log"));
+		hSelectPage = static_cast<HWND>(GetProp(hDlg, L"select"));
+
 		switch (((NMHDR*)lParam)->code) {
 		case TCN_SELCHANGE: {    //タブの切り替え
 			int num = TabCtrl_GetCurSel(hTab);
-			if (num == 0) {
+
+			switch (num)
+			{
+			case 0:
+				ShowWindow(hChannelPage, SW_SHOW);
+				ShowWindow(hLogPage, SW_HIDE);
+				ShowWindow(hSelectPage, SW_HIDE);
+				break;
+			case 1:
+				ShowWindow(hChannelPage, SW_HIDE);
 				ShowWindow(hLogPage, SW_SHOW);
 				ShowWindow(hSelectPage, SW_HIDE);
-			}
-			else {
+				break;
+			case 2:
+				ShowWindow(hChannelPage, SW_HIDE);
 				ShowWindow(hLogPage, SW_HIDE);
 				ShowWindow(hSelectPage, SW_SHOW);
+				break;
+			default:
+				break;
 			}
 			break;
 		}
