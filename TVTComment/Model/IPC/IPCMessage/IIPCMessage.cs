@@ -14,11 +14,6 @@ namespace TVTComment.Model.IPC.IPCMessage
         public IPCMessageDecodeException(string message) : base(message)
         {
         }
-        protected IPCMessageDecodeException(System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context)
-            : base(info, context)
-        {
-        }
         public IPCMessageDecodeException(string message, Exception innerException)
             : base(message, innerException)
         {

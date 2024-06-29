@@ -12,9 +12,6 @@ namespace TVTComment.Model.TwitterUtils
         public TwitterException() { }
         public TwitterException(string message) : base(message) { }
         public TwitterException(string message, Exception inner) : base(message, inner) { }
-        protected TwitterException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     class TwiiterAuthException : TwitterException

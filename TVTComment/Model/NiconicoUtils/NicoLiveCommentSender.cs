@@ -16,15 +16,11 @@ using System.Timers;
 namespace TVTComment.Model.NiconicoUtils
 {
 
-    [Serializable]
     class NicoLiveCommentSenderException : Exception
     {
         public NicoLiveCommentSenderException() { }
         public NicoLiveCommentSenderException(string message) : base(message) { }
         public NicoLiveCommentSenderException(string message, Exception inner) : base(message, inner) { }
-        protected NicoLiveCommentSenderException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     class InvalidPlayerStatusNicoLiveCommentSenderException : NicoLiveCommentSenderException

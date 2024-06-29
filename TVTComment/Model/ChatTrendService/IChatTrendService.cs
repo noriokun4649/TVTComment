@@ -7,15 +7,11 @@ namespace TVTComment.Model
     /// <seealso cref="IChatTrendService.GetForceValueData"/>で投げる例外
     /// 投げた元の<seealso cref="IChatTrendService"/>は無効化される
     /// </summary>
-    [System.Serializable]
     public class ChatTrendServiceException : Exception
     {
         public ChatTrendServiceException() { }
         public ChatTrendServiceException(string message) : base(message) { }
         public ChatTrendServiceException(string message, Exception inner) : base(message, inner) { }
-        protected ChatTrendServiceException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>

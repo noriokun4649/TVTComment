@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVTComment", "TVTComment\TVTComment.csproj", "{ABAB38A2-69CC-4DB9-AC66-B5700DD31B02}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TVTComment", "TVTComment\TVTComment.csproj", "{ABAB38A2-69CC-4DB9-AC66-B5700DD31B02}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TVTComment_Viewer", "Viewer\Viewer.vcxproj", "{F941C1D5-1DE1-4AEB-9410-4DEC982367EE}"
 EndProject
