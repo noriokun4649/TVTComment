@@ -27,15 +27,11 @@ namespace TVTComment.Model.ChatCollectService
         public bool CanPost => true;
 
 
-        [Serializable]
         private class ChatReceivingException : Exception
         {
             public ChatReceivingException() { }
             public ChatReceivingException(string message) : base(message) { }
             public ChatReceivingException(string message, Exception inner) : base(message, inner) { }
-            protected ChatReceivingException(
-              System.Runtime.Serialization.SerializationInfo info,
-              System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
         private string originalLiveId;

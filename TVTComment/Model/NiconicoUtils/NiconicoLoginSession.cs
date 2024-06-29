@@ -12,15 +12,11 @@ namespace TVTComment.Model.NiconicoUtils
     /// <summary>
     /// <see cref="NiconicoLoginSession"/>で投げられる例外
     /// </summary>
-    [System.Serializable]
     class NiconicoLoginSessionException : Exception
     {
         public NiconicoLoginSessionException() { }
         public NiconicoLoginSessionException(string message) : base(message) { }
         public NiconicoLoginSessionException(string message, Exception inner) : base(message, inner) { }
-        protected NiconicoLoginSessionException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>

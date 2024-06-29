@@ -5,15 +5,11 @@ namespace TVTComment.Model.ChatCollectServiceEntry
     /// <summary>
     /// <seealso cref="IChatCollectServiceEntry.GetNewService(IChatCollectServiceCreationOption)"/>で投げる例外
     /// </summary>
-    [Serializable]
     public class ChatCollectServiceCreationException : Exception
     {
         public ChatCollectServiceCreationException() { }
         public ChatCollectServiceCreationException(string message) : base(message) { }
         public ChatCollectServiceCreationException(string message, Exception inner) : base(message, inner) { }
-        protected ChatCollectServiceCreationException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     public interface IChatCollectServiceEntry

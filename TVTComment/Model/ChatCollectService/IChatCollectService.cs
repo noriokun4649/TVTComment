@@ -8,40 +8,28 @@ namespace TVTComment.Model.ChatCollectService
     /// <seealso cref="IChatCollectService.GetChats(ChannelInfo, DateTime)"/>で投げる例外
     /// 投げた元の<seealso cref="IChatCollectService"/>は無効化される
     /// </summary>
-    [System.Serializable]
     public class ChatCollectException : Exception
     {
         public ChatCollectException() { }
         public ChatCollectException(string message) : base(message) { }
         public ChatCollectException(string message, Exception inner) : base(message, inner) { }
-        protected ChatCollectException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
     /// <seealso cref="IChatCollectService.PostChat(BasicChatPostObject)"/>で投げる例外
     /// </summary>
-    [System.Serializable]
     public class ChatPostException : Exception
     {
         public ChatPostException() { }
         public ChatPostException(string message) : base(message) { }
         public ChatPostException(string message, Exception inner) : base(message, inner) { }
-        protected ChatPostException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
-    [System.Serializable]
     public class ChatPostSessionException : Exception
     {
         public ChatPostSessionException() { }
         public ChatPostSessionException(string message) : base(message) { }
         public ChatPostSessionException(string message, Exception inner) : base(message, inner) { }
-        protected ChatPostSessionException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
