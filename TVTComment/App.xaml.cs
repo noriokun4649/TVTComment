@@ -15,7 +15,7 @@ namespace TVTComment
         {
             var builder = new ConfigurationBuilder()
              .SetBasePath(Directory.GetCurrentDirectory())
-             .AddUserSecrets<App>(optional: false);
+             .AddUserSecrets<App>(optional: true);
 
             Configuration = builder.Build();
 
