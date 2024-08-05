@@ -24,6 +24,7 @@ namespace TVTComment.ViewModels.ShellContents
         public ObservableValue<bool> NgCommentNotShow { get; private set; }
         public ObservableValue<bool> UiFlashingDeterrence { get; private set; }
         public ObservableValue<double> WindowFontSize { get; } = new ObservableValue<double>(1.2);
+        public ObservableValue<bool> NXJikkyoImportDisable { get; private set; }
 
         public DelegateCommand<int?> SetChatCollectTimeAdjustment { get; private set; }
         public DelegateCommand<int?> AddChatCollectTimeAdjustment { get; private set; }
@@ -55,6 +56,7 @@ namespace TVTComment.ViewModels.ShellContents
             ClearChatsOnChannelChange = model.ChatModule.ClearChatsOnChannelChange;
             NgCommentNotShow = model.ChatModule.NgCommentNotShow;
             UiFlashingDeterrence = model.ChatModule.UiFlashingDeterrence;
+            NXJikkyoImportDisable = model.ChatModule.NXJikkyoImportDisable;
 
             ChatCollectTimeAdjustment = model.ChatCollectServiceModule.TimeAdjustment;
 

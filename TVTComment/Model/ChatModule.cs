@@ -30,6 +30,7 @@ namespace TVTComment.Model
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> NgCommentNotShow { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> UiFlashingDeterrence { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> NXJikkyoImportDisable { get; } = new ObservableValue<bool>();
 
         private readonly ObservableCollection<Chat> chats = new ObservableCollection<Chat>();
         public ReadOnlyObservableCollection<Chat> Chats { get; }
@@ -83,6 +84,10 @@ namespace TVTComment.Model
             foreach (Chat chat in newChats)
             {
                 ApplyChatModRule(chat);
+                if (NXJikkyoImportDisable.Value && chat.UserId.StartsWith("nicolive:"))
+                {
+                    continue;
+                }
 
                 if (ChatPreserveCount.Value > 0)
                 {
@@ -137,6 +142,7 @@ namespace TVTComment.Model
             ChatPreserveCount.Value = settings.ChatPreserveCount;
             ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
             NgCommentNotShow.Value = settings.NgCommentNotShow;
+            NXJikkyoImportDisable.Value = settings.NXJikkyoImportDisable;
             UiFlashingDeterrence.Value = settings.UiFlashingDeterrence;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
             var entities = settings.ChatModRules;

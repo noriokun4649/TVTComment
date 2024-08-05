@@ -50,7 +50,7 @@ namespace TVTComment.Model.NiconicoUtils
             string userId;
             if (chat.HasRawUserId)
             {
-                userId = $"{chat.RawUserId} (${chat.Name})";
+                userId = $"{chat.RawUserId} ({chat.Name})";
             }
             else
             {
