@@ -241,3 +241,6 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# ProtoBuf Generate code
+TVTComment/dwango/

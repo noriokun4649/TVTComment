@@ -21,9 +21,17 @@
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Protobuf Include="protobuf\proto\**\*.proto" ProtoRoot="protobuf\proto\" OutputDir=".\" GrpcServices="None"/>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="AttachedCommandBehavior" Version="2.0.0" />
     <PackageReference Include="CommonServiceLocator" Version="1.3.0" />
     <PackageReference Include="CoreTweet" Version="2.0.0.593" />
+    <PackageReference Include="Google.Protobuf" Version="3.27.2" />
+    <PackageReference Include="Grpc.Tools" Version="2.65.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
     <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.18" />
     <PackageReference Include="Prism.Core" Version="6.3.0-pre1" />

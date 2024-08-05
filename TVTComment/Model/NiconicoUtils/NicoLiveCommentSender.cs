@@ -52,6 +52,12 @@ namespace TVTComment.Model.NiconicoUtils
     {
     }
 
+    class MessageServer
+    {
+        public string HashedUserId { get; set; }
+        public string ViewUri { get; set; }
+    }
+
     class NicoLiveCommentSender : IDisposable
     {
         private readonly HttpClient httpClient;
@@ -72,7 +78,7 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
 
-        public async Task ConnectWatchSession(string liveId, CancellationToken cancellationToken, BlockingCollection<String> postKey)
+        public async Task ConnectWatchSession(string liveId, BlockingCollection<MessageServer> messageServer, CancellationToken cancellationToken)
         {
             var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
             var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
@@ -143,7 +149,7 @@ namespace TVTComment.Model.NiconicoUtils
                                 timer.Close();
                                 return;
                         }
-                        errorMesColl.Add(reason);
+                        errorMesColl.Add(reason, cancellationToken);
                         break;
                     case "seat":
                         var keepInterval = json.GetProperty("data").GetProperty("keepIntervalSec").GetInt32();
@@ -161,7 +167,7 @@ namespace TVTComment.Model.NiconicoUtils
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "reconnect", CancellationToken.None);
                         var path = webScoketUri.GetLeftPart(UriPartial.Path);
                         var newUri = new Uri(path + "?audience_token=" + token);
-                        await Task.Delay(waittime * 1000);
+                        await Task.Delay(waittime * 1000, cancellationToken);
                         await clientWebSocket.ConnectAsync(newUri, cancellationToken);
                         await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
                         break;
@@ -169,15 +175,16 @@ namespace TVTComment.Model.NiconicoUtils
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "disconnect", CancellationToken.None);
                         timer.Elapsed -= handler;
                         timer.Close();
-                        errorMesColl.Add("disconnect");
+                        errorMesColl.Add("disconnect", cancellationToken);
                         break;
                     case "postCommentResult":
                         var postres = json.GetProperty("data").GetProperty("chat").GetProperty("content").GetString();
-                        errorMesColl.Add(postres);
+                        errorMesColl.Add(postres, cancellationToken);
                         break;
-                    case "room":
-                        var yourPostKey = json.GetProperty("data").GetProperty("yourPostKey").GetString();
-                        postKey.Add(yourPostKey);
+                    case "messageServer":
+                        var dataHashedUserId = json.GetProperty("data").GetProperty("hashedUserId").GetString();
+                        var dataViewUri = json.GetProperty("data").GetProperty("viewUri").GetString();
+                        messageServer.Add(new(){ HashedUserId = dataHashedUserId, ViewUri = dataViewUri }, cancellationToken);
                         break;
                 }
             }
@@ -283,7 +290,7 @@ namespace TVTComment.Model.NiconicoUtils
             httpClient.Dispose();
             messageColl.Dispose();
             errorMesColl.Dispose();
-            if (clientWebSocket != null) clientWebSocket.Dispose();
+            clientWebSocket?.Dispose();
         }
     }
 }
