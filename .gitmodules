@@ -1,3 +1,6 @@
 [submodule "Viewer/NicoJK"]
 	path = Viewer/NicoJK
 	url = https://github.com/noriokun4649/NicoJK.git
+[submodule "TVTComment/protobuf"]
+	path = TVTComment/protobuf
+	url = https://github.com/n-air-app/nicolive-comment-protobuf
