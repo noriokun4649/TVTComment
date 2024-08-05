@@ -1,74 +1,117 @@
 ﻿# ニコニコ生放送の生放送ID設定
+# ここで設定されたチャンネルはchannels.txtにも登録されている必要がある
+#
+#target	value	liveid
+#
+# targetの値がvalueに等しいなら生放送IDをliveidにセットする
+# (targetがflagsならvalueとのビットアンドが0でないなら)
+# targetがnsidのときvalueは nid<<16 | sid の形式
+# liveidは空白なら対応付けを解除する（！！！空白の場合でもその前のタブ文字は必須です！！！）
+# 下に書いたものは上より優先される
 
-# GR: NHK 総合
-flags	1	ch2646436
-# GR: Eテレ
-flags	2	ch2646437
-# GR: 日テレ
-flags	4	ch2646438
-# GR: テレビ朝日
-flags	32	ch2646439
-# GR: TBS
-flags	8	ch2646440
-# GR: テレビ東京
-flags	64	ch2646441
-# GR: フジテレビ
-flags	16	ch2646442
-# GR: TOKYO MX
-nsid	0xf5c38	ch2646485
-nsid	0xf5c39	ch2646485
-nsid	0xf5c3a	ch2646485
-# GR: テレ玉
-nsid	0xf7438	co5253063
-nsid	0xf7439	co5253063
-nsid	0xf743a	co5253063
-# GR: tvk
-nsid	0xf6038	co5215296
-nsid	0xf6039	co5215296
-nsid	0xf603a	co5215296
-# GR: チバテレビ
-nsid	0xf6c38	co5359761
-nsid	0xf6c39	co5359761
-nsid	0xf6c3a	co5359761
-# BS: NHKBS1
-nsid	0x40065	ch2647992
-nsid	0x40066	ch2647992
-# BS: NHKBSプレミアム
-nsid	0x40067	co5175227
-nsid	0x40068	co5175227
-# BS: BS日テレ
-nsid	0x4008d	co5175341
-nsid	0x4008e	co5175341
-nsid	0x4008f	co5175341
-# BS: BS朝日
-nsid	0x40097	co5175345
-nsid	0x40098	co5175345
-nsid	0x40099	co5175345
-# BS: BS-TBS
-nsid	0x400a1	co5176119
-nsid	0x400a2	co5176119
-nsid	0x400a3	co5176119
-# BS: BSテレ東
-nsid	0x400ab	co5176122
-nsid	0x400ac	co5176122
-nsid	0x400ad	co5176122
-# BS: BSフジ
-nsid	0x400b5	co5176125
-nsid	0x400b6	co5176125
-nsid	0x400b7	co5176125
-# BS: WOWOWプライム
-nsid	0x400bf	co5251972
-# BS: WOWOWライブ
-nsid	0x400c0	co5251976
-# BS: WOWOWシネマ
-nsid	0x400c1	co5251983
-# BS: BS11イレブン
-nsid	0x400d3	ch2646846
-# BS: BS12トゥエルビ
-nsid	0x400de	co5193029
-# BS: グリーンチャンネル
-nsid	0x400ea	co5217651
-# BS: BSアニマックス
-nsid	0x400ec	co5296297
-# CS: AT-X
-nsid	0x7014d	co5245469
+# NHK総合
+flags	1	lv345479988
+# NHKEテレ
+flags	2	lv345479989
+# 日本テレビ系
+flags	4	lv345479991
+# テレビ朝日系
+flags	32	lv345479993
+# TBS系
+flags	8	lv345479994
+# テレビ東京系
+flags	64	lv345479995
+# フジテレビ系
+flags	16	lv345479996
+
+# ＴＯＫＹＯ ＭＸ
+nsid	0x000F5C38	lv345479997
+nsid	0x000F5C3A	lv345479997
+
+
+# ＮＨＫＢＳ１
+nsid	0x00040065	lv345479990
+# ＮＨＫＢＳ１
+nsid	0x00040066	lv345479990
+# ＮＨＫＢＳプレミアム
+nsid	0x00040067	
+# ＮＨＫＢＳプレミアム
+nsid	0x00040068	
+# ＢＳ日テレ
+nsid	0x0004008d	
+# ＢＳ日テレ
+nsid	0x0004008e	
+# ＢＳ日テレ
+nsid	0x0004008f	
+# ＢＳ朝日
+nsid	0x00040097	
+# ＢＳ朝日２
+nsid	0x00040098	
+# ＢＳ朝日３
+nsid	0x00040099	
+# ＢＳ－ＴＢＳ
+nsid	0x000400a1	
+# ＢＳ－ＴＢＳ
+nsid	0x000400a2	
+# ＢＳ－ＴＢＳ
+nsid	0x000400a3	
+# ＢＳテレ東
+nsid	0x000400ab	
+# ＢＳテレ東２
+nsid	0x000400ac	
+# ＢＳテレ東３
+nsid	0x000400ad	
+# ＢＳフジ
+nsid	0x000400b5	
+# ＢＳフジ・１８２
+nsid	0x000400b6	
+# ＢＳフジ・１８３
+nsid	0x000400b7	
+# ＷＯＷＯＷプライム
+nsid	0x000400bf	
+# ＷＯＷＯＷライブ
+nsid	0x000400c0	
+# ＷＯＷＯＷシネマ
+nsid	0x000400c1	
+# スター・チャンネル１
+nsid	0x000400c8	
+# スター・チャンネル２
+nsid	0x000400c9	
+# スター・チャンネル３
+nsid	0x000400ca	
+# ＢＳ１１イレブン
+nsid	0x000400d3	lv345479998
+# ＢＳ１１イレブン トラモジ
+nsid	0x000400d3	lv345479998
+# ＢＳ１２トゥエルビ
+nsid	0x000400de	
+# ＢＳキャンパスｅｘ
+nsid	0x000400e7	
+# ＢＳキャンパスｏｎ
+nsid	0x000400e8	
+# グリーンチャンネル
+nsid	0x000400ea	
+# ＢＳアニマックス
+nsid	0x000400ec	
+# ＦＯＸスポーツエンタ
+nsid	0x000400ee	
+# ＢＳスカパー！
+nsid	0x000400f1	
+# Ｊ　ＳＰＯＲＴＳ　１
+nsid	0x000400f2	
+# Ｊ　ＳＰＯＲＴＳ　２
+nsid	0x000400f3	
+# Ｊ　ＳＰＯＲＴＳ　３
+nsid	0x000400f4	
+# Ｊ　ＳＰＯＲＴＳ　４
+nsid	0x000400f5	
+# ＢＳ釣りビジョン
+nsid	0x000400fb	
+# シネフィルＷＯＷＯＷ
+nsid	0x000400fc	
+# 日本映画専門ｃｈ
+nsid	0x000400ff	
+# ディズニーｃｈ
+nsid	0x00040100	
+# ディーライフ
+nsid	0x00040102	
