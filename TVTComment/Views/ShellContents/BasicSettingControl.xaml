@@ -87,6 +87,12 @@
                 <CheckBox IsChecked="{Binding NgCommentNotShow.Value}" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="1">NGコメントのログを非表示にする</CheckBox>
             </Grid>
         </GroupBox>
+
+        <GroupBox Header="NX-Jikkyo設定">
+            <Grid local:Grid.Shape="*:auto,auto">
+                <CheckBox IsChecked="{Binding NXJikkyoImportDisable.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">ニコニコ実況からのコメントを表示しない</CheckBox>
+            </Grid>
+        </GroupBox>
         <Button Content="その他設定">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="Click">
