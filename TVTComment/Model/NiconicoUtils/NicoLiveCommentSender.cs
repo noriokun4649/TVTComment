@@ -88,6 +88,7 @@ namespace TVTComment.Model.NiconicoUtils
 
             clientWebSocket = new ClientWebSocket();
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
+            clientWebSocket.Options.KeepAliveInterval = TimeSpan.Zero;
 
             await clientWebSocket.ConnectAsync(webScoketUri, cancellationToken);
             await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
