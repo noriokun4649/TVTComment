@@ -50,6 +50,7 @@ namespace TVTComment.Model.NxJikkyoUtils
 
                 ws.Options.SetRequestHeader("User-Agent", ua);
                 ws.Options.AddSubProtocol("msg.nicovideo.jp#json");
+                ws.Options.KeepAliveInterval = TimeSpan.Zero;
 
                 try
                 {
