@@ -37,6 +37,7 @@ namespace Nichan
     /// </summary>
     public class DatThreadLoader
     {
+        public string ServiceProvider { get; }
         public string ServerName { get; }
         public string BoardName { get; }
         public string ThreadId { get; }
@@ -57,9 +58,9 @@ namespace Nichan
         /// </summary>
         public bool LastAllUpdated { get; private set; } = false;
 
-        public DatThreadLoader(string serverName, string boardName, string threadId)
+        public DatThreadLoader(string serviceProvider, string serverName, string boardName, string threadId)
         {
-            (ServerName, BoardName, ThreadId) = (serverName, boardName, threadId);
+            (ServiceProvider, ServerName, BoardName, ThreadId) = (serviceProvider, serverName, boardName, threadId);
             Thread.Name = threadId;
         }
 
@@ -82,7 +83,7 @@ namespace Nichan
             }
 
             HttpResponseMessage response = await apiClient.GetDatResponse(
-                ServerName, BoardName, ThreadId, headers
+                ServiceProvider, ServerName, BoardName, ThreadId, headers
             );
 
             if (response.StatusCode == HttpStatusCode.NotModified)
