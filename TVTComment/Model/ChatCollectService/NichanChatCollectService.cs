@@ -327,14 +327,15 @@ namespace TVTComment.Model.ChatCollectService
         {
             var uri = new Uri(url);
             var server = uri.Host.Split('.')[0];
+            var provider = uri.Host.Remove(0, server.Length + 1);
             var pathes = uri.Segments.SkipWhile(x => x != "read.cgi/").ToArray();
             var board = pathes[1][..^1];
             var threadID = pathes[2][..^1];
 
-            if (!threadLoaders.TryGetValue((server, board, threadID), out var threadLoader))
+            if (!threadLoaders.TryGetValue((provider, server, board, threadID), out var threadLoader))
             {
-                threadLoader = new Nichan.DatThreadLoader(server, board, threadID);
-                threadLoaders.Add((server, board, threadID), threadLoader);
+                threadLoader = new Nichan.DatThreadLoader(provider, server, board, threadID);
+                threadLoaders.Add((provider, server, board, threadID), threadLoader);
             }
 
             try
@@ -363,6 +364,6 @@ namespace TVTComment.Model.ChatCollectService
         }
 
         private readonly Nichan.ApiClient apiClient;
-        private readonly Dictionary<(string server, string board, string thread), Nichan.DatThreadLoader> threadLoaders = new Dictionary<(string, string, string), Nichan.DatThreadLoader>();
+        private readonly Dictionary<(string provider ,string server, string board, string thread), Nichan.DatThreadLoader> threadLoaders = [];
     }
 }

@@ -133,11 +133,18 @@ namespace Nichan
         private static DateTime? GetDate(string str)
         {
             Match m = reDate.Match(str);
-            if (m.Success)
+            if (m.Success) {
+                var sec = 0;
+                if (m.Groups["sec"].Success)
+                {
+                    sec = int.Parse(m.Groups["sec"].Value);
+                    if (sec >= 10 && sec <= 99) sec *= 10;
+                }
                 return new DateTime(
                     int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), m.Groups["sec"].Success ? int.Parse(m.Groups["sec"].Value) * 10 : 0, DateTimeKind.Local
+                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), sec, DateTimeKind.Local
                 );
+            }
             else
                 return null;
         }

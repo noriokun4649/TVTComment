@@ -47,9 +47,9 @@ namespace Nichan
         //}
         );
 
-        public async Task<HttpResponseMessage> GetDatResponse(string server, string board, string threadId, IEnumerable<(string name, string value)> additionalHeaders)
+        public async Task<HttpResponseMessage> GetDatResponse(string provider,string server, string board, string threadId, IEnumerable<(string name, string value)> additionalHeaders)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://{server}.5ch.net/{board}/dat/{threadId}.dat");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://{server}.{provider}/{board}/dat/{threadId}.dat");
 
             async Task<HttpResponseMessage> get()
             {
