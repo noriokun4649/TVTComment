@@ -91,6 +91,17 @@ namespace TVTComment.Model.ChatCollectService
                 else
                     throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatCollectTask.Exception);
             }
+            if (chatSessionTask?.IsFaulted ?? false)
+            {
+                //非同期部分で例外発生
+                var e = chatSessionTask.Exception.InnerExceptions.Count == 1
+                        ? chatSessionTask.Exception.InnerExceptions[0] : chatSessionTask.Exception;
+                // 有志のコミュニティチャンネルで生放送がされてない場合にエラー扱いされると使いづらいので
+                if (e is LiveNotFoundException)
+                    notOnAir = true;
+                else
+                    throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatSessionTask.Exception);
+            }
 
             var liveId = liveIdResolver.Resolve(channel.NetworkId, channel.ServiceId).ToString();
 
@@ -143,6 +154,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             try
             {
+                await Task.Delay(2500, cancellationToken).ConfigureAwait(false);
                 //コメント投稿(視聴)セッションのRoomメッセージでPostKeyを取得出来るまでロックして待機
                 messageServers.TryTake(out var message, Timeout.Infinite);
 
@@ -205,7 +217,7 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
                 catch (AggregateException e) when (e.InnerExceptions.All(
-                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException || innerE is NetworkNicoLiveCommentReceiverException
+                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException || innerE is NetworkNicoLiveCommentReceiverException || innerE is NicoLiveCommentSenderException
                 ))
                 {
                 }
