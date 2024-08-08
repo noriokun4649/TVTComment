@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
@@ -12,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Web;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -48,8 +51,9 @@ namespace TVTComment.Model.NiconicoUtils
         }
     }
 
-    class ResponseErrorNicoLiveCommentSenderException : NicoLiveCommentSenderException
+    class LiveNotFoundException : NicoLiveCommentSenderException
     {
+        public LiveNotFoundException(string message) : base(message) { }
     }
 
     class MessageServer
@@ -64,7 +68,7 @@ namespace TVTComment.Model.NiconicoUtils
         private BlockingCollection<string[]> messageColl = new();
         private BlockingCollection<string> errorMesColl = new();
         private readonly string ua;
-        private int openTime;
+        private long openTime;
         private ClientWebSocket clientWebSocket;
 
         public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
@@ -80,11 +84,43 @@ namespace TVTComment.Model.NiconicoUtils
 
         public async Task ConnectWatchSession(string liveId, BlockingCollection<MessageServer> messageServer, CancellationToken cancellationToken)
         {
-            var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
-            var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
-            var webScoketUri = new Uri(webSocketUrl);
-            int.TryParse(Regex.Matches(resp, @"&quot;beginTime&quot;:(?<time>[0-9]+),").First().Groups["time"].Value, out var openTime);
-            this.openTime = openTime;
+            Uri webScoketUri;
+
+            try
+            {
+                var httpResp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
+                var dataPropsPattern = @"<script\s+[^>]*id=['""]embedded-data['""][^>]*data-props=['""]([^'""]+)['""][^>]*>";
+                Match match = Regex.Match(httpResp, dataPropsPattern);
+                if (!match.Success)
+                    throw new NicoLiveCommentSenderException("放送情報を取得出来ませんでした。");
+                var dataProps = JsonDocument.Parse(HttpUtility.HtmlDecode(match.Groups[1].Value)).RootElement;
+                if (dataProps.TryGetProperty("site", out var site) && site.TryGetProperty("relive", out var relive) && dataProps.TryGetProperty("program",out var program))
+                {
+                    var webSocketUrl = relive.GetProperty("webSocketUrl").ToString();
+                    var notOnAir = !program.GetProperty("status").ToString().Equals("ON_AIR");
+                    var openTime = program.GetProperty("openTime").GetInt64();
+
+                    if (notOnAir || webSocketUrl.Equals(""))
+                        throw new LiveNotFoundException("放送が終了しています。");
+
+                    this.openTime = openTime;
+                    webScoketUri = new Uri(webSocketUrl);
+                }
+                else
+                    throw new KeyNotFoundException();
+            }
+            catch (HttpRequestException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                    throw new NicoLiveCommentSenderException($"放送ページが見つかりません。放送ID:{liveId} を再確認してください");
+                else
+                    throw new NicoLiveCommentSenderException($"放送ページにアクセスできません。HTTP Status:{e.Message}");
+            }
+            catch (Exception e) when (e is JsonException || e is InvalidOperationException || e is ArgumentException || e is KeyNotFoundException)
+            {
+                throw new NicoLiveCommentSenderException("放送情報を解析出来ませんでした。");
+            }
+
 
             clientWebSocket = new ClientWebSocket();
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
@@ -231,7 +267,7 @@ namespace TVTComment.Model.NiconicoUtils
                 case "NO_PERMISSION":
                     throw new NicoLiveCommentSenderException("APIにアクセスする権限がない");
                 case "NOT_ON_AIR":
-                    throw new NicoLiveCommentSenderException("放送中ではない");
+                    throw new LiveNotFoundException("放送中ではない");
                 case "BROADCAST_NOT_FOUND":
                     throw new NicoLiveCommentSenderException("配信情報を取得できない");
                 case "INTERNAL_SERVERERROR":
