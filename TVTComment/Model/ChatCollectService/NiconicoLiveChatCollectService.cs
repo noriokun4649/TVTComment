@@ -95,6 +95,13 @@ namespace TVTComment.Model.ChatCollectService
                         ? chatCollectTask.Exception.InnerExceptions[0] : chatCollectTask.Exception;
                 throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatCollectTask.Exception);
             }
+            if (chatSessionTask?.IsFaulted ?? false)
+            {
+                //非同期部分で例外発生
+                var e = chatSessionTask.Exception.InnerExceptions.Count == 1
+                        ? chatSessionTask.Exception.InnerExceptions[0] : chatSessionTask.Exception;
+                    throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatSessionTask.Exception);
+            }
 
             var ret = new List<Chat>();
             while (commentTagQueue.TryDequeue(out var tag))
@@ -176,7 +183,8 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
                 catch (AggregateException e) when (e.InnerExceptions.All(
-                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException || innerE is NetworkNicoLiveCommentReceiverException
+                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException ||
+                    innerE is NetworkNicoLiveCommentReceiverException || innerE is NicoLiveCommentSenderException
                 ))
                 {
                 }
