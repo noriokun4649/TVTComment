@@ -48,6 +48,7 @@ jobs:
           Copy-Item -Path TVTComment/Data/* -Destination Asset/
           Copy-Item -Path CHANGELOG.md -Destination Asset/misc/CHANGELOG.txt
           Copy-Item -Path LICENSE -Destination Asset/misc/LICENSE.txt
+          Copy-Item -Path THIRDPARTY_LICENSE -Destination Asset/misc/THIRDPARTY_LICENSE.txt
           Copy-Item -Path README.md -Destination "Asset/misc/README edit noriokun4649.txt"
 
       - name: Upload asset to Artifacts (TVTComment.exe)
