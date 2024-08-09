@@ -12,6 +12,12 @@ using TVTComment.Model.Utils;
 
 namespace TVTComment.Model.NiconicoUtils
 {
+    /**
+     * 
+     * This class is derived from integration-docs/example
+     * See THIRDPARTY_LICENSE.
+     * 
+    **/
     class NewNicoLiveCommentReciver : IDisposable
     {
         public NiconicoLoginSession NiconicoLoginSession { get; }
