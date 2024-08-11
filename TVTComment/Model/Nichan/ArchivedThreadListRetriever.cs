@@ -161,6 +161,7 @@ namespace Nichan
             string response;
             try
             {
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Cookie", "READJS=\"off\"; 5chClassic=on");
                 response = await httpClient.GetStringAsync(url, cancellationToken);
             }
             catch (HttpRequestException e)
