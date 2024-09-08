@@ -53,6 +53,11 @@ namespace TVTComment
 
 		std::wstring collectExePath;//起動するEXEのパス
 
+		int channelSelectSpaceIndex;//WM_CHANNELSELECTをタイムアウトつきで呼び出すときの引数
+		int channelSelectChannelIndex;
+		uint16_t channelSelectServiceId;
+		static constexpr int CHANNELSELECT_TIMEOUT = 5000;//WM_CHANNELSELECTの完了を待つタイムアウト（ミリ秒）
+
 		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> utf8_utf16_conv;
 
 	private:
@@ -69,7 +74,8 @@ namespace TVTComment
 		static constexpr int WM_DISABLEPLUGIN = WM_APP + 1002;//プラグインを無効化する（別スレッドから無効化するときに使う）
 		static constexpr int WM_ONCHANNELLISTCHANGE = WM_APP + 1003;//メンバ関数OnChannelListChangeを呼ぶ（別スレッドから送るときに使う）
 		static constexpr int WM_ONCHANNELSELECTIONCHANGE = WM_APP + 1004;//メンバ関数OnChannelSelectionChangeを呼ぶ（別スレッドから送るときに使う）
-		static constexpr int WM_SETCHATOPACITY = WM_APP + 1005;//コメント透過度を設定する wParamに透過度を渡す(0~255)
+		static constexpr int WM_SETCHATOPACITY = WM_APP + 1005;//コメント透過度を設定する wParamに透過度(0~255)、lParamに表示状態（非0で非表示）を渡す
+		static constexpr int WM_CHANNELSELECT = WM_APP + 1006;//チャンネル変更する
 
 		enum class UserInteractionRequestType{ConnectSucceed,ConnectFail,InvalidMessage,ReceiveError,SendError, FetalErrorInTask};
 
