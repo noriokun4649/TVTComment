@@ -17,7 +17,7 @@ namespace TVTComment.Model.IPC.IPCMessage
         public IEnumerable<string> Encode()
         {
             string[] ret = new string[5];
-            ret[0] = Chat.Text;
+            ret[0] = Chat.Text.Replace('\u001E', '〓').Replace('\u001F', '〓');
             switch (Chat.Position)
             {
                 case Chat.PositionType.Normal:
