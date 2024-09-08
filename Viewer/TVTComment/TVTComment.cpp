@@ -48,6 +48,8 @@ namespace TVTComment
 				if (CreateProcessW(NULL, &(this->collectExePath + L" " + receivePipeName.substr(9) + L" " + sendPipeName.substr(9))[0], NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi) == 0)
 					throw std::system_error(std::system_error(GetLastError(), std::system_category()));
 				pid = pi.dwProcessId;
+				CloseHandle(pi.hProcess);
+				CloseHandle(pi.hThread);
 
 				this->ipcTunnel->Connect();
 			}
