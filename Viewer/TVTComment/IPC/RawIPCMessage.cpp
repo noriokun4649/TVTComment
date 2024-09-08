@@ -5,10 +5,9 @@ namespace TVTComment
 {
 	std::string RawIPCMessage::ToString() const
 	{
-		std::string ret;
+		std::string ret = this->MessageName;
 		for (const std::string &content : this->Contents)
-			ret += content+" ";
-		ret.pop_back();
-		return this->MessageName + ret;
+			ret += " " + content;
+		return ret;
 	}
 }

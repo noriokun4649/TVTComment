@@ -541,6 +541,8 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			commentWindow_.Destroy();
 		}
 		commentWindow_.SetOpacity(newOpacity);
+		bool hideState = lParam != 0;
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), hideState ? TVTest::COMMAND_ICON_STATE_CHECKED : 0);
 		break;
 	}
 #pragma endregion
