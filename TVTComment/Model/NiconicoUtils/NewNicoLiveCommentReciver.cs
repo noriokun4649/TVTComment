@@ -34,7 +34,7 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
 
-        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(MessageServer messageServer,[EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(MessageServer messageServer,[EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var hashedUserId = messageServer.HashedUserId;
             var viewUri = messageServer.ViewUri;
@@ -75,7 +75,7 @@ namespace TVTComment.Model.NiconicoUtils
             }
         }
 
-        private async IAsyncEnumerable<T> Retrieve<T>(string uri, MessageParser<T> decoder, [EnumeratorCancellation] CancellationToken cancellationToken) where T : IMessage<T>
+        private async IAsyncEnumerable<T> Retrieve<T>(string uri, MessageParser<T> decoder, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : IMessage<T>
         {
             var unread = new List<byte>();
             using var response = await httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
@@ -87,7 +87,7 @@ namespace TVTComment.Model.NiconicoUtils
                 var buffer = new byte[4096];
                 int chunk;
 
-                while ((chunk = await responseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+                while ((chunk = await responseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0 && !cancellationToken.IsCancellationRequested)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
