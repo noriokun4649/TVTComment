@@ -164,7 +164,7 @@ namespace TVTComment.Model.NiconicoUtils
             handler.CookieContainer.Add(cookie);
             try
             {
-                await client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
+                await client.GetAsync("https://account.nicovideo.jp/logout").ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
