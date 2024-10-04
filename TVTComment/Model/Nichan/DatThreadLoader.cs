@@ -160,6 +160,13 @@ namespace Nichan
                 await Update(apiClient);
                 return;
             }
+            else if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                // 過去のレスが削除などで見つからない→全体再取得
+                (loadedNumBytes, lastModified) = (0, "");
+                await Update(apiClient);
+                return;
+            }
             else
             {
                 throw new ResponseApiClientException();
