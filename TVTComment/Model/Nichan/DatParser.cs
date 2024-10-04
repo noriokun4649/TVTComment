@@ -67,11 +67,15 @@ namespace Nichan
                 reses = reses[1..];
             }
 
+            // 6フィールドでも実害がなさそうなのでエラー出さずに無視する
+            // 運営スレが6フィールドになる模様？
             // 通常は5フィールドだが、なぜか先頭行が6フィールドあるdatが確認されている
+            /*
             if (!reses.All(x => x.Length >= 5))
             {
-                throw new DatParserException();
+                //throw new DatParserException();
             }
+            */
 
             if (isFirstLine && !FromTheMiddle)
             {
