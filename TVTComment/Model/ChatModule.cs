@@ -238,6 +238,7 @@ namespace TVTComment.Model
             settings.ChatPreserveCount = ChatPreserveCount.Value;
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
             settings.NgCommentNotShow = NgCommentNotShow.Value;
+            settings.NXJikkyoImportDisable = NXJikkyoImportDisable.Value;
             settings.UiFlashingDeterrence = UiFlashingDeterrence.Value;
             settings.ChatModRules = chatModRules.Select(x =>
             {
