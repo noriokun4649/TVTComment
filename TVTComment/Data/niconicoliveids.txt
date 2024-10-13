@@ -1,117 +1,117 @@
-ï»¿# ãƒ‹ã‚³ãƒ‹ã‚³ç”Ÿæ”¾é€ã®ç”Ÿæ”¾é€IDè¨­å®š
-# ã“ã“ã§è¨­å®šã•ã‚ŒãŸãƒãƒ£ãƒ³ãƒãƒ«ã¯channels.txtã«ã‚‚ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹å¿…è¦ãŒã‚ã‚‹
+# ƒjƒRƒjƒR¶•ú‘—‚Ì¶•ú‘—IDÝ’è
+# ‚±‚±‚ÅÝ’è‚³‚ê‚½ƒ`ƒƒƒ“ƒlƒ‹‚Íchannels.txt‚É‚à“o˜^‚³‚ê‚Ä‚¢‚é•K—v‚ª‚ ‚é
 #
 #target	value	liveid
 #
-# targetã®å€¤ãŒvalueã«ç­‰ã—ã„ãªã‚‰ç”Ÿæ”¾é€IDã‚’liveidã«ã‚»ãƒƒãƒˆã™ã‚‹
-# (targetãŒflagsãªã‚‰valueã¨ã®ãƒ“ãƒƒãƒˆã‚¢ãƒ³ãƒ‰ãŒ0ã§ãªã„ãªã‚‰)
-# targetãŒnsidã®ã¨ãvalueã¯ nid<<16 | sid ã®å½¢å¼
-# liveidã¯ç©ºç™½ãªã‚‰å¯¾å¿œä»˜ã‘ã‚’è§£é™¤ã™ã‚‹ï¼ˆï¼ï¼ï¼ç©ºç™½ã®å ´åˆã§ã‚‚ãã®å‰ã®ã‚¿ãƒ–æ–‡å­—ã¯å¿…é ˆã§ã™ï¼ï¼ï¼ï¼‰
-# ä¸‹ã«æ›¸ã„ãŸã‚‚ã®ã¯ä¸Šã‚ˆã‚Šå„ªå…ˆã•ã‚Œã‚‹
+# target‚Ì’l‚ªvalue‚É“™‚µ‚¢‚È‚ç¶•ú‘—ID‚ðliveid‚ÉƒZƒbƒg‚·‚é
+# (target‚ªflags‚È‚çvalue‚Æ‚ÌƒrƒbƒgƒAƒ“ƒh‚ª0‚Å‚È‚¢‚È‚ç)
+# target‚ªnsid‚Ì‚Æ‚«value‚Í nid<<16 | sid ‚ÌŒ`Ž®
+# liveid‚Í‹ó”’‚È‚ç‘Î‰ž•t‚¯‚ð‰ðœ‚·‚éiIII‹ó”’‚Ìê‡‚Å‚à‚»‚Ì‘O‚Ìƒ^ƒu•¶Žš‚Í•K{‚Å‚·IIIj
+# ‰º‚É‘‚¢‚½‚à‚Ì‚Íã‚æ‚è—Dæ‚³‚ê‚é
 
-# NHKç·åˆ
-flags	1	lv345479988
-# NHKEãƒ†ãƒ¬
-flags	2	lv345479989
-# æ—¥æœ¬ãƒ†ãƒ¬ãƒ“ç³»
-flags	4	lv345479991
-# ãƒ†ãƒ¬ãƒ“æœæ—¥ç³»
-flags	32	lv345479993
-# TBSç³»
-flags	8	lv345479994
-# ãƒ†ãƒ¬ãƒ“æ±äº¬ç³»
-flags	64	lv345479995
-# ãƒ•ã‚¸ãƒ†ãƒ¬ãƒ“ç³»
-flags	16	lv345479996
+# NHK‘‡
+flags	1	ch2646436
+# NHKEƒeƒŒ
+flags	2	ch2646437
+# “ú–{ƒeƒŒƒrŒn
+flags	4	ch2646438
+# ƒeƒŒƒr’©“úŒn
+flags	32	ch2646439
+# TBSŒn
+flags	8	ch2646440
+# ƒeƒŒƒr“Œ‹žŒn
+flags	64	ch2646441
+# ƒtƒWƒeƒŒƒrŒn
+flags	16	ch2646442
 
-# ï¼´ï¼¯ï¼«ï¼¹ï¼¯ ï¼­ï¼¸
-nsid	0x000F5C38	lv345479997
-nsid	0x000F5C3A	lv345479997
+# ‚s‚n‚j‚x‚n ‚l‚w
+nsid	0x000F5C38	ch2646485
+nsid	0x000F5C3A	ch2646485
 
 
-# ï¼®ï¼¨ï¼«ï¼¢ï¼³ï¼‘
-nsid	0x00040065	lv345479990
-# ï¼®ï¼¨ï¼«ï¼¢ï¼³ï¼‘
-nsid	0x00040066	lv345479990
-# ï¼®ï¼¨ï¼«ï¼¢ï¼³ãƒ—ãƒ¬ãƒŸã‚¢ãƒ 
+# ‚m‚g‚j‚a‚r‚P
+nsid	0x00040065	ch2647992
+# ‚m‚g‚j‚a‚r‚P
+nsid	0x00040066	ch2647992
+# ‚m‚g‚j‚a‚rƒvƒŒƒ~ƒAƒ€
 nsid	0x00040067	
-# ï¼®ï¼¨ï¼«ï¼¢ï¼³ãƒ—ãƒ¬ãƒŸã‚¢ãƒ 
+# ‚m‚g‚j‚a‚rƒvƒŒƒ~ƒAƒ€
 nsid	0x00040068	
-# ï¼¢ï¼³æ—¥ãƒ†ãƒ¬
+# ‚a‚r“úƒeƒŒ
 nsid	0x0004008d	
-# ï¼¢ï¼³æ—¥ãƒ†ãƒ¬
+# ‚a‚r“úƒeƒŒ
 nsid	0x0004008e	
-# ï¼¢ï¼³æ—¥ãƒ†ãƒ¬
+# ‚a‚r“úƒeƒŒ
 nsid	0x0004008f	
-# ï¼¢ï¼³æœæ—¥
+# ‚a‚r’©“ú
 nsid	0x00040097	
-# ï¼¢ï¼³æœæ—¥ï¼’
+# ‚a‚r’©“ú‚Q
 nsid	0x00040098	
-# ï¼¢ï¼³æœæ—¥ï¼“
+# ‚a‚r’©“ú‚R
 nsid	0x00040099	
-# ï¼¢ï¼³ï¼ï¼´ï¼¢ï¼³
+# ‚a‚r|‚s‚a‚r
 nsid	0x000400a1	
-# ï¼¢ï¼³ï¼ï¼´ï¼¢ï¼³
+# ‚a‚r|‚s‚a‚r
 nsid	0x000400a2	
-# ï¼¢ï¼³ï¼ï¼´ï¼¢ï¼³
+# ‚a‚r|‚s‚a‚r
 nsid	0x000400a3	
-# ï¼¢ï¼³ãƒ†ãƒ¬æ±
+# ‚a‚rƒeƒŒ“Œ
 nsid	0x000400ab	
-# ï¼¢ï¼³ãƒ†ãƒ¬æ±ï¼’
+# ‚a‚rƒeƒŒ“Œ‚Q
 nsid	0x000400ac	
-# ï¼¢ï¼³ãƒ†ãƒ¬æ±ï¼“
+# ‚a‚rƒeƒŒ“Œ‚R
 nsid	0x000400ad	
-# ï¼¢ï¼³ãƒ•ã‚¸
+# ‚a‚rƒtƒW
 nsid	0x000400b5	
-# ï¼¢ï¼³ãƒ•ã‚¸ãƒ»ï¼‘ï¼˜ï¼’
+# ‚a‚rƒtƒWE‚P‚W‚Q
 nsid	0x000400b6	
-# ï¼¢ï¼³ãƒ•ã‚¸ãƒ»ï¼‘ï¼˜ï¼“
+# ‚a‚rƒtƒWE‚P‚W‚R
 nsid	0x000400b7	
-# ï¼·ï¼¯ï¼·ï¼¯ï¼·ãƒ—ãƒ©ã‚¤ãƒ 
+# ‚v‚n‚v‚n‚vƒvƒ‰ƒCƒ€
 nsid	0x000400bf	
-# ï¼·ï¼¯ï¼·ï¼¯ï¼·ãƒ©ã‚¤ãƒ–
+# ‚v‚n‚v‚n‚vƒ‰ƒCƒu
 nsid	0x000400c0	
-# ï¼·ï¼¯ï¼·ï¼¯ï¼·ã‚·ãƒãƒž
+# ‚v‚n‚v‚n‚vƒVƒlƒ}
 nsid	0x000400c1	
-# ã‚¹ã‚¿ãƒ¼ãƒ»ãƒãƒ£ãƒ³ãƒãƒ«ï¼‘
+# ƒXƒ^[Eƒ`ƒƒƒ“ƒlƒ‹‚P
 nsid	0x000400c8	
-# ã‚¹ã‚¿ãƒ¼ãƒ»ãƒãƒ£ãƒ³ãƒãƒ«ï¼’
+# ƒXƒ^[Eƒ`ƒƒƒ“ƒlƒ‹‚Q
 nsid	0x000400c9	
-# ã‚¹ã‚¿ãƒ¼ãƒ»ãƒãƒ£ãƒ³ãƒãƒ«ï¼“
+# ƒXƒ^[Eƒ`ƒƒƒ“ƒlƒ‹‚R
 nsid	0x000400ca	
-# ï¼¢ï¼³ï¼‘ï¼‘ã‚¤ãƒ¬ãƒ–ãƒ³
-nsid	0x000400d3	lv345479998
-# ï¼¢ï¼³ï¼‘ï¼‘ã‚¤ãƒ¬ãƒ–ãƒ³ ãƒˆãƒ©ãƒ¢ã‚¸
-nsid	0x000400d3	lv345479998
-# ï¼¢ï¼³ï¼‘ï¼’ãƒˆã‚¥ã‚¨ãƒ«ãƒ“
+# ‚a‚r‚P‚PƒCƒŒƒuƒ“
+nsid	0x000400d3	ch2646846
+# ‚a‚r‚P‚PƒCƒŒƒuƒ“ ƒgƒ‰ƒ‚ƒW
+nsid	0x000400d3	ch2646846
+# ‚a‚r‚P‚QƒgƒDƒGƒ‹ƒr
 nsid	0x000400de	
-# ï¼¢ï¼³ã‚­ãƒ£ãƒ³ãƒ‘ã‚¹ï½…ï½˜
+# ‚a‚rƒLƒƒƒ“ƒpƒX‚…‚˜
 nsid	0x000400e7	
-# ï¼¢ï¼³ã‚­ãƒ£ãƒ³ãƒ‘ã‚¹ï½ï½Ž
+# ‚a‚rƒLƒƒƒ“ƒpƒX‚‚Ž
 nsid	0x000400e8	
-# ã‚°ãƒªãƒ¼ãƒ³ãƒãƒ£ãƒ³ãƒãƒ«
+# ƒOƒŠ[ƒ“ƒ`ƒƒƒ“ƒlƒ‹
 nsid	0x000400ea	
-# ï¼¢ï¼³ã‚¢ãƒ‹ãƒžãƒƒã‚¯ã‚¹
+# ‚a‚rƒAƒjƒ}ƒbƒNƒX
 nsid	0x000400ec	
-# ï¼¦ï¼¯ï¼¸ã‚¹ãƒãƒ¼ãƒ„ã‚¨ãƒ³ã‚¿
+# ‚e‚n‚wƒXƒ|[ƒcƒGƒ“ƒ^
 nsid	0x000400ee	
-# ï¼¢ï¼³ã‚¹ã‚«ãƒ‘ãƒ¼ï¼
+# ‚a‚rƒXƒJƒp[I
 nsid	0x000400f1	
-# ï¼ªã€€ï¼³ï¼°ï¼¯ï¼²ï¼´ï¼³ã€€ï¼‘
+# ‚i@‚r‚o‚n‚q‚s‚r@‚P
 nsid	0x000400f2	
-# ï¼ªã€€ï¼³ï¼°ï¼¯ï¼²ï¼´ï¼³ã€€ï¼’
+# ‚i@‚r‚o‚n‚q‚s‚r@‚Q
 nsid	0x000400f3	
-# ï¼ªã€€ï¼³ï¼°ï¼¯ï¼²ï¼´ï¼³ã€€ï¼“
+# ‚i@‚r‚o‚n‚q‚s‚r@‚R
 nsid	0x000400f4	
-# ï¼ªã€€ï¼³ï¼°ï¼¯ï¼²ï¼´ï¼³ã€€ï¼”
+# ‚i@‚r‚o‚n‚q‚s‚r@‚S
 nsid	0x000400f5	
-# ï¼¢ï¼³é‡£ã‚Šãƒ“ã‚¸ãƒ§ãƒ³
+# ‚a‚r’Þ‚èƒrƒWƒ‡ƒ“
 nsid	0x000400fb	
-# ã‚·ãƒãƒ•ã‚£ãƒ«ï¼·ï¼¯ï¼·ï¼¯ï¼·
+# ƒVƒlƒtƒBƒ‹‚v‚n‚v‚n‚v
 nsid	0x000400fc	
-# æ—¥æœ¬æ˜ ç”»å°‚é–€ï½ƒï½ˆ
+# “ú–{‰f‰æê–å‚ƒ‚ˆ
 nsid	0x000400ff	
-# ãƒ‡ã‚£ã‚ºãƒ‹ãƒ¼ï½ƒï½ˆ
+# ƒfƒBƒYƒj[‚ƒ‚ˆ
 nsid	0x00040100	
-# ãƒ‡ã‚£ãƒ¼ãƒ©ã‚¤ãƒ•
+# ƒfƒB[ƒ‰ƒCƒt
 nsid	0x00040102	
