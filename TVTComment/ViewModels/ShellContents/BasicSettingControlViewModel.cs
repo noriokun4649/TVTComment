@@ -22,6 +22,7 @@ namespace TVTComment.ViewModels.ShellContents
         public ObservableValue<TimeSpan> ChatCollectTimeAdjustment { get; private set; }
         public ObservableValue<bool> ClearChatsOnChannelChange { get; private set; }
         public ObservableValue<bool> NgCommentNotShow { get; private set; }
+        public ObservableValue<bool> AddChannelLogOnChannelChange { get; private set; }
         public ObservableValue<bool> UiFlashingDeterrence { get; private set; }
         public ObservableValue<double> WindowFontSize { get; } = new ObservableValue<double>(1.2);
         public ObservableValue<bool> NXJikkyoImportDisable { get; private set; }
@@ -54,6 +55,7 @@ namespace TVTComment.ViewModels.ShellContents
             //256段階でスライダーを動かすと大量にSetChatOpacityIPCMessageが発生してしまうため16段階にする
             ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
             ClearChatsOnChannelChange = model.ChatModule.ClearChatsOnChannelChange;
+            AddChannelLogOnChannelChange = model.ChatModule.AddChannelLogOnChannelChange;
             NgCommentNotShow = model.ChatModule.NgCommentNotShow;
             UiFlashingDeterrence = model.ChatModule.UiFlashingDeterrence;
             NXJikkyoImportDisable = model.ChatModule.NXJikkyoImportDisable;
