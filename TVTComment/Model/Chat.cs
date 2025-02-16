@@ -21,6 +21,7 @@ namespace TVTComment.Model
         public string UserId { get; private set; }
         public int Number { get; private set; }
         public bool IsSelfComment { get; private set; }
+        public bool IsSystemMsg { get; private set; }
 
         public ChatCollectServiceEntry.IChatCollectServiceEntry SourceService { get; private set; }
 
@@ -69,6 +70,10 @@ namespace TVTComment.Model
         public void SetSelfComment(bool isSelfComment)
         {
             IsSelfComment = isSelfComment;
+        }
+        public void SetSystemMsg(bool isSystemMsg)
+        {
+            IsSystemMsg = isSystemMsg;
         }
     }
 }

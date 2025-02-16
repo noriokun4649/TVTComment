@@ -185,18 +185,26 @@
                                 <GridViewColumn Header="コメント" attachedproperties:GridViewColumnSettingsBinder.ColumnId="text">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock TextWrapping="Wrap">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="{Binding Text}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Ng}" Value="True">
-                                                                <Setter Property="Text" Value="###### NG ######"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                            <Grid x:Name="ItemGrid">
+                                                <TextBlock TextWrapping="Wrap" x:Name="ItemText">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="{Binding Text}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Ng}" Value="True">
+                                                                    <Setter Property="Text" Value="###### NG ######"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding IsSystemMsg}" Value="True">
+                                                    <Setter TargetName="ItemGrid" Property="Background" Value="Black"/>
+                                                    <Setter TargetName="ItemText" Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>

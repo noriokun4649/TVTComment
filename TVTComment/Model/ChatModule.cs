@@ -29,6 +29,7 @@ namespace TVTComment.Model
         public ObservableValue<int> ChatPreserveCount { get; } = new ObservableValue<int>();
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> NgCommentNotShow { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> AddChannelLogOnChannelChange { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> UiFlashingDeterrence { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> NXJikkyoImportDisable { get; } = new ObservableValue<bool>();
 
@@ -57,8 +58,14 @@ namespace TVTComment.Model
             {
                 if (ClearChatsOnChannelChange.Value)
                     ClearChats();
+                if (x != null && AddChannelLogOnChannelChange.Value)
+                {
+                    var msg = " ★" + x.ChannelName + " (" + x.NetworkId + ") ";
+                    var chat = new Chat(DateTime.Now, msg, Chat.PositionType.Normal, Chat.SizeType.Normal, Color.White, "TvTComment system message", 0, true);
+                    chat.SetSystemMsg(true);
+                    chats.Add(chat);
+                }
             }));
-
             collectServiceModule.NewChatProduced += CollectServiceModule_NewChatProduced;
 
             LoadSettings();
@@ -142,6 +149,7 @@ namespace TVTComment.Model
             ChatPreserveCount.Value = settings.ChatPreserveCount;
             ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
             NgCommentNotShow.Value = settings.NgCommentNotShow;
+            AddChannelLogOnChannelChange.Value = settings.AddChannelLogOnChannelChange;
             NXJikkyoImportDisable.Value = settings.NXJikkyoImportDisable;
             UiFlashingDeterrence.Value = settings.UiFlashingDeterrence;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
@@ -238,6 +246,7 @@ namespace TVTComment.Model
             settings.ChatPreserveCount = ChatPreserveCount.Value;
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
             settings.NgCommentNotShow = NgCommentNotShow.Value;
+            settings.AddChannelLogOnChannelChange = AddChannelLogOnChannelChange.Value;
             settings.NXJikkyoImportDisable = NXJikkyoImportDisable.Value;
             settings.UiFlashingDeterrence = UiFlashingDeterrence.Value;
             settings.ChatModRules = chatModRules.Select(x =>
