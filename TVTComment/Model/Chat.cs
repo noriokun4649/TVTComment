@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Prism.Mvvm;
+using System;
 using System.Drawing;
 
 namespace TVTComment.Model
 {
-    public class Chat
+    public class Chat : BindableBase
     {
         public enum PositionType { Normal, Top, Bottom }
         public enum SizeType { Normal, Small, Large }
@@ -22,7 +23,12 @@ namespace TVTComment.Model
         public int Number { get; private set; }
         public bool IsSelfComment { get; private set; }
         public bool IsSystemMsg { get; private set; }
-
+        private bool _ishoverd;
+        public bool IsHoverd
+        {
+            get => _ishoverd;
+            private set => SetProperty(ref _ishoverd, value);  // プロパティ変更時に通知
+        }
         public ChatCollectServiceEntry.IChatCollectServiceEntry SourceService { get; private set; }
 
         public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number, bool isSelfComment = false)
@@ -74,6 +80,10 @@ namespace TVTComment.Model
         public void SetSystemMsg(bool isSystemMsg)
         {
             IsSystemMsg = isSystemMsg;
+        }
+        public void SetHoverdUser(string target)
+        {
+            IsHoverd = target == UserId;
         }
     }
 }

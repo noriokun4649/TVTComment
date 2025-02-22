@@ -30,6 +30,7 @@ namespace TVTComment.Model
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> NgCommentNotShow { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> AddChannelLogOnChannelChange { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> CommentLogSameUserHighlight { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> UiFlashingDeterrence { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> NXJikkyoImportDisable { get; } = new ObservableValue<bool>();
 
@@ -84,6 +85,14 @@ namespace TVTComment.Model
         public void ClearChats()
         {
             chats.Clear();
+        }
+
+        public void SetHoverdUser(string target)
+        {
+            if (CommentLogSameUserHighlight.Value)
+            {
+                chats.ToList().ForEach(c => c.SetHoverdUser(target));
+            }
         }
 
         private async void CollectServiceModule_NewChatProduced(IEnumerable<Chat> newChats)
@@ -150,6 +159,7 @@ namespace TVTComment.Model
             ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
             NgCommentNotShow.Value = settings.NgCommentNotShow;
             AddChannelLogOnChannelChange.Value = settings.AddChannelLogOnChannelChange;
+            CommentLogSameUserHighlight.Value = settings.CommentLogSameUserHighlight;
             NXJikkyoImportDisable.Value = settings.NXJikkyoImportDisable;
             UiFlashingDeterrence.Value = settings.UiFlashingDeterrence;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
@@ -247,6 +257,7 @@ namespace TVTComment.Model
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
             settings.NgCommentNotShow = NgCommentNotShow.Value;
             settings.AddChannelLogOnChannelChange = AddChannelLogOnChannelChange.Value;
+            settings.CommentLogSameUserHighlight = CommentLogSameUserHighlight.Value;
             settings.NXJikkyoImportDisable = NXJikkyoImportDisable.Value;
             settings.UiFlashingDeterrence = UiFlashingDeterrence.Value;
             settings.ChatModRules = chatModRules.Select(x =>
