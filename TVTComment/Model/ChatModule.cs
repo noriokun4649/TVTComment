@@ -60,7 +60,7 @@ namespace TVTComment.Model
                     ClearChats();
                 if (x != null && AddChannelLogOnChannelChange.Value)
                 {
-                    var msg = " ★" + x.ChannelName + " (" + x.NetworkId + ") ";
+                    var msg = " ★" + x.ChannelName + " (" + x.ServiceName + ") ";
                     var chat = new Chat(DateTime.Now, msg, Chat.PositionType.Normal, Chat.SizeType.Normal, Color.White, "TvTComment system message", 0, true);
                     chat.SetSystemMsg(true);
                     chats.Add(chat);
