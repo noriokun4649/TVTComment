@@ -67,8 +67,8 @@ bool CViewer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
 	pInfo->pszPluginName  = L"TvtComment";
-	pInfo->pszCopyright   = L"(c) 2017 silane / 2022-2024 noriokun4649";
-	pInfo->pszDescription = L"実況コメントをオーバーレイ表示 (v3.2.2)";
+	pInfo->pszCopyright   = L"(c) 2017 silane / 2022-2025 noriokun4649";
+	pInfo->pszDescription = L"実況コメントをオーバーレイ表示 (v3.3.0)";
 	return true;
 }
 

@@ -7,8 +7,8 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>3.2.2</Version>
-    <Copyright>© 2017 silane / © 2020-2024 noriokun4649</Copyright>
+    <Version>3.3.0</Version>
+    <Copyright>© 2017 silane / © 2020-2025 noriokun4649</Copyright>
     <Authors>silane edit by noriokun4649</Authors>
     <Company>silane</Company>
     <NeutralLanguage>ja-JP</NeutralLanguage>
