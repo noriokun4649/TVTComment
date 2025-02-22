@@ -13,6 +13,7 @@
         public bool ClearChatsOnChannelChange { get; set; } = false;
         public bool NgCommentNotShow { get; set; } = false;
         public bool AddChannelLogOnChannelChange { get; set; } = false;
+        public bool CommentLogSameUserHighlight { get; set; } = false;
         public bool NXJikkyoImportDisable { get; set; } = false;
         public bool UiFlashingDeterrence { get; set; } = false;
         public Serialization.ChatModRuleEntity[] ChatModRules { get; set; } = System.Array.Empty<Serialization.ChatModRuleEntity>();

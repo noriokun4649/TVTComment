@@ -23,6 +23,7 @@ namespace TVTComment.ViewModels.ShellContents
         public ObservableValue<bool> ClearChatsOnChannelChange { get; private set; }
         public ObservableValue<bool> NgCommentNotShow { get; private set; }
         public ObservableValue<bool> AddChannelLogOnChannelChange { get; private set; }
+        public ObservableValue<bool> CommentLogSameUserHighlight { get; private set; }
         public ObservableValue<bool> UiFlashingDeterrence { get; private set; }
         public ObservableValue<double> WindowFontSize { get; } = new ObservableValue<double>(1.2);
         public ObservableValue<bool> NXJikkyoImportDisable { get; private set; }
@@ -56,6 +57,7 @@ namespace TVTComment.ViewModels.ShellContents
             ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
             ClearChatsOnChannelChange = model.ChatModule.ClearChatsOnChannelChange;
             AddChannelLogOnChannelChange = model.ChatModule.AddChannelLogOnChannelChange;
+            CommentLogSameUserHighlight = model.ChatModule.CommentLogSameUserHighlight;
             NgCommentNotShow = model.ChatModule.NgCommentNotShow;
             UiFlashingDeterrence = model.ChatModule.UiFlashingDeterrence;
             NXJikkyoImportDisable = model.ChatModule.NXJikkyoImportDisable;
