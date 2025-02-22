@@ -94,6 +94,7 @@ namespace TVTComment.ViewModels
         public ICommand AddUserNgCommand { get; private set; }
         public ICommand CopyCommentCommand { get; private set; }
         public ICommand CopyUserCommand { get; private set; }
+        public ICommand UpdateHoverdUserCommand { get; private set; }
 
         public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
         public InteractionRequest<Notifications.ChatCollectServiceCreationSettingsConfirmation> ChatCollectServiceCreationSettingsRequest { get; } = new InteractionRequest<Notifications.ChatCollectServiceCreationSettingsConfirmation>();
@@ -236,6 +237,12 @@ namespace TVTComment.ViewModels
             {
                 if (chat == null) return;
                 Clipboard.SetText(chat.UserId);
+            });
+
+            UpdateHoverdUserCommand = new DelegateCommand<string>(userid =>
+            {
+                if (userid == null) return;
+                model.ChatModule.SetHoverdUser(userid);
             });
 
             OnPropertyChanged(null);

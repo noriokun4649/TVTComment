@@ -86,6 +86,11 @@ namespace TVTComment.Model
             chats.Clear();
         }
 
+        public void SetHoverdUser(string target)
+        {
+            chats.ToList().ForEach(c => c.SetHoverdUser(target));
+        }
+
         private async void CollectServiceModule_NewChatProduced(IEnumerable<Chat> newChats)
         {
             foreach (Chat chat in newChats)

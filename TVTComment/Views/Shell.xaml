@@ -27,7 +27,7 @@
          CornerRadius="0"
          ResizeBorderThickness="8"/>
     </WindowChrome.WindowChrome>
-    
+
     <Window.Resources>
         <converters:ColorToSolidColorBrushConverter x:Key="ColorConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
@@ -185,7 +185,7 @@
                                 <GridViewColumn Header="コメント" attachedproperties:GridViewColumnSettingsBinder.ColumnId="text">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Grid x:Name="ItemGrid">
+                                            <Grid x:Name="ItemGrid" Background="{Binding BackgroundColor, Converter={StaticResource ColorConverter}}" >
                                                 <TextBlock TextWrapping="Wrap" x:Name="ItemText">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
@@ -254,6 +254,15 @@
                                         </TextBlock>
                                     </Setter.Value>
                                 </Setter>
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="acb:CommandBehavior.Event" Value="MouseEnter" />
+                                <Setter Property="acb:CommandBehavior.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.UpdateHoverdUserCommand}"/>
+                                <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding UserId}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsHoverd}" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ContextMenu>
