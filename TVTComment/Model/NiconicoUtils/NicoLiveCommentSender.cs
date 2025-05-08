@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sgml;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Web;
+using System.Xml.Linq;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -82,32 +84,63 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
 
+        private async Task<(string webSocketUrl,bool notOnAir, long openTime)> GetLiveDataAsync(string url)
+        {
+            var httpResp = await httpClient.GetStringAsync(url).ConfigureAwait(false);
+            var dataPropsPattern = @"<script\s+[^>]*id=['""]embedded-data['""][^>]*data-props=['""]([^'""]+)['""][^>]*>";
+            Match match = Regex.Match(httpResp, dataPropsPattern);
+            if (!match.Success)
+                throw new NicoLiveCommentSenderException("放送情報を取得出来ませんでした。");
+            var dataProps = JsonDocument.Parse(HttpUtility.HtmlDecode(match.Groups[1].Value)).RootElement;
+            if (dataProps.TryGetProperty("site", out var site) && site.TryGetProperty("relive", out var relive) && dataProps.TryGetProperty("program",out var program))
+            {
+                var webSocketUrl = relive.GetProperty("webSocketUrl").ToString();
+                var notOnAir = !program.GetProperty("status").ToString().Equals("ON_AIR");
+                var openTime = program.GetProperty("openTime").GetInt64();
+                return (webSocketUrl, notOnAir, openTime);
+            }
+            else
+                throw new KeyNotFoundException();
+        }
+
+
         public async Task ConnectWatchSession(string liveId, BlockingCollection<MessageServer> messageServer, CancellationToken cancellationToken)
         {
             Uri webScoketUri;
 
             try
             {
-                var httpResp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
-                var dataPropsPattern = @"<script\s+[^>]*id=['""]embedded-data['""][^>]*data-props=['""]([^'""]+)['""][^>]*>";
-                Match match = Regex.Match(httpResp, dataPropsPattern);
-                if (!match.Success)
-                    throw new NicoLiveCommentSenderException("放送情報を取得出来ませんでした。");
-                var dataProps = JsonDocument.Parse(HttpUtility.HtmlDecode(match.Groups[1].Value)).RootElement;
-                if (dataProps.TryGetProperty("site", out var site) && site.TryGetProperty("relive", out var relive) && dataProps.TryGetProperty("program",out var program))
-                {
-                    var webSocketUrl = relive.GetProperty("webSocketUrl").ToString();
-                    var notOnAir = !program.GetProperty("status").ToString().Equals("ON_AIR");
-                    var openTime = program.GetProperty("openTime").GetInt64();
+                var (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync("https://live.nicovideo.jp/watch/" + liveId);
 
-                    if (notOnAir || webSocketUrl.Equals(""))
+
+                if (notOnAir || webSocketUrl == null)
+                {
+                    // 本来であれば放送終了判定だが下記の不具合が発生した場合に取得出来ないため
+                    // LiveIDがチャンネルだった場合のみ代替策で取得する
+                    // https://x.com/nico_nico_talk/status/1920441957840486464
+
+                    if (liveId.Contains("lv"))
                         throw new LiveNotFoundException("放送が終了しています。");
 
-                    this.openTime = openTime;
-                    webScoketUri = new Uri(webSocketUrl);
+                    // チャンネルページから放送IDを取得
+                    var bugfix = await httpClient.GetStringAsync("https://ch.nicovideo.jp/" + liveId).ConfigureAwait(false);
+
+                    using var textReader = new StringReader(bugfix);
+                    using var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = textReader };
+                    var doc = XDocument.Load(sgml);
+
+                    // <p class="g-live-airtime onair">(放送中)の要素を取得後、親要素を取得しaタグを探してhref属性を取得
+                    var url = doc.Descendants("p").Where(p => (string)p.Attribute("class") == "g-live-airtime onair").Select(p => p.Parent.Descendants("a").FirstOrDefault()?.Attribute("href")?.Value).FirstOrDefault()??throw new LiveNotFoundException("放送が終了しています。");
+
+                    (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync(url);
+
+                    if (notOnAir || webSocketUrl == null)
+                        throw new LiveNotFoundException("放送が終了しています。");
                 }
-                else
-                    throw new KeyNotFoundException();
+
+                this.openTime = openTime;
+                webScoketUri = new Uri(webSocketUrl);
+
             }
             catch (HttpRequestException e)
             {
