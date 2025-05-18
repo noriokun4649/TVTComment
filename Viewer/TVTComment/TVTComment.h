@@ -21,7 +21,8 @@ namespace TVTComment
 	enum class Command
 	{
 		ShowWindow,
-		HideComment
+		HideComment,
+		ShowComment,
 	};
 
 	//TVTCommentの最上位クラス
@@ -77,7 +78,7 @@ namespace TVTComment
 		static constexpr int WM_SETCHATOPACITY = WM_APP + 1005;//コメント透過度を設定する wParamに透過度(0~255)、lParamに表示状態（非0で非表示）を渡す
 		static constexpr int WM_CHANNELSELECT = WM_APP + 1006;//チャンネル変更する
 
-		enum class UserInteractionRequestType{ConnectSucceed,ConnectFail,InvalidMessage,ReceiveError,SendError, FetalErrorInTask};
+		enum class UserInteractionRequestType{ConnectSucceed,ConnectFail,InvalidMessage,ReceiveError,SendError, FetalErrorInTask, CommentMessege};
 
 	public:
 		bool IsConnected() const;

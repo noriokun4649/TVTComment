@@ -192,7 +192,7 @@ namespace TVTComment
 	{
 	}
 
-	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM /* lParam */)
+	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
@@ -264,6 +264,12 @@ namespace TVTComment
 			{
 				std::wstring text = L"TVTComment設定ウィンドウからの受信処理で致命的な問題が発生しました。\nプラグインを無効化します。";
 				MessageBoxW(this->tvtest->GetAppWindow(), text.c_str(), L"TVTComment表示側エラー", 0);
+				break;
+			}
+			case UserInteractionRequestType::CommentMessege:
+			{
+				LPCTSTR receivedStr = (LPCTSTR)lParam;
+				this->commentWindow->AddChat(receivedStr, RGB(0, 255, 0), CCommentWindow::CHAT_POS_UE, CCommentWindow::CHAT_SIZE_SMALL);
 				break;
 			}
 			}
@@ -415,7 +421,17 @@ namespace TVTComment
 					PostMessage(this->dialog, WM_SETCHATOPACITY, lastOpacity, 0);
 				}
 				break;
-		}
+			case Command::ShowComment:
+				if (this->commentWindow->GetOpacity() == 0) {
+					PostMessage(this->dialog, WM_SETCHATOPACITY, lastOpacity, 0);
+					PostMessage(this->dialog, WM_USERINTERACTIONREQUEST, (WPARAM)UserInteractionRequestType::CommentMessege, (LPARAM)TEXT("[TVTComment: コメントON]"));
+				}
+				else {
+					lastOpacity = this->commentWindow->GetOpacity();
+					PostMessage(this->dialog, WM_SETCHATOPACITY, 0, 1);
+				}
+				break;
+	}
 	}
 
 #pragma warning(push)

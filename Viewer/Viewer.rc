@@ -17,6 +17,8 @@
 IDB_TVTCICON             BITMAP         ".\\TVTComment\\Resource\\TvTComIcon.bmp"
 IDB_TVTCTOPICON          BITMAP         ".\\TVTComment\\Resource\\TopIcon.bmp"
 IDB_TVTCVIEWICON         BITMAP         ".\\TVTComment\\Resource\\ViewIcon.bmp"
+IDB_TVTCVIEWICON2        BITMAP         ".\\TVTComment\\Resource\\ViewIcon2.bmp"
 IDB_TVTCICON16           BITMAP         ".\\TVTComment\\Resource\\TvTComIcon16.bmp"
 IDB_TVTCTOPICON16        BITMAP         ".\\TVTComment\\Resource\\TopIcon16.bmp"
 IDB_TVTCVIEWICON16       BITMAP         ".\\TVTComment\\Resource\\ViewIcon16.bmp"
+IDB_TVTCVIEWICON2_16     BITMAP         ".\\TVTComment\\Resource\\ViewIcon2_16.bmp"
