@@ -22,7 +22,7 @@ namespace TVTComment
 	{
 		ShowWindow,
 		HideComment,
-		ShowComment,
+		ToggleComment,
 	};
 
 	//TVTCommentの最上位クラス

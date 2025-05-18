@@ -140,8 +140,8 @@ bool CViewer::Initialize()
 	}
 	DeleteObject(ci.hbmIcon);
 
-	//非表示コマンド(反転)を登録
-	ci.ID = static_cast<int>(TVTComment::Command::ShowComment);
+	//表示切替コマンドを登録
+	ci.ID = static_cast<int>(TVTComment::Command::ToggleComment);
 	ci.pszText = L"ShowComment";
 	ci.pszDescription = ci.pszName = L"TvtCommentコメントの表示切替";
 	ci.hbmIcon = static_cast<HBITMAP>(LoadImage(g_hinstDLL, MAKEINTRESOURCE(bSmallIcon ? IDB_TVTCVIEWICON16 : IDB_TVTCVIEWICON), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
@@ -524,7 +524,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		SetTimer(hwnd, TIMER_DONE_SIZE, 500, nullptr);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), 0);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), 0);
-		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowComment), TVTest::COMMAND_ICON_STATE_CHECKED);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ToggleComment), TVTest::COMMAND_ICON_STATE_CHECKED);
 		return TRUE;
 	}
 	case WM_DESTROY:
@@ -538,7 +538,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		m_pApp->SetWindowMessageCallback(nullptr);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
-		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowComment), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ToggleComment), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
 		hDummy_ = nullptr;
 		break;
 #pragma region TVTComment
@@ -557,7 +557,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		commentWindow_.SetOpacity(newOpacity);
 		bool hideState = lParam != 0;
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::HideComment), hideState ? TVTest::COMMAND_ICON_STATE_CHECKED : 0);
-		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowComment), hideState ? 0 : TVTest::COMMAND_ICON_STATE_CHECKED);
+		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ToggleComment), hideState ? 0 : TVTest::COMMAND_ICON_STATE_CHECKED);
 		break;
 	}
 #pragma endregion

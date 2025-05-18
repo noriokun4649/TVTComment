@@ -421,7 +421,7 @@ namespace TVTComment
 					PostMessage(this->dialog, WM_SETCHATOPACITY, lastOpacity, 0);
 				}
 				break;
-			case Command::ShowComment:
+			case Command::ToggleComment:
 				if (this->commentWindow->GetOpacity() == 0) {
 					PostMessage(this->dialog, WM_SETCHATOPACITY, lastOpacity, 0);
 					PostMessage(this->dialog, WM_USERINTERACTIONREQUEST, (WPARAM)UserInteractionRequestType::CommentMessege, (LPARAM)TEXT("[TVTComment: コメントON]"));
