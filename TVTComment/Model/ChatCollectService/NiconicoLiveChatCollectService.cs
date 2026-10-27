@@ -52,6 +52,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly NiconicoUtils.NicoLiveCommentSender commentSender;
         private DateTime lastHeartbeatTime = DateTime.MinValue;
         private readonly CancellationTokenSource cancel = new();
+        private bool disposed;
 
         public NiconicoLiveChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string liveId,
@@ -73,7 +74,8 @@ namespace TVTComment.Model.ChatCollectService
             commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
 
             chatCollectTask = CollectChat(cancel.Token);
-            chatSessionTask = commentSender.ConnectWatchSession(this.liveId, messageServers, cancel.Token);
+            var token = cancel.Token;
+            chatSessionTask = Task.Run(() => commentSender.ConnectWatchSession(this.liveId, messageServers, token), token);
         }
 
         public string GetInformationText()
@@ -88,6 +90,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
+            if (disposed) return Array.Empty<Chat>();
             if (chatCollectTask?.IsFaulted ?? false)
             {
                 //非同期部分で例外発生
@@ -122,7 +125,7 @@ namespace TVTComment.Model.ChatCollectService
             {
                 await Task.Delay(2500, cancellationToken).ConfigureAwait(false);
                 //コメント投稿(視聴)セッションのRoomメッセージでPostKeyを取得出来るまでロックして待機
-                messageServers.TryTake(out var message, Timeout.Infinite);
+                messageServers.TryTake(out var message, Timeout.Infinite, cancellationToken);
 
                 await foreach (NiconicoCommentXmlTag tag in commentReceiver.Receive(message, cancellationToken))
                 {
@@ -172,22 +175,26 @@ namespace TVTComment.Model.ChatCollectService
 
         public void Dispose()
         {
-            using (messageServers)
-            using (commentReceiver)
-            using (commentSender)
+            if (disposed) return;
+            disposed = true;
+            _ = DisposeAsync();
+        }
+
+        private async Task DisposeAsync()
+        {
+            try
             {
-                cancel?.Cancel();
-                try
-                {
-                    chatSessionTask?.Wait();
-                }
-                //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
-                catch (AggregateException e) when (e.InnerExceptions.All(
-                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException ||
-                    innerE is NetworkNicoLiveCommentReceiverException || innerE is NicoLiveCommentSenderException
-                ))
-                {
-                }
+                await Task.WhenAll(cancel.CancelAsync(), chatSessionTask, chatCollectTask).ConfigureAwait(false);
+            }
+            // UIで同期待機せず、受信処理が終了してから共有資源を破棄する。
+            catch (Exception) { }
+            finally
+            {
+                messageServers.Dispose();
+                commentReceiver.Dispose();
+                commentSender.Dispose();
+                httpClient.Dispose();
+                cancel.Dispose();
             }
         }
     }

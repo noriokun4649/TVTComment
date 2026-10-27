@@ -84,9 +84,9 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
 
-        private async Task<(string webSocketUrl,bool notOnAir, long openTime)> GetLiveDataAsync(string url)
+        private async Task<(string webSocketUrl,bool notOnAir, long openTime)> GetLiveDataAsync(string url, CancellationToken cancellationToken)
         {
-            var httpResp = await httpClient.GetStringAsync(url).ConfigureAwait(false);
+            var httpResp = await httpClient.GetStringAsync(url, cancellationToken).ConfigureAwait(false);
             var dataPropsPattern = @"<script\s+[^>]*id=['""]embedded-data['""][^>]*data-props=['""]([^'""]+)['""][^>]*>";
             Match match = Regex.Match(httpResp, dataPropsPattern);
             if (!match.Success)
@@ -110,7 +110,7 @@ namespace TVTComment.Model.NiconicoUtils
 
             try
             {
-                var (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync("https://live.nicovideo.jp/watch/" + liveId);
+                var (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync("https://live.nicovideo.jp/watch/" + liveId, cancellationToken).ConfigureAwait(false);
 
 
                 if (notOnAir || webSocketUrl == null)
@@ -123,7 +123,7 @@ namespace TVTComment.Model.NiconicoUtils
                         throw new LiveNotFoundException("放送が終了しています。");
 
                     // チャンネルページから放送IDを取得
-                    var bugfix = await httpClient.GetStringAsync("https://ch.nicovideo.jp/" + liveId).ConfigureAwait(false);
+                    var bugfix = await httpClient.GetStringAsync("https://ch.nicovideo.jp/" + liveId, cancellationToken).ConfigureAwait(false);
 
                     using var textReader = new StringReader(bugfix);
                     using var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = textReader };
@@ -132,7 +132,7 @@ namespace TVTComment.Model.NiconicoUtils
                     // <p class="g-live-airtime onair">(放送中)の要素を取得後、親要素を取得しaタグを探してhref属性を取得
                     var url = doc.Descendants("p").Where(p => (string)p.Attribute("class") == "g-live-airtime onair").Select(p => p.Parent.Descendants("a").FirstOrDefault()?.Attribute("href")?.Value).FirstOrDefault()??throw new LiveNotFoundException("放送が終了しています。");
 
-                    (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync(url);
+                    (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync(url, cancellationToken).ConfigureAwait(false);
 
                     if (notOnAir || webSocketUrl == null)
                         throw new LiveNotFoundException("放送が終了しています。");
@@ -155,6 +155,8 @@ namespace TVTComment.Model.NiconicoUtils
             }
 
 
+            cancellationToken.ThrowIfCancellationRequested();
+            clientWebSocket?.Dispose();
             clientWebSocket = new ClientWebSocket();
             clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
             clientWebSocket.Options.KeepAliveInterval = TimeSpan.Zero;
@@ -167,24 +169,24 @@ namespace TVTComment.Model.NiconicoUtils
             ElapsedEventHandler handler = null;
             handler = async (sender, e) =>
             {
-                if (clientWebSocket.State != WebSocketState.Open)
+                try
                 {
-                    timer.Elapsed -= handler;
-                    timer.Close();
-                    return;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (clientWebSocket.State != WebSocketState.Open)
+                    {
+                        timer.Elapsed -= handler;
+                        timer.Close();
+                        return;
+                    }
+                    await WsSend("{\"type\": \"keepSeat\"}", cancellationToken);
                 }
-                await WsSend("{\"type\": \"keepSeat\"}", cancellationToken);
+                catch (Exception error) when (cancellationToken.IsCancellationRequested &&
+                    (error is OperationCanceledException || error is WebSocketException || error is ObjectDisposedException)) { }
             };
             var buffer = new byte[4096];
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "IsCancellationRequested", CancellationToken.None);
-                    timer.Elapsed -= handler;
-                    timer.Close();
-                    break;
-                }
+                cancellationToken.ThrowIfCancellationRequested();
                 var segment = new ArraySegment<byte>(buffer);
                 WebSocketReceiveResult result;
                 try
@@ -214,7 +216,7 @@ namespace TVTComment.Model.NiconicoUtils
                             case "NO_PERMISSION":
                             case "NOT_ON_AIR":
                             case "BROADCAST_NOT_FOUND":
-                                await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "error disconnect", CancellationToken.None);
+                                await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "error disconnect", cancellationToken);
                                 timer.Elapsed -= handler;
                                 timer.Close();
                                 return;
@@ -234,7 +236,7 @@ namespace TVTComment.Model.NiconicoUtils
                         var data = json.GetProperty("data");
                         var token = data.GetProperty("audienceToken").GetString();
                         var waittime = data.GetProperty("waitTimeSec").GetInt32();
-                        await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "reconnect", CancellationToken.None);
+                        await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "reconnect", cancellationToken);
                         var path = webScoketUri.GetLeftPart(UriPartial.Path);
                         var newUri = new Uri(path + "?audience_token=" + token);
                         await Task.Delay(waittime * 1000, cancellationToken);
@@ -242,7 +244,7 @@ namespace TVTComment.Model.NiconicoUtils
                         await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
                         break;
                     case "disconnect":
-                        await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "disconnect", CancellationToken.None);
+                        await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "disconnect", cancellationToken);
                         timer.Elapsed -= handler;
                         timer.Close();
                         errorMesColl.Add("disconnect", cancellationToken);
@@ -272,7 +274,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         public async Task Send(string liveId, string message, string mail)
         {
-            if (clientWebSocket.State == WebSocketState.Closed) throw new NicoLiveCommentSenderException("視聴セッションは切断されています");
+            if (clientWebSocket?.State != WebSocketState.Open) throw new NicoLiveCommentSenderException("視聴セッションは接続されていません");
             var arrayMail = mail.Split(" ");
             var size = arrayMail.FirstOrDefault(x => IsSize(x)) ?? "medium";
             var position = arrayMail.FirstOrDefault(x => IsPosition(x)) ?? "naka";

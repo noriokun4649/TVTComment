@@ -122,6 +122,8 @@ namespace TVTComment.Model
                 new ChatService.TwitterChatService(Settings.Twitter, channelDatabase, Path.Combine(baseDir, "twittersearchword.txt"))
             });
 
+            await ChatServices.OfType<ChatService.NiconicoChatService>().Single().RestoreAsync();
+
             var chatCollectServiceEntryIds = ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
             System.Diagnostics.Debug.Assert(
                 chatCollectServiceEntryIds.Distinct().Count() == chatCollectServiceEntryIds.Count(),
