@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.ViewModels
 {
@@ -112,10 +113,13 @@ namespace TVTComment.ViewModels
         private bool disposed = false;
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private readonly Model.TVTComment model;
+        private readonly INiconicoLoginService niconicoLoginService;
+        private Model.ChatService.NiconicoChatService niconico;
 
-        public ShellViewModel(Model.TVTComment model)
+        public ShellViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService)
         {
             this.model = model;
+            this.niconicoLoginService = niconicoLoginService;
 
             Window mainWindow = Application.Current.MainWindow;
             mainWindow.MouseLeftButtonDown += (_, __) => { mainWindow.DragMove(); };
@@ -246,6 +250,19 @@ namespace TVTComment.ViewModels
             });
 
             OnPropertyChanged(null);
+
+            if (!disposed)
+            {
+                niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
+                niconico.AuthenticationChanged += NiconicoAuthenticationChanged;
+                // 起動時の復元で検出した失効も、メイン画面の準備後に案内する。
+                await niconico.ReloginIfExpiredAsync(niconicoLoginService);
+            }
+        }
+
+        private async void NiconicoAuthenticationChanged(object sender, EventArgs e)
+        {
+            if (!disposed) await niconico.ReloginIfExpiredAsync(niconicoLoginService);
         }
 
         private void CloseApplication()
@@ -335,6 +352,9 @@ namespace TVTComment.ViewModels
         {
             if (disposed)
                 return;
+
+            if (niconico != null)
+                niconico.AuthenticationChanged -= NiconicoAuthenticationChanged;
 
             if (model.CommandModule != null)
                 model.CommandModule.ShowWindowCommandInvoked -= CommandModule_ShowWindowCommandInvoked;

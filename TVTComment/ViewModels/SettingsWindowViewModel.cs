@@ -15,14 +15,12 @@ using TVTComment.Model.TwitterUtils.AnnictUtils;
 
 namespace TVTComment.ViewModels
 {
-    class SettingsWindowViewModel : BindableBase
+    class SettingsWindowViewModel : BindableBase, IDisposable
     {
         public ObservableValue<int> ChatPreserveCount { get; }
         public ShellContents.DefaultChatCollectServicesViewModel DefaultChatCollectServices { get; }
         public ObservableValue<string> NiconicoLoginStatus { get; } = new ObservableValue<string>();
-        public ObservableValue<string> NiconicoUserId { get; } = new ObservableValue<string>();
-        public ObservableValue<string> NiconicoPassword { get; } = new ObservableValue<string>();
-        public ObservableValue<string> NiconicoOneTimePassword { get; } = new ObservableValue<string>();
+        public ObservableValue<bool> NiconicoRememberSession { get; } = new ObservableValue<bool>();
         public ObservableValue<string> NichanResCollectInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
@@ -44,6 +42,7 @@ namespace TVTComment.ViewModels
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
         public ICommand LoginNiconicoCommand { get; }
+        public ICommand LogoutNiconicoCommand { get; }
         public ICommand ApplyNichanSettingsCommand { get; }
         public ICommand ApplyTwitterApisCommand { get; }
         public ICommand LoginTokensTwitterCommand { get; }
@@ -65,8 +64,9 @@ namespace TVTComment.ViewModels
         private readonly Model.ChatService.TwitterChatService twitter;
 
         private TwitterAuthentication twitterAuthentication;
+        private readonly IDisposable rememberSessionSubscription;
 
-        public SettingsWindowViewModel(Model.TVTComment model)
+        public SettingsWindowViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService)
         {
             var secrets = App.Configuration;
             var annict = new AnnictAuthentication(secrets["Annict:ClientId"], secrets["Annict:ClientSecret"]);
@@ -84,21 +84,11 @@ namespace TVTComment.ViewModels
             Always184.Value = niconico.Always184;
             Always184.Subscribe(state => niconico.Always184 = state);
 
-            LoginNiconicoCommand = new DelegateCommand(async () =>
-              {
-                  if (string.IsNullOrWhiteSpace(NiconicoUserId.Value) || string.IsNullOrWhiteSpace(NiconicoPassword.Value))
-                      return;
-
-                  try
-                  {
-                      await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value, NiconicoOneTimePassword.Value);
-                      SyncNiconicoUserStatus();
-                  }
-                  catch (Model.NiconicoUtils.NiconicoLoginSessionException)
-                  {
-                      AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "ニコニコへのログインに失敗しました" });
-                  }
-              });
+            LoginNiconicoCommand = new DelegateCommand(async () => await niconico.LoginAsync(niconicoLoginService), () => !niconico.IsBusy);
+            LogoutNiconicoCommand = new DelegateCommand(niconico.Logout);
+            NiconicoRememberSession.Value = niconico.RememberSession;
+            rememberSessionSubscription = NiconicoRememberSession.Subscribe(value => niconico.RememberSession = value);
+            niconico.AuthenticationChanged += NiconicoAuthenticationChanged;
 
             ThirdForceApplyCommand = new DelegateCommand(async () =>
             {
@@ -278,9 +268,17 @@ namespace TVTComment.ViewModels
 
         private void SyncNiconicoUserStatus()
         {
-            NiconicoLoginStatus.Value = niconico.IsLoggedin ? "ログイン済" : "未ログイン";
-            NiconicoUserId.Value = niconico.UserId;
-            NiconicoPassword.Value = niconico.UserPassword;
+            NiconicoLoginStatus.Value = niconico.AuthenticationMessage;
+            ((DelegateCommand)LoginNiconicoCommand).RaiseCanExecuteChanged();
+        }
+
+        private void NiconicoAuthenticationChanged(object sender, EventArgs e) => SyncNiconicoUserStatus();
+
+        public void Dispose()
+        {
+            niconico.AuthenticationChanged -= NiconicoAuthenticationChanged;
+            rememberSessionSubscription?.Dispose();
+            niconico.CancelAuthentication();
         }
 
         private void SyncNichanSettings()

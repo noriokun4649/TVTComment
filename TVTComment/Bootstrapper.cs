@@ -22,6 +22,7 @@ namespace TVTComment
             base.ConfigureContainer();
 
             Container.RegisterInstance(typeof(Model.TVTComment), new Model.TVTComment());
+            Container.RegisterType<Model.NiconicoUtils.INiconicoLoginService, Views.Services.WebView2NiconicoLoginService>();
             Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.NichanChatCollectServiceCreationOptionControl>
                  (nameof(Views.ChatCollectServiceCreationOptionControl.NichanChatCollectServiceCreationOptionControl));
             Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl>

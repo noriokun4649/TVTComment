@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,6 +57,9 @@ namespace TVTComment.Model.ChatCollectService
         private Task chatCollectTask = null;
         private Task chatSessionTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
+        private Task stoppingTask = Task.CompletedTask;
+        private bool disposed;
+        private volatile bool readyToPost;
 
         private BlockingCollection<MessageServer> messageServers = [];
 
@@ -80,6 +83,34 @@ namespace TVTComment.Model.ChatCollectService
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
+            if (disposed) return Array.Empty<Chat>();
+
+            var liveId = liveIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
+            if (liveId != originalLiveId)
+            {
+                var stopped = StopChat();
+                originalLiveId = liveId;
+                notOnAir = false;
+
+                if (liveId != "")
+                {
+                    cancellationTokenSource = new CancellationTokenSource();
+                    var token = cancellationTokenSource.Token;
+                    chatSessionTask = Task.Run(async () =>
+                    {
+                        await stopped.ConfigureAwait(false);
+                        token.ThrowIfCancellationRequested();
+                        await commentSender.ConnectWatchSession(liveId, messageServers, token).ConfigureAwait(false);
+                    }, token);
+                    chatCollectTask = Task.Run(async () =>
+                    {
+                        await stopped.ConfigureAwait(false);
+                        token.ThrowIfCancellationRequested();
+                        await CollectChat(token).ConfigureAwait(false);
+                    }, token);
+                }
+            }
+
             if (chatCollectTask?.IsFaulted ?? false)
             {
                 //非同期部分で例外発生
@@ -103,36 +134,7 @@ namespace TVTComment.Model.ChatCollectService
                     throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatSessionTask.Exception);
             }
 
-            var liveId = liveIdResolver.Resolve(channel.NetworkId, channel.ServiceId).ToString();
-
-            if (liveId != this.originalLiveId)
-            {
-                // 生放送IDが変更になった場合
-
-                cancellationTokenSource?.Cancel();
-                try
-                {
-                    chatSessionTask?.Wait();
-                }
-                //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
-                catch (AggregateException e) when (e.InnerExceptions.All(
-                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException
-                ))
-                {
-                }
-                this.originalLiveId = liveId;
-                commentTagQueue.Clear();
-                notOnAir = false;
-
-                if (this.originalLiveId != "")
-                {
-                    cancellationTokenSource = new CancellationTokenSource();
-                    chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, messageServers, cancellationTokenSource.Token);
-                    chatCollectTask = CollectChat(cancellationTokenSource.Token);
-                }
-            }
-
-            if (this.originalLiveId == "")
+            if (originalLiveId == "" || !stoppingTask.IsCompleted)
             {
                 return Array.Empty<Chat>();
             }
@@ -156,7 +158,9 @@ namespace TVTComment.Model.ChatCollectService
             {
                 await Task.Delay(2500, cancellationToken).ConfigureAwait(false);
                 //コメント投稿(視聴)セッションのRoomメッセージでPostKeyを取得出来るまでロックして待機
-                messageServers.TryTake(out var message, Timeout.Infinite);
+                messageServers.TryTake(out var message, Timeout.Infinite, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                readyToPost = true;
 
                 await foreach (NiconicoCommentXmlTag tag in commentReceiver.Receive(message, cancellationToken))
                 {
@@ -183,7 +187,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public async Task PostChat(BasicChatPostObject chatPostObject)
         {
-            if (originalLiveId != "")
+            if (!disposed && originalLiveId != "" && stoppingTask.IsCompleted && readyToPost)
             {
                 try
                 {
@@ -206,22 +210,40 @@ namespace TVTComment.Model.ChatCollectService
 
         public void Dispose()
         {
-            using (messageServers)
-            using (commentReceiver)
-            using (commentSender)
+            if (disposed) return;
+            disposed = true;
+            _ = DisposeAsync();
+        }
+
+        private Task StopChat()
+        {
+            var cancellation = cancellationTokenSource;
+            var pending = Task.WhenAll(stoppingTask, chatSessionTask ?? Task.CompletedTask,
+                chatCollectTask ?? Task.CompletedTask, cancellation?.CancelAsync() ?? Task.CompletedTask);
+            cancellationTokenSource = null;
+            chatSessionTask = chatCollectTask = null;
+            return stoppingTask = FinishStopAsync(pending, cancellation);
+        }
+
+        private async Task FinishStopAsync(Task pending, CancellationTokenSource cancellation)
+        {
+            try { await pending.ConfigureAwait(false); }
+            catch (Exception) { }
+            finally
             {
-                cancellationTokenSource?.Cancel();
-                try
-                {
-                    chatSessionTask?.Wait();
-                }
-                //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
-                catch (AggregateException e) when (e.InnerExceptions.All(
-                    innerE => innerE is OperationCanceledException || innerE is ChatReceivingException || innerE is NetworkNicoLiveCommentReceiverException || innerE is NicoLiveCommentSenderException
-                ))
-                {
-                }
+                cancellation?.Dispose();
+                readyToPost = false;
+                commentTagQueue.Clear();
+                while (messageServers.TryTake(out _)) { }
             }
+        }
+
+        private async Task DisposeAsync()
+        {
+            await StopChat().ConfigureAwait(false);
+            messageServers.Dispose();
+            commentReceiver.Dispose();
+            commentSender.Dispose();
         }
     }
 }

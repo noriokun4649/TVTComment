@@ -1,176 +1,36 @@
-﻿using Prism.Interactivity.InteractionRequest;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.NiconicoUtils
 {
-    /// <summary>
-    /// <see cref="NiconicoLoginSession"/>で投げられる例外
-    /// </summary>
     class NiconicoLoginSessionException : Exception
     {
-        public NiconicoLoginSessionException() { }
-        public NiconicoLoginSessionException(string message) : base(message) { }
-        public NiconicoLoginSessionException(string message, Exception inner) : base(message, inner) { }
+        public NiconicoLoginSessionException(string message, Exception inner = null) : base(message, inner) { }
     }
 
-    /// <summary>
-    /// ログインに失敗した
-    /// </summary>
-    class LoginFailureNiconicoLoginSessionException : NiconicoLoginSessionException
-    { }
-
-    /// <summary>
-    /// ネットワークエラーが発生した
-    /// </summary>
-    class NetworkNiconicoLoginSessionException : NiconicoLoginSessionException
+    class NiconicoSessionExpiredException : NiconicoLoginSessionException
     {
-        public NetworkNiconicoLoginSessionException(Exception inner) : base(null, inner)
-        { }
+        public NiconicoSessionExpiredException() : base("ログインの有効期限が切れました。設定の「ログイン」から再度ログインしてください。") { }
     }
 
     class NiconicoLoginSession
     {
-        private readonly string mail;
-        private readonly string password;
-        private readonly string onetimepassword;
-        private CookieCollection cookie = null;
-        private string userid = null;
-        private readonly string ua;
+        private readonly CookieContainer cookies = new CookieContainer();
+        public bool IsLoggedin => true;
+        public string UserId { get; }
+        public CookieCollection Cookie => cookies.GetAllCookies();
 
-        public bool IsLoggedin => cookie != null;
-        /// <summary>
-        /// 送信するべき認証情報を含んだクッキー
-        /// </summary>
-        /// <exception cref="InvalidOperationException">ログインしていない</exception>
-        public CookieCollection Cookie
+        internal NiconicoLoginSession(CookieCollection cookies, string userId)
         {
-            get
-            {
-                if (IsLoggedin)
-                    return cookie;
-                else
-                    throw new InvalidOperationException("ログインしていません");
-            }
+            this.cookies.Add(cookies);
+            UserId = userId;
         }
 
-        public string UserId
+        internal static bool IsServiceDomain(string domain)
         {
-            get
-            {
-                if (userid != null)
-                    return userid;
-                else
-                    throw new InvalidOperationException("UserIDが取得できてません");
-            }
-        }
-
-        public NiconicoLoginSession(string mail, string password,string onetimePassword = "")
-        {
-            this.mail = mail;
-            this.password = password;
-            this.onetimepassword = onetimePassword;
-            var assembly = Assembly.GetExecutingAssembly().GetName();
-            ua = assembly.Name + "/" + assembly.Version.ToString(3);
-        }
-
-        /// <summary>
-        /// ログインする
-        /// </summary>
-        /// <exception cref="InvalidOperationException">すでにログインしている</exception>
-        /// <exception cref="LoginFailureNiconicoLoginSessionException"></exception>
-        /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
-        public async Task Login()
-        {
-            if (IsLoggedin)
-                throw new InvalidOperationException("すでにログインしています");
-
-            const string loginUrl = "https://account.nicovideo.jp/login/redirector?site=niconico";
-
-            var handler = new HttpClientHandler();
-            handler.AllowAutoRedirect = false;
-            using var client = new HttpClient(handler);
-            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
-
-            var content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { "next_url", "" },
-                { "mail_tel", mail },
-                { "password", password }
-            });
-
-            try
-            {
-                var res = await client.PostAsync(loginUrl, content).ConfigureAwait(false);
-                var location = res.Headers.GetValues("Location").FirstOrDefault();
-                if (location == "https://www.nicovideo.jp/")
-                {
-                    var twofactorRes = await client.GetAsync(location).ConfigureAwait(false);
-                    userid = twofactorRes.Headers.GetValues("x-niconico-id").FirstOrDefault();
-                }
-                else
-                {
-                    var loginCookie = handler.CookieContainer.GetCookies(new Uri(loginUrl));
-                    var twofactorContent = new FormUrlEncodedContent(new Dictionary<string, string>
-                    {
-                        { "loginBtn", "ログイン" },
-                        { "device_name", "TvTComment" },
-                        { "otp", onetimepassword}
-                    });
-
-                    var twofactorHandler = new HttpClientHandler();
-                    twofactorHandler.CookieContainer.Add(loginCookie);
-                    using var twofactor = new HttpClient(twofactorHandler);
-                    twofactor.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
-                    var twofactorRes = await twofactor.PostAsync(location,twofactorContent).ConfigureAwait(false);
-                    userid = twofactorRes.Headers.GetValues("x-niconico-id").FirstOrDefault();
-                    handler.CookieContainer.Add(twofactorHandler.CookieContainer.GetCookies(new Uri(location)));
-                }
-            }
-            catch (HttpRequestException e)
-            {
-                throw new NetworkNiconicoLoginSessionException(e);
-            }
-            catch(InvalidOperationException e)
-            {
-                throw new NetworkNiconicoLoginSessionException(e);
-            }
-            
-            CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
-            if (cookieCollection.All(x => x.Name != "user_session"))
-                throw new LoginFailureNiconicoLoginSessionException();
-
-            cookie = cookieCollection;
-        }
-
-        /// <summary>
-        /// ログアウトする
-        /// </summary>
-        /// <exception cref="InvalidOperationException">ログインしていない</exception>
-        /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
-        public async Task Logout()
-        {
-            if (!IsLoggedin)
-                throw new InvalidOperationException("ログインしていません");
-
-            var handler = new HttpClientHandler();
-            using var client = new HttpClient(handler);
-
-            handler.CookieContainer.Add(cookie);
-            try
-            {
-                await client.GetAsync("https://account.nicovideo.jp/logout").ConfigureAwait(false);
-            }
-            catch (HttpRequestException e)
-            {
-                throw new NetworkNiconicoLoginSessionException(e);
-            }
-            cookie = null;
+            domain = domain.TrimStart('.');
+            return domain.Equals("nicovideo.jp", StringComparison.OrdinalIgnoreCase)
+                || domain.EndsWith(".nicovideo.jp", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
