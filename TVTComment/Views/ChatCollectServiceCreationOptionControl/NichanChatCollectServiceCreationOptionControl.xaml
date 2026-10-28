@@ -61,7 +61,10 @@
                 </TextBox.InputBindings>
             </TextBox>
         </DockPanel>
-        <Button Grid.Row="3" Command="{Binding RefreshThreadsCommand}">スレ一覧更新</Button>
+        <StackPanel Grid.Row="3">
+            <Button Command="{Binding RefreshThreadsCommand}">スレ一覧更新</Button>
+            <TextBlock Text="{Binding RefreshStatus}" TextWrapping="Wrap"/>
+        </StackPanel>
         <ListView ItemsSource="{Binding Threads}" SelectedItem="{Binding SelectedThread}" Style="{StaticResource DisableWhenAutoMethod}" Grid.Row="4">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">

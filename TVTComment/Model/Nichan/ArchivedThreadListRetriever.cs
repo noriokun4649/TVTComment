@@ -1,215 +1,209 @@
-﻿using Sgml;
+using Sgml;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace Nichan
 {
-    class ArchivedThreadListRetriever
+    sealed class ArchivedThreadListRetriever
     {
-        public string Board { get; }
-        public bool IsPrepared => rangeAndUrls != null;
-
-        public ArchivedThreadListRetriever(string board, string oneOfTheServer)
+        public string Board => board.AbsolutePath.Trim('/');
+        public bool IsPrepared => root != null;
+        private readonly Uri board;
+        private readonly HttpClient client;
+        private Page root;
+        private readonly Dictionary<string, (Page Page, DateTime Expires)> cache = new Dictionary<string, (Page, DateTime)>();
+        internal sealed class Page
         {
-            Board = board;
-            server = oneOfTheServer;
+            public Uri Uri;
+            public List<Thread> Threads = new List<Thread>();
+            public List<(Uri Uri, long Start, long End)> Ranges = new List<(Uri, long, long)>();
+            public List<Uri> Servers = new List<Uri>();
+            public int LastPage = 1;
+        }
+        public ArchivedThreadListRetriever(string board, string server) : this(new Uri($"https://{server}.5ch.io/{board}/"))
+        {
         }
 
-        public async Task Prepare(CancellationToken cancellationToken)
+        public ArchivedThreadListRetriever(Uri board, HttpClient client = null)
         {
-            string mainDocumentUrl = $"https://{server}.5ch.net/{Board}/kako/";
-            var startTimeToUrlMapping = new SortedList<long, IEnumerable<(string url, (long start, long end) range)>>();
+            this.board = ThreadAddress.NormalizeBoard(board);
+            this.client = client ?? sharedClient;
+        }
 
-            static (long start, long end) getThreadRange(string str)
+        private static readonly HttpClient sharedClient = BoardClient.CreateHttpClient();
+
+        public async Task Prepare(CancellationToken token)
+        {
+            root = await GetPageAsync(new Uri(board, "kako/"), token).ConfigureAwait(false);
+        }
+
+        internal static Page ParsePage(string html, Uri finalUri)
+        {
+            using var reader = new StringReader(html);
+            using var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = true, CaseFolding = CaseFolding.ToLower, InputStream = reader };
+            var document = XDocument.Load(sgml);
+            var page = new Page { Uri = finalUri };
+            var byId = new Dictionary<string, Thread>();
+            foreach (var row in document.Descendants().Where(e => HasClass(e, "main_odd") || HasClass(e, "main_even")))
             {
-                var strs = str.Split('-');
-                if (strs.Length != 2)
-                    return (0, 0);
-                var nums = strs.Select(x => long.TryParse(x.Trim(), out long num) ? num : 0).ToArray();
-                if (nums.Any(x => x == 0))
-                    return (0, 0);
-                return (nums[1], nums[0]);
-            }
-
-            var otherServerDocument = await GetHtml(mainDocumentUrl, cancellationToken).ConfigureAwait(false);
-            var urlAndRanges = new List<(string url, (long start, long end) range)>
+                var link = row.Descendants().FirstOrDefault(x => HasClass(x, "title"))?.Descendants("a").FirstOrDefault();
+                var href = (string)link?.Attribute("href");
+                if (href == null || !ThreadAddress.TryParse(new Uri(finalUri, href).AbsoluteUri, out var address))
+                    continue;
+                int.TryParse(row.Descendants().FirstOrDefault(x => HasClass(x, "lines"))?.Value.Trim(), out int count);
+                byId[address.Identity] = new Thread
                 {
-                    (
-                    "",
-                    getThreadRange(((XText)otherServerDocument.XPathSelectElement(
-                        @"//*[contains(@class, ""menu"")]/*[contains(@class, ""menu_here"")]"
-                    ).Nodes().First(x => x.NodeType == XmlNodeType.Text)).Value)
-                )
+                    Uri = address.ThreadUri,
+                    Name = address.ThreadId,
+                    Title = link.Value.Trim(),
+                    ResCount = count
                 };
-            urlAndRanges.AddRange(otherServerDocument.XPathSelectElements(
-                    @"//*[contains(@class, ""menu"")]/*"
-                ).SkipWhile(x => x.Name != "h2").Skip(1).TakeWhile(x => x.Name != "h2").Where(
-                    x => x.Attribute("class")?.Value == "menu_link"
-                ).Select(x => x.Element("a")).Select(x => (x.Attribute("href").Value, getThreadRange(x.Value)))
-            );
-            foreach (var x in urlAndRanges)
-            {
-                var url = new Uri(new Uri(mainDocumentUrl), x.url).ToString();
-                if (!startTimeToUrlMapping.TryGetValue(x.range.start, out var value))
-                {
-                    value = new List<(string url, (long start, long end) range)>();
-                    startTimeToUrlMapping.Add(x.range.start, value);
-                }
-                ((List<(string, (long, long))>)value).Add((url, x.range));
             }
+            // 旧サーバー集約サイトのサーバー描画済み一覧にも対応
+            foreach (var link in document.Descendants("a"))
+            {
+                var href = (string)link.Attribute("href");
+                if (href == null || !Uri.TryCreate(finalUri, href, out var uri) || (uri.Scheme != "http" && uri.Scheme != "https"))
+                    continue;
+                uri = ThreadAddress.Normalize(uri);
+                if (ThreadAddress.TryParse(uri.AbsoluteUri, out var address))
+                {
+                    if (!byId.ContainsKey(address.Identity))
+                        byId[address.Identity] = new Thread
+                        {
+                            Uri = address.ThreadUri,
+                            Name = address.ThreadId,
+                            Title = link.Value.Trim()
+                        };
+                    continue;
+                }
+                var range = Regex.Match(link.Value, @"(?<first>\d{9,12})\s*-\s*(?<last>\d{9,12})");
+                if (range.Success && uri.AbsolutePath.Contains("/kako/", StringComparison.Ordinal))
+                {
+                    long a = long.Parse(range.Groups["first"].Value), b = long.Parse(range.Groups["last"].Value);
+                    page.Ranges.Add((uri, Math.Min(a, b), Math.Max(a, b)));
+                }
+                else if (HasClass(link.Parent, "menu_link") && uri.Host != finalUri.Host && ThreadAddress.Is5chHost(uri.Host))
+                    page.Servers.Add(uri);
+                var pagination = Regex.Match(uri.Query, @"(?:\?|&)page=(\d+)(?:&|$)");
+                if (uri.Host == finalUri.Host && pagination.Success && int.TryParse(pagination.Groups[1].Value, out var number))
+                    page.LastPage = Math.Max(page.LastPage, number);
+            }
+            page.Threads = byId.Values.ToList();
+            return page;
+        }
+        private static bool HasClass(XElement element, string name) => ((string)element?.Attribute("class") ?? "").Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Contains(name);
 
-            rangeAndUrls = startTimeToUrlMapping;
+        private async Task<Page> GetPageAsync(Uri uri, CancellationToken token)
+        {
+            if (cache.TryGetValue(uri.AbsoluteUri, out var cached) && DateTime.UtcNow < cached.Expires)
+                return cached.Page;
+            using var response = await client.GetAsync(uri, token).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            var bytes = await response.Content.ReadAsByteArrayAsync(token).ConfigureAwait(false);
+            var html = DecodeHtml(bytes, response.Content.Headers.ContentType?.CharSet);
+            var page = ParsePage(html, response.RequestMessage?.RequestUri ?? uri);
+            if (cache.Count >= 64)
+                cache.Remove(cache.Keys.First());
+            // kako0001等も先頭ページの増加で内容が移動するため、永久保存しない
+            cache[uri.AbsoluteUri] = (page, DateTime.UtcNow.AddMinutes(5));
+            return page;
+        }
+        internal static string DecodeHtml(byte[] bytes, string charset)
+        {
+            var header = Encoding.ASCII.GetString(bytes, 0, Math.Min(bytes.Length, 4096));
+            bool sjis = (charset ?? header).Contains("shift", StringComparison.OrdinalIgnoreCase) || (charset ?? "").Contains("932");
+            return (sjis ? BoardClient.DatEncoding : Encoding.UTF8).GetString(bytes);
         }
 
-        /// <summary>
-        /// 指定した時間範囲に作られたスレッドのリストを返す。
-        /// 返り値の<see cref="Thread"/>のインスタンスはキャッシュされて過去の呼び出し時と同じものが返るので注意。
-        /// </summary>
-        public async Task<IEnumerable<Thread>> GetThreadsCreatedAt(
-            DateTimeOffset startTime, DateTimeOffset endTime,
-            CancellationToken cancellationToken
-        )
+        public async Task<IEnumerable<Thread>> GetThreadsCreatedAt(DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken token)
         {
             if (startTime > endTime)
-                throw new ArgumentException(@$"""{nameof(startTime)}"" must be earlier than ""{nameof(endTime)}""");
-            if (!IsPrepared)
-                throw new InvalidOperationException(@$"""{nameof(Prepare)}"" must be called beforehand");
-
-            long start = startTime.ToUnixTimeSeconds();
-            int startUrlIdx = Array.BinarySearch(rangeAndUrls.Keys.ToArray(), start);
-            if (startUrlIdx < 0)
+                throw new ArgumentException("検索時刻の範囲が不正です。");
+            await Prepare(token).ConfigureAwait(false);
+            long start = startTime.ToUnixTimeSeconds(), end = endTime.ToUnixTimeSeconds();
+            var found = new List<Thread>();
+            var pending = new Queue<Page>();
+            pending.Enqueue(root);
+            var visited = new HashSet<string>();
+            while (pending.Count > 0)
             {
-                startUrlIdx = ~startUrlIdx - 1;
-                if (startUrlIdx == -1)
-                    startUrlIdx = 0;
-            }
-
-            long end = endTime.ToUnixTimeSeconds();
-            int endUrlIdx = Array.BinarySearch(rangeAndUrls.Keys.ToArray(), end);
-            if (endUrlIdx < 0)
-            {
-                endUrlIdx = ~endUrlIdx;
-            }
-
-            var urlList = rangeAndUrls.Values.ToArray()[startUrlIdx..endUrlIdx].SelectMany(x => x.Select(x => x.url));
-            var ret = new List<(long threadId, Thread thread)>(); // スレの作成時間とスレのリスト
-            foreach (string url in urlList)
-            {
-                // キャッシュになければ取得しにいく
-                if (!threadListCache.TryGetValue(url, out IEnumerable<(long threadId, Thread thread)> threads))
+                token.ThrowIfCancellationRequested();
+                var page = pending.Dequeue();
+                if (!visited.Add(page.Uri.AbsoluteUri))
+                    continue;
+                if (visited.Count > 128)
+                    throw new InvalidDataException("検索対象の過去ログ一覧が多すぎます。検索範囲を短くしてください。");
+                found.AddRange(page.Threads.Where(t => long.TryParse(t.Name, out var id) && start <= id && id <= end));
+                foreach (var range in page.Ranges.Where(r => r.Start <= end && start <= r.End))
                 {
-                    var threadList = new List<(long threadId, Thread thread)>();
-                    XDocument doc = await GetHtml(url, cancellationToken).ConfigureAwait(false);
-                    foreach (var elem in doc.XPathSelectElements(
-                        @"//*[contains(@class, ""main"")]/*[contains(@class, ""main_odd"") or contains(@class, ""main_even"")]"
-                    ))
+                    if (visited.Contains(range.Uri.AbsoluteUri))
+                        continue;
+                    try
                     {
-                        XElement filenameElem = elem.XPathSelectElement(@"./*[contains(@class, ""filename"")]");
-                        string filename = filenameElem?.Value;
-                        long threadId = long.Parse(filename[0..^4]);
-
-                        XElement anchorElem = elem.XPathSelectElement(@"./*[contains(@class, ""title"")]/a");
-                        string threadUrl = anchorElem?.Attribute("href")?.Value ?? "";
-                        string threadTitle = anchorElem?.Value ?? "";
-                        XElement linesElem = elem.XPathSelectElement(@"./*[contains(@class, ""lines"")]");
-                        int resCount = int.Parse(linesElem?.Value ?? "0");
-
-                        if (threadUrl == "" || threadTitle == "" || resCount == 0)
-                            continue;
-
-                        threadList.Add((threadId, new Thread()
-                        {
-                            Uri = new Uri(new Uri(url), threadUrl),
-                            Name = threadId.ToString(),
-                            Title = threadTitle,
-                            ResCount = resCount,
-                        }));
+                        pending.Enqueue(await GetPageAsync(range.Uri, token).ConfigureAwait(false));
                     }
-
-                    threadListCache.Add(url, threadList);
-
-                    threads = threadList;
+                    catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+                    { }
                 }
-
-                ret.AddRange(threads.Where(x => start <= x.threadId && x.threadId < end));
+                long oldest = page.Threads.Select(t => long.Parse(t.Name)).DefaultIfEmpty(long.MaxValue).Min();
+                long oldestRange = page.Ranges.Select(r => r.Start).DefaultIfEmpty(oldest).Min();
+                if (start < Math.Min(oldest, oldestRange))
+                {
+                    foreach (var server in page.Servers)
+                    {
+                        try
+                        {
+                            var other = await GetPageAsync(server, token).ConfigureAwait(false);
+                            if (other.LastPage > 1 && other.Ranges.Count == 0)
+                                found.AddRange(await GetPagedThreadsAsync(other, start, end, token).ConfigureAwait(false));
+                            else
+                                pending.Enqueue(other);
+                        }
+                        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+                        { }
+                    }
+                }
             }
-
-            // 複数のサーバーに同じスレッドが保存されてることがあるので
-            return ret.Distinct(new KeyEqualityComparer<(long, Thread), long>(x => x.Item1)).Select(x => x.Item2);
+            return found.DistinctBy(t => ThreadAddress.Parse(t.Uri.AbsoluteUri).Identity).ToArray();
         }
 
-        private static readonly HttpClient httpClient = new HttpClient();
-
-        private readonly string server;
-        private SortedList<long, IEnumerable<(string url, (long start, long end) range)>> rangeAndUrls = null;
-        /// <summary>
-        /// キーが https://{server}.5ch.net/{board}/kako/kako****.html の形のURL、値がそのページのスレッドIDとスレッドのリスト
-        /// </summary>
-        private readonly Dictionary<string, IEnumerable<(long, Thread)>> threadListCache = new Dictionary<string, IEnumerable<(long, Thread)>>();
-
-        private static async Task<XDocument> GetHtml(string url, CancellationToken cancellationToken)
+        // 集約一覧はスレッド番号昇順のため、全ページ巡回せず境界を二分探索
+        private async Task<IEnumerable<Thread>> GetPagedThreadsAsync(Page first, long start, long end, CancellationToken token)
         {
-            System.Diagnostics.Debug.WriteLine($"[ArchivedThreadListRetriever] HTTP Get {url}");
-            string response;
-            try
+            int low = 1, high = first.LastPage;
+            Uri PageUri(int index) => new UriBuilder(first.Uri) { Query = "page=" + index }.Uri;
+            while (low < high)
             {
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Cookie", "READJS=\"off\"; 5chClassic=on");
-                response = await httpClient.GetStringAsync(url, cancellationToken);
-            }
-            catch (HttpRequestException e)
-            {
-                if (e.StatusCode == null)
-                    throw new NetworkException(url, null, e);
+                int middle = low + (high - low) / 2;
+                var page = await GetPageAsync(PageUri(middle), token).ConfigureAwait(false);
+                if (page.Threads.Count == 0)
+                    return Array.Empty<Thread>();
+                if (page.Threads.Max(t => long.Parse(t.Name)) < start)
+                    low = middle + 1;
                 else
-                    throw new HttpErrorResponseException((int)e.StatusCode.Value, null, url, null, e);
+                    high = middle;
             }
-
-            using var textReader = new StringReader(response);
-            using var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = textReader };
-            sgml.WhitespaceHandling = WhitespaceHandling.None;
-            sgml.CaseFolding = CaseFolding.ToLower;
-            // XDocument.LoadAsyncはNotImplementedを投げてくる
-            //doc = await XDocument.LoadAsync(sgml, LoadOptions.None, cancellationToken);
-            XDocument doc = XDocument.Load(sgml);
-
-            return doc;
-        }
-
-        private class KeyEqualityComparer<T, TKey> : IComparer<T>, IEqualityComparer<T>
-        {
-            private readonly Func<T, TKey> keyExtractor;
-            private readonly IComparer<TKey> comparer;
-            private readonly IEqualityComparer<TKey> equalityComparer;
-
-            public KeyEqualityComparer(Func<T, TKey> keyExtractor)
+            var result = new List<Thread>();
+            for (int index = low; index <= first.LastPage; index++)
             {
-                this.keyExtractor = keyExtractor;
-                comparer = Comparer<TKey>.Default;
-                equalityComparer = EqualityComparer<TKey>.Default;
+                if (index - low >= 64)
+                    throw new InvalidDataException("過去ログの検索範囲が広すぎます。");
+                var page = await GetPageAsync(PageUri(index), token).ConfigureAwait(false);
+                result.AddRange(page.Threads.Where(t => start <= long.Parse(t.Name) && long.Parse(t.Name) <= end));
+                if (page.Threads.Count == 0 || page.Threads.Max(t => long.Parse(t.Name)) >= end)
+                    break;
             }
-
-            public int Compare(T x, T y)
-            {
-                return comparer.Compare(keyExtractor(x), keyExtractor(y));
-            }
-
-            public bool Equals(T x, T y)
-            {
-                return equalityComparer.Equals(keyExtractor(x), keyExtractor(y));
-            }
-
-            public int GetHashCode(T obj)
-            {
-                return equalityComparer.GetHashCode(keyExtractor(obj));
-            }
+            return result;
         }
     }
 }

@@ -1,252 +1,193 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Runtime.ExceptionServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace TVTComment.Model.ChatCollectService
 {
-    class PastNichanChatCollectService : OnceASecondChatCollectService
+    sealed class PastNichanChatCollectService : IChatCollectService
     {
-        public override string Name => "2ch過去ログ";
-
-        public override string GetInformationText()
-        {
-            string ret = "";
-            lock (threadList)
-            {
-                string threadInformation = string.Join("\n", threadList.Where(
-                    x => currentThreadUrls.Contains(x.Uri.ToString())
-                ).Select(x => $"{x.Title}  ({x.ResCount})  {x.Uri}"));
-                if (threadInformation != "")
-                    ret += threadInformation;
-                else
-                    ret += "[スレなし]";
-            }
-            return ret;
-        }
-
-        public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
+        public string Name => "2ch過去ログ";
+        public ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
+        public bool CanPost => false;
+        private readonly NichanUtils.INichanThreadSelector selector;
+        private readonly Nichan.PastThreadRepository repository;
+        private readonly TimeSpan interval;
+        private readonly object sync = new object();
+        private readonly SemaphoreSlim queryLock = new SemaphoreSlim(1);
+        private readonly ReplayCursor cursor = new ReplayCursor();
+        private CancellationTokenSource cancellation;
+        private Task worker = Task.CompletedTask;
+        private Task cleanupTask = Task.CompletedTask;
+        private List<Nichan.Thread> threads = new List<Nichan.Thread>();
+        private ChannelInfo channel;
+        private DateTime loadedUntil, retryAt;
+        private int generation;
+        private bool loaded, disposed;
+        private string status = "再生時刻待ち";
 
         public PastNichanChatCollectService(
-            ChatCollectServiceEntry.IChatCollectServiceEntry chatCollectServiceEntry,
-            NichanUtils.INichanThreadSelector threadSelector,
-            TimeSpan threadSelectionUpdateInterval,
-            string pastUserAgent
-        ) : base(TimeSpan.FromSeconds(10))
+            ChatCollectServiceEntry.IChatCollectServiceEntry entry,
+            NichanUtils.INichanThreadSelector selector,
+            TimeSpan interval, Nichan.PastThreadRepository repository
+        )
         {
-            ServiceEntry = chatCollectServiceEntry;
-            this.threadSelector = threadSelector;
-            this.threadSelectionUpdateInterval = threadSelectionUpdateInterval;
-            httpClient.DefaultRequestHeaders.Add("User-Agent", pastUserAgent);
-
-            resCollectLoopTask = Task.Run(() => ResCollectLoop(resCollectLoopTaskCancellation.Token));
+            ServiceEntry = entry;
+            this.selector = selector;
+            this.interval = interval;
+            this.repository = repository;
         }
 
-        protected override IEnumerable<Chat> GetOnceASecond(ChannelInfo channel, DateTime time)
+        public string GetInformationText()
         {
-            lastGetChannel = channel;
-            lastGetTime = new DateTimeOffset(time, TimeSpan.FromHours(9));
-
-            if (resCollectLoopTask.IsCompleted)
+            lock (sync)
+                return status + "\n" + string.Join("\n", threads.Select(x => $"{x.Title} ({x.ResCount}) {x.Uri}"));
+        }
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time) => GetChats(channel, time);
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
+        {
+            lock (sync)
             {
+                if (disposed)
+                    return Array.Empty<Chat>();
+                time = DateTime.SpecifyKind(time, DateTimeKind.Unspecified);
+                bool changed = this.channel == null || this.channel.NetworkId != channel.NetworkId || this.channel.ServiceId != channel.ServiceId;
+                if (cursor.Observe(time, changed))
+                {
+                    generation++;
+                    threads = new List<Nichan.Thread>();
+                    loaded = false;
+                    loadedUntil = retryAt = DateTime.MinValue;
+                    StartQuery(channel, time);
+                }
+                else if (worker.IsCompleted && (loadedUntil == DateTime.MinValue || time >= loadedUntil - TimeSpan.FromSeconds(3)) && DateTime.UtcNow >= retryAt)
+                {
+                    // 取得が遅れた場合も、未検索の時間帯を飛ばさず続きから検索
+                    var nextTime = loaded ? (time < loadedUntil ? time : loadedUntil) : cursor.DisplayedUntil.AddSeconds(1);
+                    StartQuery(channel, nextTime);
+                }
+                this.channel = channel;
+                if (!loaded)
+                    return Array.Empty<Chat>();
+                // 次の一覧の取得中に表示済み位置だけを先へ進めると、遅れて判明した次スレのレスを失う
+                var displayUntil = time < loadedUntil ? time : loadedUntil;
+                if (displayUntil <= cursor.DisplayedUntil)
+                    return Array.Empty<Chat>();
+                var result = new List<Chat>();
+                foreach (var res in threads.SelectMany(t => t.Res).Where(r => r.Date.HasValue && r.Number <= 1000 && r.Text != null
+                    && cursor.DisplayedUntil < r.Date.Value && r.Date.Value <= displayUntil).OrderBy(r => r.Date))
+                {
+                    var body = new XElement(res.Text);
+                    foreach (var br in body.Descendants("br").ToArray())
+                        br.ReplaceWith("\n");
+                    result.Add(new Chat(
+                        res.Date.Value, body.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
+                        Color.White, res.UserId, res.Number
+                    ));
+                }
+                cursor.Advance(displayUntil);
+                return result;
+            }
+        }
+        private void StartQuery(ChannelInfo channel, DateTime time)
+        {
+            var previous = cancellation;
+            cleanupTask = Task.WhenAll(cleanupTask, worker, previous?.CancelAsync() ?? Task.CompletedTask)
+                .ContinueWith(t =>
+                {
+                    _ = t.Exception;
+                    previous?.Dispose();
+                }, TaskScheduler.Default);
+            cancellation = new CancellationTokenSource();
+            var token = cancellation.Token;
+            int version = generation;
+            status = "過去ログを取得中…";
+            worker = Task.Run(async () =>
+            {
+                bool entered = false;
                 try
                 {
-                    resCollectLoopTask.Wait();
-                }
-                catch (AggregateException e)
-                {
-                    ResCollectLoopTaskExceptionHandler(e);
-                    return Enumerable.Empty<Chat>();
-                }
-            }
-
-            bool leaped = time < this.lastTime || time > this.lastTime + continuousCallLimit;
-            var lastTime = !leaped ? this.lastTime : time - TimeSpan.FromSeconds(1);
-            // TODO: 録画の再生を一時停止すると時刻が数秒巻き戻ることがある。するとコメントが2重で表示される。
-            lock (threadList)
-            {
-                return threadList.Where(
-                    x => currentThreadUrls.Contains(x.Uri.ToString())
-                ).SelectMany(x => x.Res).Where(
-                    x => lastTime <= x.Date && x.Date < time
-                ).Select(x =>
-                {
-                    foreach (var elem in x.Text.Descendants("br").ToArray())
+                    await queryLock.WaitAsync(token).ConfigureAwait(false);
+                    entered = true;
+                    var urls = await selector.Get(channel, new DateTimeOffset(time, TimeSpan.FromHours(9)), token).ToListAsync(token).ConfigureAwait(false);
+                    var result = new List<Nichan.Thread>();
+                    foreach (var url in urls.DistinctBy(x => Nichan.ThreadAddress.Parse(x).Identity))
                     {
-                        elem.ReplaceWith("\n");
+                        var thread = await repository.GetAsync(url, token).ConfigureAwait(false);
+                        if (thread != null)
+                            result.Add(thread);
                     }
-
-                    return new Chat(
-                        x.Date.Value, x.Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
-                        Color.White, x.UserId, x.Number
-                    );
-                });
-            }
-        }
-
-        public override void Dispose()
-        {
-            resCollectLoopTaskCancellation.Cancel();
-            try
-            {
-                resCollectLoopTask.Wait();
-            }
-            catch (AggregateException e)
-            {
-                try
-                {
-                    ResCollectLoopTaskExceptionHandler(e);
+                    token.ThrowIfCancellationRequested();
+                    lock (sync)
+                    {
+                        if (version != generation || disposed)
+                            return;
+                        threads = result;
+                        loaded = true;
+                        loadedUntil = time + interval;
+                        status = repository.LastError ?? (result.Count == 0 ? "対象の過去ログがありません" : "取得済");
+                        retryAt = DateTime.UtcNow.AddSeconds(1);
+                    }
                 }
-                catch (ChatCollectException)
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
                 { }
-            }
-        }
-
-        private async Task ResCollectLoop(CancellationToken cancellationToken)
-        {
-            while (true)
-            {
-                if (lastGetChannel == null)
+                catch (Exception)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-                    continue;
+                    lock (sync)
+                        if (version == generation && !disposed)
+                        {
+                            status = "過去ログを取得できませんでした。30秒後に再試行します。";
+                            retryAt = DateTime.UtcNow.AddSeconds(30);
+                        }
                 }
-
-                IEnumerable<string> existingThreadUrls;
-                lock (threadList)
-                    existingThreadUrls = threadList.Select(x => x.Uri.ToString()).ToArray();
-
-                var urls = new List<string>();
-                await foreach (var url in threadSelector.Get(lastGetChannel, lastGetTime, cancellationToken))
+                finally
                 {
-                    if (!existingThreadUrls.Contains(url))
+                    if (entered)
+                        queryLock.Release();
+                }
+            });
+        }
+        public Task PostChat(BasicChatPostObject post) => throw new NotSupportedException();
+        public void Dispose()
+        {
+            lock (sync)
+            {
+                if (disposed)
+                    return;
+                disposed = true;
+                generation++;
+                var previous = cancellation;
+                _ = Task.WhenAll(cleanupTask, worker, previous?.CancelAsync() ?? Task.CompletedTask)
+                    .ContinueWith(t =>
                     {
-                        var (server, board_, threadId) = GetServerBoardThreadFromThreadUrl(url);
-                        var thread = await GetThread(server, board_, threadId, cancellationToken).ConfigureAwait(false);
-                        thread.Uri = new Uri(url); // キャッシュにヒットするようにthreadSelectorの返したUriで記憶する
-
-                        lock (threadList)
-                            threadList.Add(thread);
-                    }
-
-                    urls.Add(url);
-                    currentThreadUrls = urls.ToArray();
-                }
-
-                await Task.Delay(threadSelectionUpdateInterval, cancellationToken);
+                        _ = t.Exception;
+                        previous?.Dispose();
+                        repository.Dispose();
+                    }, TaskScheduler.Default);
             }
         }
+    }
 
-        private static readonly Regex reThreadUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/test/read\.cgi/(?<board>[^/]*)/(?<thread>\d*)($|/)");
-        private static (string server, string board, string thread) GetServerBoardThreadFromThreadUrl(string threadUrl)
+    // TVTestの停止・再開時に生じる小さな逆行は表示済み位置を戻さない
+    internal sealed class ReplayCursor
+    {
+        private DateTime? observed;
+        public DateTime DisplayedUntil { get; private set; }
+        public bool Observe(DateTime time, bool channelChanged)
         {
-            Match match = reThreadUrl.Match(threadUrl);
-            return (match.Groups["server"].Value, match.Groups["board"].Value, match.Groups["thread"].Value);
+            bool seek = channelChanged || !observed.HasValue || time < observed.Value.AddSeconds(-2) || time > observed.Value.AddSeconds(10);
+            if (seek)
+                DisplayedUntil = time.AddSeconds(-1);
+            observed = time;
+            return seek;
         }
-
-        private static async Task<Nichan.Thread> GetThread(string server, string board, string thread, CancellationToken cancellationToken)
+        public void Advance(DateTime time)
         {
-            Nichan.Thread ret;
-            // まず2ch.scのdatから取得する
-            string datUrl = $"https://{server}.2ch.sc/{board}/dat/{thread}.dat";
-            string datResponse = null;
-
-            System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {datUrl}");
-
-            try
-            {
-                datResponse = await httpClient.GetStringAsync(datUrl, cancellationToken).ConfigureAwait(false);
-            }
-            catch (HttpRequestException)
-            {
-            }
-
-            if (datResponse != null)
-            {
-                ret = new Nichan.Thread() { Name = thread };
-                var datParser = new Nichan.DatParser();
-                datParser.Feed(datResponse);
-
-                ret.Uri = new Uri(datUrl);
-                ret.Title = datParser.ThreadTitle;
-                while (true)
-                {
-                    Nichan.Res res = datParser.PopRes();
-                    if (res == null) break;
-                    ret.Res.Add(res);
-                }
-                ret.ResCount = ret.Res.Count;
-                return ret;
-            }
-
-            // 2ch.scがダメだった場合、5ch.netのスクレイピング
-            string gochanUrl = $"https://{server}.5ch.net/test/read.cgi/c/{board}/{thread}/";
-            string response;
-
-            System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {gochanUrl}");
-
-            try
-            {
-                response = await httpClient.GetStringAsync(gochanUrl, cancellationToken).ConfigureAwait(false);
-            }
-            catch (HttpRequestException e)
-            {
-                if (e.StatusCode == null)
-                    throw new Nichan.NetworkException(gochanUrl, null, e);
-                else
-                    throw new Nichan.HttpErrorResponseException((int)e.StatusCode.Value, null, gochanUrl, null, e);
-            }
-
-            using var textReader = new StringReader(response);
-            ret = Nichan.ThreadParser.ParseFromStream(textReader);
-            ret.Uri = new Uri(gochanUrl);
-            return ret;
+            if (time > DisplayedUntil)
+                DisplayedUntil = time;
         }
-
-        /// <summary>
-        /// <see cref="resCollectLoopTask"/>を<see cref="Task.Wait"/>した時に出た<see cref="AggregateException"/>を適切な例外に変換して投げなおす。
-        /// 例外を投げなければタスクがキャンセルされたことによる例外だったということ。
-        /// </summary>
-        private static void ResCollectLoopTaskExceptionHandler(AggregateException e)
-        {
-            if (e.InnerExceptions.All(x => x is OperationCanceledException))
-                return;
-            if (e.InnerExceptions.Count != 1)
-                ExceptionDispatchInfo.Capture(e).Throw(); // スタックトレースを保って再スロー
-
-            switch (e.InnerExceptions[0])
-            {
-                case Nichan.HttpErrorResponseException http:
-                    throw new ChatCollectException($"HTTP でエラーのステータスコードが返りました\nコード: {http.HttpStatusCode}\nURL: {http.Url}", e);
-                case Nichan.ErrorResponseException errorResponse:
-                    throw new ChatCollectException($"エラー応答が返りました\nURL: {errorResponse.Url}", e);
-                case Nichan.InvalidResponseException invalidResponse:
-                    throw new ChatCollectException($"不正な応答が返りました\nURL: {invalidResponse.Url}", e);
-                case Nichan.ResponseException response:
-                    throw new ChatCollectException($"応答エラーです\nURL: {response.Url}", e);
-                case Nichan.NetworkException network:
-                    throw new ChatCollectException($"接続できませんでした\nURL: {network.Url}", e);
-                case Nichan.CommunicationException communication:
-                    throw new ChatCollectException($"通信エラーです\nURL: {communication.Url}", e);
-            }
-
-            ExceptionDispatchInfo.Capture(e).Throw(); // スタックトレースを保って再スロー
-        }
-
-        private static readonly HttpClient httpClient = new HttpClient();
-        private readonly NichanUtils.INichanThreadSelector threadSelector;
-        private readonly TimeSpan threadSelectionUpdateInterval;
-        private readonly List<Nichan.Thread> threadList = new List<Nichan.Thread>();
-        private readonly Task resCollectLoopTask;
-        private readonly CancellationTokenSource resCollectLoopTaskCancellation = new CancellationTokenSource();
-        private string[] currentThreadUrls;
-        private ChannelInfo lastGetChannel = null;
-        private DateTimeOffset lastGetTime;
     }
 }
