@@ -24,7 +24,10 @@ namespace TVTComment.Model.NiconicoUtils
         
         public void Push(ChunkedMessage msg)
         {            
-            if (msg.PayloadCase == PayloadOneofCase.Message && msg.Message.DataCase == DataOneofCase.Chat)
+            if (msg.State?.ProgramStatus?.State == ProgramStatus.Types.State.Ended)
+                throw new ConnectionDisconnectNicoLiveCommentReceiverException();
+
+            if (msg.PayloadCase == PayloadOneofCase.Message && msg.Message.DataCase == DataOneofCase.Chat && msg.Meta?.At != null)
             {
                 chats.Enqueue(GetChatTag(msg));
             }
@@ -42,10 +45,6 @@ namespace TVTComment.Model.NiconicoUtils
 
         private ChatNiconicoCommentXmlTag GetChatTag(ChunkedMessage msg)
         {
-            
-            if (msg.State?.ProgramStatus.State == ProgramStatus.Types.State.Ended) //放送のAlertで切断メッセージが来たらException
-                throw new ConnectionDisconnectNicoLiveCommentReceiverException();
-
             var chat = msg.Message.Chat;
             string userId;
             if (chat.HasRawUserId)
@@ -58,7 +57,7 @@ namespace TVTComment.Model.NiconicoUtils
             }
 
             var text = chat.Content;
-            var thread = msg.Meta.Origin.Chat.LiveId.ToString();
+            var thread = msg.Meta.Origin?.Chat?.LiveId.ToString() ?? "";
             var no = chat.No;
             var vpos = chat.Vpos;
             var mail = GetCommands(chat);
@@ -79,7 +78,7 @@ namespace TVTComment.Model.NiconicoUtils
         {
             try
             {
-                var command = chat.Modifier;
+                var command = chat.Modifier ?? new Modifier();
                 var mail = "";
                 if (chat.SourceCase == SourceOneofCase.HashedUserId)
                 {
