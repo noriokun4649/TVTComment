@@ -9,7 +9,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public string Id => "2chPast";
         public string Name => "2ch過去ログ";
-        public string Description => "2chの過去ログを自動で表示";
+        public string Description => "5chの過去ログを自動で表示";
 
         public bool CanUseDefaultCreationOption => true;
 
@@ -28,9 +28,10 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            var threadSelector = new NichanUtils.AutoPastNichanThreadSelector(threadResolver, TimeSpan.FromSeconds(15), backTime.Value, pastUserAgent.Value);
+            var repository = new Nichan.PastThreadRepository(pastUserAgent.Value);
+            var threadSelector = new NichanUtils.AutoPastNichanThreadSelector(threadResolver, TimeSpan.FromSeconds(15), backTime.Value, repository);
             return new ChatCollectService.PastNichanChatCollectService(
-                this, threadSelector, TimeSpan.FromSeconds(15), pastUserAgent.Value
+                this, threadSelector, TimeSpan.FromSeconds(15), repository
             );
         }
 

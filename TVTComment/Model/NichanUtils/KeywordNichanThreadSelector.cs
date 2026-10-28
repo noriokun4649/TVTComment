@@ -12,41 +12,29 @@ namespace TVTComment.Model.NichanUtils
 {
     class KeywordNichanThreadSelector : INichanThreadSelector
     {
-        private static readonly HttpClient httpClient = new HttpClient();
-        private readonly string boardHost;
-        private readonly string boardName;
 
         public string BoardUri { get; }
         public IEnumerable<string> Keywords { get; }
 
         public KeywordNichanThreadSelector(string boardUri, IEnumerable<string> keywords)
         {
-            var uri = new Uri(boardUri);
-            boardHost = $"{uri.Scheme}://{uri.Host}";
-            boardName = uri.Segments[1];
-            if (boardName.EndsWith('/'))
-                boardName = boardName[..^1];
-
-            BoardUri = boardUri;
-            Keywords = keywords.Select(x => x.ToLower().Normalize(NormalizationForm.FormKD));
+            BoardUri = Nichan.ThreadAddress.NormalizeBoard(new Uri(boardUri)).AbsoluteUri;
+            Keywords = keywords.Select(x => x.ToLower().Normalize(NormalizationForm.FormKD)).ToArray();
         }
 
         public async IAsyncEnumerable<string> Get(ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{boardHost}/{boardName}/subject.txt", cancellationToken);
-            string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
-
-            using var textReader = new StringReader(subject);
-            var threadsInBoard = Nichan.SubjecttxtParser.ParseFromStream(textReader)
+            var threads = await Nichan.BoardClient.Shared.GetThreadsAsync(new Uri(BoardUri), cancellationToken).ConfigureAwait(false);
+            var threadsInBoard = threads.Where(x => x.ResCount <= 1000)
                 .Select(
                     x => { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
                 ).Where(
                     x => Keywords.All(keyword => x.Title.Contains(keyword))
                 ).Select(
-                    x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
+                    x => x.Uri.AbsoluteUri
                 );
 
-            await foreach (var thread in threadsInBoard)
+            foreach (var thread in threadsInBoard)
             {
                 yield return thread;
             }

@@ -5,13 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Windows.Input;
 
 namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 {
     class NichanChatCollectServiceCreationOptionControlViewModel : ChatCollectServiceCreationOptionControlViewModel
     {
-        private static readonly HttpClient httpClient = new HttpClient();
+        private CancellationTokenSource refreshCancellation;
+        private string refreshStatus;
+        public string RefreshStatus
+        {
+            get { return refreshStatus; }
+            private set { SetProperty(ref refreshStatus, value); }
+        }
 
         public override event EventHandler Finished;
 
@@ -76,24 +83,43 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         private async void RefreshThreads()
         {
-            if (SelectedBoard == null) return;
-            string boardUri = SelectedBoard.Uri.ToString();
-            var uri = new Uri(boardUri);
-            string boardHost = $"{uri.Scheme}://{uri.Host}";
-            string boardName = uri.Segments[1];
-            if (boardName.EndsWith('/'))
-                boardName = boardName[..^1];
-
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{boardHost}/{boardName}/subject.txt");
-            string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
-
-            using var textReader = new StringReader(subject);
-            List<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader).ToListAsync();
-
-            foreach (var thread in threadsInBoard)
-                thread.Uri = new Uri($"{boardHost}/test/read.cgi/{boardName}/{thread.Name}/l50");
-
-            Threads = threadsInBoard;
+            refreshCancellation?.Cancel();
+            using var cancellation = new CancellationTokenSource();
+            refreshCancellation = cancellation;
+            Threads = new List<Nichan.Thread>();
+            SelectedThread = null;
+            if (SelectedBoard == null)
+            {
+                refreshCancellation = null;
+                RefreshStatus = "";
+                return;
+            }
+            var board = SelectedBoard;
+            RefreshStatus = "スレ一覧を取得中…";
+            try
+            {
+                var result = await Nichan.BoardClient.Shared.GetThreadsAsync(board.Uri, cancellation.Token);
+                if (!cancellation.IsCancellationRequested && SelectedBoard == board)
+                {
+                    Threads = result;
+                    RefreshStatus = $"{result.Count}スレッド";
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                if (refreshCancellation == cancellation)
+                    RefreshStatus = "取得をキャンセルしました";
+            }
+            catch (Exception e) when (e is HttpRequestException || e is Nichan.NichanException || e is FormatException || e is IOException)
+            {
+                if (refreshCancellation == cancellation)
+                    RefreshStatus = "一覧を取得できませんでした: " + e.Message;
+            }
+            finally
+            {
+                if (refreshCancellation == cancellation)
+                    refreshCancellation = null;
+            }
         }
     }
 }

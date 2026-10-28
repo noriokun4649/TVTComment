@@ -29,15 +29,9 @@ namespace Nichan
     /// </summary>
     class Type1ThreadParser : IThreadParser
     {
-        static private readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
         private static DateTime? GetDate(string str)
         {
-            Match m = reDate.Match(str);
-            if (m.Success)
-                return new DateTime(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value) * 10, DateTimeKind.Local);
-            else
-                return null;
+            return DatParser.GetDate(str);
         }
 
         public Thread Parse(XDocument doc)
@@ -72,15 +66,9 @@ namespace Nichan
     /// </summary>
     class Type2ThreadParser : IThreadParser
     {
-        static private readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
         private static DateTime? GetDate(string str)
         {
-            Match m = reDate.Match(str);
-            if (m.Success)
-                return new DateTime(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value) * 10, DateTimeKind.Local);
-            else
-                return null;
+            return DatParser.GetDate(str);
         }
 
         public Thread Parse(XDocument doc)
@@ -96,7 +84,7 @@ namespace Nichan
                 var res = new Res();
                 string str = (string)elem.XPathEvaluate(@"string(text()[1])");
                 res.Number = int.Parse(str.Substring(0, str.IndexOf(' ')));
-                res.Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"//b").Value);
+                res.Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@".//b").Value);
                 res.Mail = elem.Element("a")?.Attribute("href")?.Value;
                 if (res.Mail != null)
                     res.Mail = HttpUtility.HtmlDecode(res.Mail);
@@ -106,8 +94,11 @@ namespace Nichan
                 res.Date = GetDate(str);
                 res.Text = elem.XPathSelectElement(@"following-sibling::dd[1]");
                 XElement[] brs = res.Text.Elements("br").ToArray();
-                brs[^2].Remove();
-                brs[^1].Remove();
+                if (brs.Length >= 2)
+                {
+                    brs[^2].Remove();
+                    brs[^1].Remove();
+                }
                 ret.Res.Add(res);
             }
             ret.ResCount = ret.Res.Count;
@@ -120,15 +111,9 @@ namespace Nichan
     /// </summary>
     class Type3ThreadParser : IThreadParser
     {
-        static private readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
         private static DateTime? GetDate(string str)
         {
-            Match m = reDate.Match(str);
-            if (m.Success)
-                return new DateTime(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value) * 10, DateTimeKind.Local);
-            else
-                return null;
+            return DatParser.GetDate(str);
         }
 
         public Thread Parse(XDocument doc)
@@ -159,6 +144,66 @@ namespace Nichan
         }
     }
 
+    // 既存の3形式で解析できない現行HTML・項目欠損を補完
+    class FallbackThreadParser : IThreadParser
+    {
+        private static bool HasClass(XElement element, string name) => ((string)element.Attribute("class") ?? "").Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Contains(name);
+        public Thread Parse(XDocument doc)
+        {
+            var thread = new Thread
+            {
+                Title = doc.Descendants("h1").FirstOrDefault()?.Value ?? doc.Descendants("title").FirstOrDefault()?.Value
+            };
+            foreach (var post in doc.Descendants().Where(x => HasClass(x, "post")))
+            {
+                var numberText = (string)post.Attribute("id") ?? post.Descendants().FirstOrDefault(x => HasClass(x, "number"))?.Value ?? "";
+                if (!int.TryParse(Regex.Match(numberText, @"\d+").Value, out var number))
+                    continue;
+                var body = post.Descendants().FirstOrDefault(x => HasClass(x, "message"));
+                if (body == null)
+                    continue;
+                var date = post.Descendants().FirstOrDefault(x => HasClass(x, "date"))?.Value ?? "";
+                var userId = (string)post.Attribute("data-userid") ?? Regex.Match(date, @"ID:([^\s]+)").Groups[1].Value;
+                if (userId.StartsWith("ID:", StringComparison.Ordinal))
+                    userId = userId.Substring(3);
+                var name = post.Descendants().FirstOrDefault(x => HasClass(x, "name"));
+                thread.Res.Add(new Res
+                {
+                    Number = number,
+                    Name = name?.Value ?? "",
+                    Mail = (string)name?.Descendants("a").FirstOrDefault()?.Attribute("href"),
+                    Date = DatParser.GetDate(date),
+                    UserId = userId,
+                    Text = new XElement(body)
+                });
+            }
+            if (thread.Res.Count == 0)
+            {
+                foreach (var dt in doc.Descendants("dt"))
+                {
+                    if (!int.TryParse(Regex.Match(dt.Value, @"^\s*(\d+)").Groups[1].Value, out var number))
+                        continue;
+                    var body = dt.ElementsAfterSelf().FirstOrDefault();
+                    if (body?.Name.LocalName != "dd")
+                        continue;
+                    thread.Res.Add(new Res
+                    {
+                        Number = number,
+                        Name = dt.Descendants("b").FirstOrDefault()?.Value ?? "",
+                        Mail = (string)dt.Descendants("a").FirstOrDefault()?.Attribute("href"),
+                        Date = DatParser.GetDate(dt.Value),
+                        UserId = Regex.Match(dt.Value, @"ID:([^\s]+)").Groups[1].Value,
+                        Text = new XElement(body)
+                    });
+                }
+            }
+            if (thread.Title == null || thread.Res.Count == 0)
+                throw new ThreadParserException();
+            thread.ResCount = thread.Res.Count;
+            return thread;
+        }
+    }
+
     public static class ThreadParser
     {
         private static IThreadParser GetThreadParser(XDocument doc)
@@ -181,13 +226,20 @@ namespace Nichan
         /// <exception cref="ThreadParserException">解析エラーの場合</exception>
         public static Thread ParseFromStream(TextReader reader)
         {
-            using var sgmlReader = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = reader };
+            using var sgmlReader = new SgmlReader { DocType = "HTML", IgnoreDtd = true, InputStream = reader };
             sgmlReader.WhitespaceHandling = WhitespaceHandling.None;
             sgmlReader.CaseFolding = CaseFolding.ToLower;
             var doc = XDocument.Load(sgmlReader);
 
-            Thread ret = GetThreadParser(doc).Parse(doc);
-            return ret;
+            try
+            {
+                Thread ret = GetThreadParser(doc).Parse(doc);
+                if (ret.Res.Count > 0 && ret.Res.All(r => r.Text != null))
+                    return ret;
+            }
+            catch (Exception e) when (e is ThreadParserException || e is NullReferenceException || e is FormatException || e is ArgumentException || e is OverflowException)
+            { }
+            return new FallbackThreadParser().Parse(doc);
         }
     }
 }

@@ -29,6 +29,7 @@ namespace Nichan
             {
                 string line = await reader.ReadLineAsync();
                 if (line == null) break;
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
                 int sepIdx = line.IndexOf("<>");
                 if (sepIdx == -1)
@@ -41,6 +42,8 @@ namespace Nichan
                     throw new BoardSubjectParserException();
                 }
                 dat = dat[..^4];
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dat, "^[0-9]{9,12}$"))
+                    throw new BoardSubjectParserException();
 
                 int start = title.LastIndexOf("(");
                 int end = title.LastIndexOf(")");
@@ -57,7 +60,7 @@ namespace Nichan
                     throw new BoardSubjectParserException(e);
                 }
 
-                title = title[..start].Trim();
+                title = System.Net.WebUtility.HtmlDecode(title[..start].Trim());
 
                 yield return new Thread() { Name = dat, Title = title, ResCount = resCount };
             }

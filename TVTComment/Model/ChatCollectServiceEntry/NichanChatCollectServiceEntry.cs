@@ -94,7 +94,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
     {
         public override string Id => "2chHTML";
         public override string Name => "2chHTML";
-        public override string Description => "2chのレスをHTMLのスクレイピングで表示";
+        public override string Description => "5chのレスをHTMLのスクレイピングで表示";
 
 
         public HTMLNichanChatCollectServiceEntry(
@@ -119,7 +119,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
     {
         public override string Id => "2chDAT";
         public override string Name => "2chDAT";
-        public override string Description => "2chのレスをAPIでのDAT取得により表示";
+        public override string Description => "5chの公開DATを直接取得して表示";
 
         private readonly ObservableValue<Nichan.ApiClient> apiClient;
 

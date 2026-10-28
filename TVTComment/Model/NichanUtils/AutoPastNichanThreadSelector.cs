@@ -2,38 +2,36 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace TVTComment.Model.NichanUtils
 {
     class AutoPastNichanThreadSelector : INichanThreadSelector
     {
-        public AutoPastNichanThreadSelector(ThreadResolver threadResolver, TimeSpan getTimeSpan, TimeSpan backTime, string pastUserAgent)
+        public AutoPastNichanThreadSelector(ThreadResolver threadResolver, TimeSpan getTimeSpan, TimeSpan backTime, Nichan.PastThreadRepository repository)
         {
             this.threadResolver = threadResolver;
             this.getTimeSpan = getTimeSpan;
             this.backTime = backTime;
-            this.pastUserAgent = pastUserAgent;
+            this.repository = repository;
         }
 
         public async IAsyncEnumerable<string> Get(ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false);
+            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false) ?? Enumerable.Empty<MatchingThread>();
 
             foreach (var thread in matchingThreads)
             {
-                string[] keywords = thread.ThreadTitleKeywords?.Select(
-                    x => x.ToLower().Normalize(NormalizationForm.FormKD)
-                )?.ToArray() ?? Array.Empty<string>();
-                (string server, string board) = GetServerAndBoardFromBoardUrl(thread.BoardUri.ToString());
+                string[] keywords = thread.ThreadTitleKeywords?.ToArray() ?? Array.Empty<string>();
+                var board = Nichan.ThreadAddress.NormalizeBoard(thread.BoardUri);
+                var key = board.AbsoluteUri;
 
-                if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
+                if (!pastThreadListerCache.TryGetValue(key, out var threadLister))
                 {
-                    threadLister = new Nichan.PastThreadLister(board, server, backTime, pastUserAgent);
-                    await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
-                    pastThreadListerCache.Add(board, threadLister);
+                    if (pastThreadListerCache.Count >= 32)
+                        pastThreadListerCache.Remove(pastThreadListerCache.Keys.First());
+                    threadLister = new Nichan.PastThreadLister(board, backTime, repository);
+                    pastThreadListerCache.Add(key, threadLister);
                 }
 
                 DateTimeOffset startTime = time;
@@ -48,14 +46,7 @@ namespace TVTComment.Model.NichanUtils
         private readonly ThreadResolver threadResolver;
         private readonly TimeSpan getTimeSpan;
         private readonly TimeSpan backTime;
-        private readonly string pastUserAgent;
+        private readonly Nichan.PastThreadRepository repository;
         private readonly Dictionary<string, Nichan.PastThreadLister> pastThreadListerCache = new Dictionary<string, Nichan.PastThreadLister>();
-
-        private static readonly Regex reBoardUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/(?<board>[^/]*)(^|/.*)");
-        private static (string server, string board) GetServerAndBoardFromBoardUrl(string boardUrl)
-        {
-            Match match = reBoardUrl.Match(boardUrl);
-            return (match.Groups["server"].Value, match.Groups["board"].Value);
-        }
     }
 }

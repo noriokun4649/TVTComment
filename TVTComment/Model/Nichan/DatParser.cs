@@ -70,27 +70,25 @@ namespace Nichan
             // 6フィールドでも実害がなさそうなのでエラー出さずに無視する
             // 運営スレが6フィールドになる模様？
             // 通常は5フィールドだが、なぜか先頭行が6フィールドあるdatが確認されている
-            /*
-            if (!reses.All(x => x.Length >= 5))
+            if (!reses.All(x => x.Length == 5 || x.Length == 6))
             {
-                //throw new DatParserException();
+                throw new DatParserException("DATのフィールド数が不正です。");
             }
-            */
 
             if (isFirstLine && !FromTheMiddle)
             {
                 // 最初の行からスレタイを取得
-                ThreadTitle = reses[0][4];
+                ThreadTitle = HttpUtility.HtmlDecode(reses[0][4].TrimEnd('\r'));
             }
 
-            using var sgmlReader = new SgmlReader() { DocType = "HTML", IgnoreDtd = false };
+            using var sgmlReader = new SgmlReader() { DocType = "HTML", IgnoreDtd = true };
             sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
             sgmlReader.CaseFolding = CaseFolding.ToLower;
 
             foreach (var row in reses)
             {
                 int startIdx = row[2].IndexOf("ID:");
-                string userId = startIdx != -1 ? row[2][(startIdx + 3)..] : null;
+                string userId = startIdx != -1 ? row[2][(startIdx + 3)..].Split(' ')[0] : null;
 
                 using var reader = new StringReader($"<html><div>{row[3]}</div></html>");
                 sgmlReader.InputStream = reader;
@@ -103,7 +101,7 @@ namespace Nichan
                     Mail = HttpUtility.HtmlDecode(row[1]),
                     UserId = userId,
                     Date = GetDate(row[2]),
-                    Text = text,
+                    Text = text ?? new XElement("div"),
                 });
             }
         }
@@ -133,21 +131,27 @@ namespace Nichan
         private int resNum;
         private bool isBeforeFirstLine;
 
-        private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)(\.(?<sec>\d+)| )");
-        private static DateTime? GetDate(string str)
+        private static readonly Regex reDate = new Regex(@"(\d{4})/(\d{1,2})/(\d{1,2})[^ ]* (\d{1,2}):(\d{2}):(\d{2})(?:\.(?<sec>\d+))?");
+        internal static DateTime? GetDate(string str)
         {
             Match m = reDate.Match(str);
             if (m.Success) {
                 var sec = 0;
                 if (m.Groups["sec"].Success)
                 {
-                    sec = int.Parse(m.Groups["sec"].Value);
-                    if (sec >= 10 && sec <= 99) sec *= 10;
+                    sec = int.Parse((m.Groups["sec"].Value + "000").Substring(0, 3));
                 }
-                return new DateTime(
-                    int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), sec, DateTimeKind.Local
-                );
+                try
+                {
+                    return new DateTime(
+                        int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
+                        int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), sec, DateTimeKind.Unspecified
+                    );
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    return null;
+                }
             }
             else
                 return null;

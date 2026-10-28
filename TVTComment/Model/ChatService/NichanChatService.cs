@@ -113,6 +113,7 @@ namespace TVTComment.Model.ChatService
 
         public void Dispose()
         {
+            nichanApiClient.Value?.Dispose();
         }
     }
 }

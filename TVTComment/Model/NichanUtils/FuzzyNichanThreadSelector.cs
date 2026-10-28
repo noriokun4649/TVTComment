@@ -13,9 +13,6 @@ namespace TVTComment.Model.NichanUtils
 {
     class FuzzyNichanThreadSelector : INichanThreadSelector
     {
-        private static readonly HttpClient httpClient = new HttpClient();
-        private readonly string boardHost;
-        private readonly string boardName;
 
         private static int GetLevenshteinDistance(string str1, string str2)
         {
@@ -49,13 +46,7 @@ namespace TVTComment.Model.NichanUtils
         public string ThreadTitleExample { get; }
         public FuzzyNichanThreadSelector(string boardUri, string threadTitleExample)
         {
-            var uri = new Uri(boardUri);
-            boardHost = $"{uri.Scheme}://{uri.Host}";
-            boardName = uri.Segments[1];
-            if (boardName.EndsWith('/'))
-                boardName = boardName[..^1];
-
-            BoardUri = boardUri;
+            BoardUri = Nichan.ThreadAddress.NormalizeBoard(new Uri(boardUri)).AbsoluteUri;
             ThreadTitleExample = NormalizeThreadTitle(threadTitleExample);
         }
 
@@ -63,28 +54,21 @@ namespace TVTComment.Model.NichanUtils
             ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync(
-                $"{boardHost}/{boardName}/subject.txt", cancellationToken
-            );
-            string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
-
-            using var textReader = new StringReader(subject);
-            var threadsInBoard = Nichan.SubjecttxtParser.ParseFromStream(textReader);
-
-            var threads = await threadsInBoard
+            var threadsInBoard = await Nichan.BoardClient.Shared.GetThreadsAsync(new Uri(BoardUri), cancellationToken).ConfigureAwait(false);
+            var threads = threadsInBoard
                 .Where(x => x.ResCount <= 1000)
                 .Select(x => new
                 {
                     Thread = x,
                     EditDistance = GetLevenshteinDistance(NormalizeThreadTitle(x.Title), ThreadTitleExample)
                 })
-                .OrderBy(x => x.EditDistance).ToArrayAsync(cancellationToken);
+                .OrderBy(x => x.EditDistance).ToArray();
 
             //レーベンシュタイン距離の最小値から距離10以内のものを選択
             var selectedThreads = threads.TakeWhile(
                 x => x.EditDistance <= threads.First().EditDistance + 10
             ).Take(3).Select(
-                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Thread.Name}/l50"
+                x => x.Thread.Uri.AbsoluteUri
             );
 
             foreach (var thread in selectedThreads)
