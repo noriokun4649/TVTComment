@@ -100,7 +100,7 @@ namespace TVTComment.Model
             foreach (Chat chat in newChats)
             {
                 ApplyChatModRule(chat);
-                if (NXJikkyoImportDisable.Value && chat.UserId.StartsWith("nicolive:"))
+                if (NXJikkyoImportDisable.Value && chat.UserId?.StartsWith("nicolive:", StringComparison.Ordinal) == true)
                 {
                     continue;
                 }

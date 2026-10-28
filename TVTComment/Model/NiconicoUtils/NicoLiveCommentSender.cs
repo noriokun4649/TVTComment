@@ -157,9 +157,7 @@ namespace TVTComment.Model.NiconicoUtils
 
             cancellationToken.ThrowIfCancellationRequested();
             clientWebSocket?.Dispose();
-            clientWebSocket = new ClientWebSocket();
-            clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
-            clientWebSocket.Options.KeepAliveInterval = TimeSpan.Zero;
+            clientWebSocket = CreateWebSocket();
 
             await clientWebSocket.ConnectAsync(webScoketUri, cancellationToken);
             await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
@@ -169,20 +167,18 @@ namespace TVTComment.Model.NiconicoUtils
             ElapsedEventHandler handler = null;
             handler = async (sender, e) =>
             {
+                var webSocket = clientWebSocket;
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    if (clientWebSocket.State != WebSocketState.Open)
-                    {
-                        timer.Elapsed -= handler;
-                        timer.Close();
+                    if (webSocket.State != WebSocketState.Open)
                         return;
-                    }
-                    await WsSend("{\"type\": \"keepSeat\"}", cancellationToken);
+                    await WsSend("{\"type\": \"keepSeat\"}", cancellationToken, webSocket);
                 }
-                catch (Exception error) when (cancellationToken.IsCancellationRequested &&
+                catch (Exception error) when ((cancellationToken.IsCancellationRequested || webSocket.State != WebSocketState.Open) &&
                     (error is OperationCanceledException || error is WebSocketException || error is ObjectDisposedException)) { }
             };
+            timer.Elapsed += handler;
             var buffer = new byte[4096];
             while (true)
             {
@@ -202,6 +198,14 @@ namespace TVTComment.Model.NiconicoUtils
                     else
                         throw new NetworkNicoLiveCommentReceiverException(e);
                 }
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    timer.Stop();
+                    if (clientWebSocket.State == WebSocketState.CloseReceived)
+                        await clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "disconnect", cancellationToken);
+                    errorMesColl.Add("disconnect", cancellationToken);
+                    return;
+                }
                 var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
                 var json = JsonDocument.Parse(message).RootElement;
@@ -216,6 +220,7 @@ namespace TVTComment.Model.NiconicoUtils
                             case "NO_PERMISSION":
                             case "NOT_ON_AIR":
                             case "BROADCAST_NOT_FOUND":
+                                timer.Stop();
                                 await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "error disconnect", cancellationToken);
                                 timer.Elapsed -= handler;
                                 timer.Close();
@@ -226,7 +231,6 @@ namespace TVTComment.Model.NiconicoUtils
                     case "seat":
                         var keepInterval = json.GetProperty("data").GetProperty("keepIntervalSec").GetInt32();
                         timer.Interval = keepInterval * 1000;
-                        timer.Elapsed += handler;
                         timer.Start();
                         break;
                     case "ping":
@@ -236,19 +240,23 @@ namespace TVTComment.Model.NiconicoUtils
                         var data = json.GetProperty("data");
                         var token = data.GetProperty("audienceToken").GetString();
                         var waittime = data.GetProperty("waitTimeSec").GetInt32();
+                        timer.Stop();
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "reconnect", cancellationToken);
+                        clientWebSocket.Dispose();
                         var path = webScoketUri.GetLeftPart(UriPartial.Path);
                         var newUri = new Uri(path + "?audience_token=" + token);
                         await Task.Delay(waittime * 1000, cancellationToken);
+                        clientWebSocket = CreateWebSocket();
                         await clientWebSocket.ConnectAsync(newUri, cancellationToken);
                         await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
                         break;
                     case "disconnect":
+                        timer.Stop();
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "disconnect", cancellationToken);
                         timer.Elapsed -= handler;
                         timer.Close();
                         errorMesColl.Add("disconnect", cancellationToken);
-                        break;
+                        return;
                     case "postCommentResult":
                         var postres = json.GetProperty("data").GetProperty("chat").GetProperty("content").GetString();
                         errorMesColl.Add(postres, cancellationToken);
@@ -262,11 +270,19 @@ namespace TVTComment.Model.NiconicoUtils
             }
         }
 
-        private async Task WsSend(string text, CancellationToken cancellationToken)
+        private ClientWebSocket CreateWebSocket()
+        {
+            var webSocket = new ClientWebSocket();
+            webSocket.Options.SetRequestHeader("User-Agent", ua);
+            webSocket.Options.KeepAliveInterval = TimeSpan.Zero;
+            return webSocket;
+        }
+
+        private async Task WsSend(string text, CancellationToken cancellationToken, ClientWebSocket webSocket = null)
         {
             var encoded = Encoding.UTF8.GetBytes(text);
             var vs = new ArraySegment<byte>(encoded);
-            await clientWebSocket.SendAsync(vs, WebSocketMessageType.Text, true, cancellationToken);
+            await (webSocket ?? clientWebSocket).SendAsync(vs, WebSocketMessageType.Text, true, cancellationToken);
         }
 
         /// <summary>

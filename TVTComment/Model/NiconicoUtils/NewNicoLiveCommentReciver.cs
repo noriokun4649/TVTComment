@@ -3,7 +3,6 @@ using Google.Protobuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -92,39 +91,41 @@ namespace TVTComment.Model.NiconicoUtils
                     cancellationToken.ThrowIfCancellationRequested();
 
                     unread.AddRange(buffer[..chunk]);
-                    using var memoryStream = new MemoryStream([.. unread]);
-                    List<T> messages = [];
+                    int position = 0;
 
-                    try
-                    {
-                        while (memoryStream.Position < memoryStream.Length)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-                            var msg = decoder.ParseDelimitedFrom(memoryStream);
-                            messages.Add(msg);
-                        }
-                        unread.Clear();
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch (InvalidProtocolBufferException)
-                    {
-                        //protobufが途中でちぎれていた場合RangeErrorになるので未読分をunreadにつめる
-                        unread = unread.Skip((int)memoryStream.Position).ToList(); // Save unread part
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException(ex.Message);
-                    }
-
-                    foreach (var msg in messages)
+                    while (position < unread.Count)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+                        int payloadOffset = position;
+                        uint length = 0;
+                        bool hasLength = false;
+
+                        // 長さと本文が揃うまで未完のメッセージを保持
+                        for (int shift = 0; payloadOffset < unread.Count; shift += 7)
+                        {
+                            byte value = unread[payloadOffset++];
+                            if (shift == 28 && (value & 0xf8) != 0)
+                                throw new InvalidDataException("コメントデータのメッセージ長が不正です。");
+                            length |= (uint)(value & 0x7f) << shift;
+                            if ((value & 0x80) == 0)
+                            {
+                                hasLength = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasLength || length > unread.Count - payloadOffset)
+                            break;
+
+                        var msg = decoder.ParseFrom(unread.GetRange(payloadOffset, (int)length).ToArray());
+                        position = payloadOffset + (int)length;
                         yield return msg;
                     }
+                    unread.RemoveRange(0, position);
                 }
+                cancellationToken.ThrowIfCancellationRequested();
+                if (unread.Count != 0)
+                    throw new EndOfStreamException("コメントデータの受信が途中で終了しました。");
             }
         }
 

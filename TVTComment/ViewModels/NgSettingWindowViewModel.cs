@@ -1,5 +1,6 @@
 ﻿using ObservableUtils;
 using Prism.Commands;
+using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using Notification = Prism.Interactivity.InteractionRequest.Notification;
 
 namespace TVTComment.ViewModels
 {
@@ -98,6 +100,8 @@ namespace TVTComment.ViewModels
         public ICommand RemoveRuleCommand { get; private set; }
         public ICommand AddUrlNgCommand { get; private set; }
         public ICommand AddMentionNgCommand { get; private set; }
+
+        public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
 
         public NgSettingWindowViewModel(Model.TVTComment model)
         {
@@ -202,12 +206,12 @@ namespace TVTComment.ViewModels
 
             AddReplaceRegexCommand = new DelegateCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.ReplaceRegexChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), ReplaceRegexPattern.Value, ReplaceRegexReplacement.Value));
+                AddRegexChatModRule(() => new Model.ChatModRules.ReplaceRegexChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), ReplaceRegexPattern.Value, ReplaceRegexReplacement.Value));
             });
 
             AddRegexNgCommand = new DelegateCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RegexNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
+                AddRegexChatModRule(() => new Model.ChatModRules.RegexNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
             });
 
             AddUrlNgCommand = new DelegateCommand(() =>
@@ -225,6 +229,21 @@ namespace TVTComment.ViewModels
                 if (SelectedRule == null) return;
                 model.ChatModule.RemoveChatModRule(SelectedRule.ChatModRule);
             });
+        }
+
+        private void AddRegexChatModRule(Func<Model.ChatModRules.IChatModRule> createRule)
+        {
+            Model.ChatModRules.IChatModRule rule;
+            try
+            {
+                rule = createRule();
+            }
+            catch (ArgumentException e)
+            {
+                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"正規表現が不正です\n{e.Message}" });
+                return;
+            }
+            model.ChatModule.AddChatModRule(rule);
         }
 
         public void Dispose()
