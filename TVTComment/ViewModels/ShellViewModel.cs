@@ -229,9 +229,9 @@ namespace TVTComment.ViewModels
             });
             AddUserNgCommand = new DelegateCommand<Model.Chat>(chat =>
             {
-                if (chat == null) return;
+                if (chat?.SourceService?.Owner == null || chat.IsSystemMsg) return;
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.UserNgChatModRule(chat.SourceService.Owner.ChatCollectServiceEntries, chat.UserId));
-            });
+            }, chat => chat?.SourceService?.Owner != null && !chat.IsSystemMsg);
             CopyCommentCommand = new DelegateCommand<Model.Chat>(chat =>
             {
                 if (chat == null) return;

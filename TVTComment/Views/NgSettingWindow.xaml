@@ -16,6 +16,9 @@
         <i:EventTrigger EventName="Closed">
             <behaviors:DisposeDataContextAction/>
         </i:EventTrigger>
+        <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
+            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True"/>
+        </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
     <Window.Resources>
