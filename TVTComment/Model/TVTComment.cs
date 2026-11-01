@@ -25,6 +25,7 @@ namespace TVTComment.Model
         private ChannelDatabase channelDatabase;
 
         private IPCModule ipcModule;
+        internal IPCModule IpcModule => ipcModule;
         public ChannelInformationModule ChannelInformationModule { get; private set; }
         public ChatCollectServiceModule ChatCollectServiceModule { get; private set; }
         public ChatTrendServiceModule ChatTrendServiceModule { get; private set; }

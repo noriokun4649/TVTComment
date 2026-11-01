@@ -12,12 +12,6 @@
              d:DesignHeight="300" d:DesignWidth="300" prism:ViewModelLocator.AutoWireViewModel="True">
     
     <StackPanel Orientation="Vertical">
-        <i:Interaction.Triggers>
-            <i:EventTrigger EventName="Unloaded">
-                <behaviors:DisposeDataContextAction/>
-            </i:EventTrigger>
-        </i:Interaction.Triggers>
-
         <GroupBox Header="コメント設定">
             <Grid local:Grid.Shape="*:auto,auto">
                 <DockPanel Grid.Row="0">
@@ -61,7 +55,7 @@
         </GroupBox>
 
         <GroupBox Header="ウィンドウ設定">
-            <Grid local:Grid.Shape="*:auto,auto,auto,auto">
+            <Grid local:Grid.Shape="*:auto,auto,auto,auto,auto">
                 <CheckBox IsChecked="{Binding WindowTopmost.Value,Mode=TwoWay}" VerticalAlignment="Center" Grid.Row="0">最前面表示</CheckBox>
                 <DockPanel Grid.Row="1">
                     <Label DockPanel.Dock="Left">ウィンドウ透過度</Label>
@@ -78,6 +72,9 @@
                 </DockPanel>
 
                 <CheckBox IsChecked="{Binding UiFlashingDeterrence.Value}" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="3">UIのチラつきを抑える (タイトルから時間が省略されます)</CheckBox>
+                <CheckBox IsChecked="{Binding MinimizeOnTVTestPanelOpen.Value,Mode=TwoWay}" Grid.Row="4">
+                    <TextBlock Text="TVTestのパネルを開いたら、このウィンドウを自動で最小化する" TextWrapping="Wrap"/>
+                </CheckBox>
             </Grid>
         </GroupBox>
 

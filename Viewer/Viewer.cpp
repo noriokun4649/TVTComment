@@ -152,6 +152,11 @@ bool CViewer::Initialize()
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback, this);
+	if (!panel_.Initialize(g_hinstDLL, m_pApp, [this](const TVTComment::IIPCMessage &message) {
+		return tvtComment && tvtComment->SendIPCMessage(message);
+	}, m_pPluginParam)) {
+		m_pApp->AddLog(L"TvtCommentパネルを登録できませんでした。");
+	}
 	return true;
 }
 
@@ -159,6 +164,7 @@ bool CViewer::Finalize()
 {
 	// 終了処理
 	TogglePlugin(false);
+	panel_.Finalize();
 	commentWindow_.Finalize();
 	return true;
 }
@@ -172,7 +178,9 @@ bool CViewer::TogglePlugin(bool bEnabled)
 #pragma region TVTComment
 			//tvtCommentオブジェクトは勢いウィンドウより生存期間が長い
 			// tstringをwstringに渡してるけどどうせUnicodeでしかビルドしないのでヨシ！
-			tvtComment = std::make_unique<TVTComment::TVTComment>(m_pApp, &commentWindow_, s_.tvtCommentPath);
+			panel_.SetPluginEnabled(true);
+			tvtComment = std::make_unique<TVTComment::TVTComment>(m_pApp, &commentWindow_, s_.tvtCommentPath,
+				[this](const TVTComment::IIPCMessage &message) { panel_.OnMessage(message); });
 #pragma endregion
 
 			// ダミー窓作成
@@ -209,6 +217,7 @@ bool CViewer::TogglePlugin(bool bEnabled)
 		}
 #pragma region TVTComment
 		tvtComment = nullptr;
+		panel_.SetPluginEnabled(false);
 #pragma endregion
 		return true;
 	}
@@ -390,6 +399,11 @@ LRESULT CALLBACK CViewer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 	static_cast<void>(lParam2);
 	CViewer *pThis = static_cast<CViewer*>(pClientData);
 	switch (Event) {
+	case TVTest::EVENT_COLORCHANGE:
+		pThis->panel_.OnColorChange();
+		return TRUE;
+	case TVTest::EVENT_PANELITEM_NOTIFY:
+		return pThis->panel_.OnPanelEvent(reinterpret_cast<TVTest::PanelItemEventInfo *>(lParam1));
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
 		pThis->TogglePlugin(lParam1 != 0);

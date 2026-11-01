@@ -15,6 +15,7 @@
         prism:ViewModelLocator.AutoWireViewModel="True"
         mc:Ignorable="d"
         Title="{Binding WindowTitle.Value}"
+        WindowState="{Binding WindowPresentation.State.Value,Mode=TwoWay}"
         Top="{Binding WindowPosition.X,Mode=TwoWay}" Left="{Binding WindowPosition.Y,Mode=TwoWay}"
         Height="{Binding WindowPosition.Height,Mode=TwoWay}" Width="{Binding WindowPosition.Width,Mode=TwoWay}"
         Topmost="{Binding WindowTopmost.Value,Mode=TwoWay}" WindowStyle="None"
@@ -53,6 +54,9 @@
     </Window.Triggers>
 
     <i:Interaction.Triggers>
+        <prism:InteractionRequestTrigger SourceObject="{Binding WindowPresentation.ActivationRequest}">
+            <behaviors:ActivateWindowAction/>
+        </prism:InteractionRequestTrigger>
         <i:EventTrigger EventName="Closed">
             <behaviors:DisposeDataContextAction/>
         </i:EventTrigger>
@@ -358,9 +362,9 @@
             </TabControl>
 
             <contents:ChatPostControl Grid.Row="2">
-                <!--<i:Interaction.Behaviors>
-                <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.ChatPostControlViewModel,Mode=OneWayToSource}"/>
-            </i:Interaction.Behaviors>-->
+                <i:Interaction.Behaviors>
+                    <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.ChatPostControlViewModel,Mode=OneWayToSource}"/>
+                </i:Interaction.Behaviors>
             </contents:ChatPostControl>
         </Grid>
     </Border>
