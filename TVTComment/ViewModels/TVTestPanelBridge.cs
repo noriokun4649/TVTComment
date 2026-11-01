@@ -75,7 +75,7 @@ namespace TVTComment.ViewModels
                     Execute(viewModel.ChangeChannelCommand, viewModel.Channels.FirstOrDefault(x => Id(x) == args[0])?.Channel);
                     break;
                 case "AddSource" when args.Length == 1:
-                    Execute(viewModel.AddChatCollectServiceCommand, viewModel.ChatCollectServiceAddList.FirstOrDefault(x => Id(x) == args[0]));
+                    await viewModel.AddChatCollectService(viewModel.ChatCollectServiceAddList.FirstOrDefault(x => Id(x) == args[0]), useDefaultCreationOption: true);
                     break;
                 case "RemoveSource" when args.Length == 1:
                     Execute(viewModel.RemoveChatCollectServiceCommand, viewModel.ChatCollectServices.FirstOrDefault(x => Id(x) == args[0])?.Service);

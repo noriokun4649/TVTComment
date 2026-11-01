@@ -210,18 +210,7 @@ namespace TVTComment.ViewModels
             ChangeChannelCommand = new DelegateCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
 
             AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(
-                async x =>
-                {
-                    if (x == null || addingChatCollectService) return;
-                    addingChatCollectService = true;
-                    AddChatCollectServiceCommand.RaiseCanExecuteChanged();
-                    try { await AddChatCollectService(x); }
-                    finally
-                    {
-                        addingChatCollectService = false;
-                        AddChatCollectServiceCommand.RaiseCanExecuteChanged();
-                    }
-                },
+                async x => await AddChatCollectService(x),
                 _ => !UseDefaultChatCollectService.Value && !addingChatCollectService
             );
             RemoveChatCollectServiceCommand = new DelegateCommand<Model.ChatCollectService.IChatCollectService>(
@@ -299,11 +288,29 @@ namespace TVTComment.ViewModels
             WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {time} - TVTComment";
         }
 
-        private async Task AddChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item)
+        internal async Task AddChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item, bool useDefaultCreationOption = false)
+        {
+            if (item == null || disposed || !AddChatCollectServiceCommand.CanExecute(item)) return;
+            addingChatCollectService = true;
+            AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+            try { await AddChatCollectServiceCore(item, useDefaultCreationOption); }
+            finally
+            {
+                addingChatCollectService = false;
+                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private async Task AddChatCollectServiceCore(ShellContents.ChatCollectServiceAddListItemViewModel item, bool useDefaultCreationOption)
         {
             if (item.IsPreset)
             {
                 model.ChatCollectServiceModule.AddService(item.ServiceEntry, item.Preset.CreationOption);
+            }
+            else if (useDefaultCreationOption && item.ServiceEntry.CanUseDefaultCreationOption)
+            {
+                // TVTestパネルでは自動選択と同じ既定の作成オプションを使う
+                model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
             }
             else
             {
