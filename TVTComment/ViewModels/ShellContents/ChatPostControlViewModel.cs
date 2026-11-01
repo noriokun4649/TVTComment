@@ -3,6 +3,7 @@ using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Linq;
@@ -11,9 +12,11 @@ using System.Windows.Input;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class ChatPostControlViewModel : INotifyPropertyChanged
+    class ChatPostControlViewModel : INotifyPropertyChanged, IDisposable
     {
         private readonly Model.TVTComment model;
+        private IDisposable selectionSubscription;
+        private bool disposed;
 
         public ObservableValue<string> PostSplitterLeftSize => model.ChatPostSplitterLeftSize;
         public ObservableValue<string> PostSplitterRightSize => model.ChatPostSplitterRightSize;
@@ -42,7 +45,7 @@ namespace TVTComment.ViewModels.ShellContents
             this.model = model;
             this.model.Initialize().ContinueWith(task =>
             {
-                if (!task.IsCompletedSuccessfully) return;
+                if (!task.IsCompletedSuccessfully || disposed) return;
                 Initialize();
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
@@ -56,31 +59,47 @@ namespace TVTComment.ViewModels.ShellContents
                 else return Array.Empty<Model.ChatCollectService.IChatCollectService>();
             });
             IsShowingNiconicoPostForm = new ReadOnlyObservableValue<bool>(
-                SelectedPostService.Select(x =>
-                    x is Model.ChatCollectService.NiconicoChatCollectService ||
-                    x is Model.ChatCollectService.NiconicoLiveChatCollectService ||
-                    x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService ||
-                    x is Model.ChatCollectService.TwitterLiveChatCollectService ||
-                    x is Model.ChatCollectService.NxJikkyoChatCollectService
-                )
+                SelectedPostService.Select(x => PostForm(x) == "text")
             );
             IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
-                SelectedPostService.Select(x => x is Model.ChatCollectService.NichanChatCollectService)
+                SelectedPostService.Select(x => PostForm(x) == "thread")
             );
 
             PostCommand = new DelegateCommand(PostChat);
             UpdateNichanCurrentThreadsCommand = new DelegateCommand(() =>
             {
-                if (SelectedPostService.Value is not Model.ChatCollectService.NichanChatCollectService nichanChatCollectService)
-                    return;
+                var selected = SelectedNichanCurrentThread.Value;
+                var threads = (SelectedPostService.Value as Model.ChatCollectService.NichanChatCollectService)?.CurrentThreads.ToArray()
+                    ?? Array.Empty<Nichan.Thread>();
+                if (NichanCurrentThreads.SequenceEqual(threads)) return;
                 NichanCurrentThreads.Clear();
-                foreach (var thread in nichanChatCollectService.CurrentThreads)
-                    NichanCurrentThreads.Add(thread);
+                foreach (var thread in threads) NichanCurrentThreads.Add(thread);
+                SelectedNichanCurrentThread.Value = threads.Contains(selected) ? selected : threads.FirstOrDefault();
             });
             AddPostMailTextExampleCommand = new DelegateCommand<string>(AddPostMailTextExample);
             RemovePostMailTextExampleCommand = new DelegateCommand<string>(RemovePostMailTextExample);
 
-            PropertyChanged(this, new PropertyChangedEventArgs(null));
+            selectionSubscription = SelectedPostService.Subscribe(_ => UpdateNichanCurrentThreadsCommand.Execute(null));
+            ((INotifyCollectionChanged)PostServices).CollectionChanged += PostServicesChanged;
+            PostServicesChanged(null, null);
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        }
+
+        internal static string PostForm(Model.ChatCollectService.IChatCollectService service) => service switch
+        {
+            Model.ChatCollectService.NichanChatCollectService _ => "thread",
+            Model.ChatCollectService.NiconicoChatCollectService _ or
+            Model.ChatCollectService.NiconicoLiveChatCollectService _ or
+            Model.ChatCollectService.NewNiconicoJikkyouChatCollectService _ or
+            Model.ChatCollectService.TwitterLiveChatCollectService _ or
+            Model.ChatCollectService.NxJikkyoChatCollectService _ => "text",
+            _ => "none"
+        };
+
+        private void PostServicesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (!PostServices.Contains(SelectedPostService.Value)) SelectedPostService.Value = PostServices.FirstOrDefault();
         }
 
         private void PostChat()
@@ -169,6 +188,16 @@ namespace TVTComment.ViewModels.ShellContents
         private void RemovePostMailTextExample(string postMailTextExample)
         {
             PostMailTextExamples.Remove(postMailTextExample);
+        }
+
+        public void Dispose()
+        {
+            disposed = true;
+            selectionSubscription?.Dispose();
+            if (PostServices != null) ((INotifyCollectionChanged)PostServices).CollectionChanged -= PostServicesChanged;
+            PostServices?.Dispose();
+            IsShowingNiconicoPostForm?.Dispose();
+            IsShowingNichanPostForm?.Dispose();
         }
     }
 }

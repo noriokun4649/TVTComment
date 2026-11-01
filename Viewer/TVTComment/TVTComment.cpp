@@ -154,6 +154,8 @@ namespace TVTComment
 			lastOpacity = (WPARAM)message->Opacity;
 			PostMessage(this->dialog, WM_SETCHATOPACITY, (WPARAM)message->Opacity, 0);
 		}
+		else if (additionalMessageHandler)
+			additionalMessageHandler(msg);
 #pragma warning(pop)
 	}
 
@@ -187,9 +189,16 @@ namespace TVTComment
 		return this->isConnected;
 	}
 
-	TVTComment::TVTComment(TVTest::CTVTestApp *tvtest,CCommentWindow *commentWindow, const std::wstring &collectExePath)
+	bool TVTComment::SendIPCMessage(const IIPCMessage &message)
+	{
+		return isConnected && !isClosing && sendMessage(message);
+	}
+
+	TVTComment::TVTComment(TVTest::CTVTestApp *tvtest,CCommentWindow *commentWindow, const std::wstring &collectExePath,
+		std::function<void(const IIPCMessage &)> additionalMessageHandler)
 		:tvtest(tvtest),commentWindow(commentWindow),dialog(0),lastTOT(0),lastEventId(0),errorCount(0),ipcTunnel(nullptr),isConnected(false),isClosing(false),collectExePath(collectExePath)
 	{
+		this->additionalMessageHandler = std::move(additionalMessageHandler);
 	}
 
 	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

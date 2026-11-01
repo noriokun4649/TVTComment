@@ -19,6 +19,7 @@ namespace TVTComment.ViewModels.ShellContents
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableValue<double> WindowOpacity { get; } = new ObservableValue<double>(1.0);
         public ObservableValue<bool> WindowTopmost { get; } = new ObservableValue<bool>(false);
+        public ObservableValue<bool> MinimizeOnTVTestPanelOpen { get; } = new ObservableValue<bool>(false);
         public ObservableValue<TimeSpan> ChatCollectTimeAdjustment { get; private set; }
         public ObservableValue<bool> ClearChatsOnChannelChange { get; private set; }
         public ObservableValue<bool> NgCommentNotShow { get; private set; }
@@ -46,10 +47,12 @@ namespace TVTComment.ViewModels.ShellContents
             if (model.State != Model.TVTCommentState.Working) return;
 
             WindowTopmost.Value = model.Settings.View.WindowTopmost;
+            MinimizeOnTVTestPanelOpen.Value = model.Settings.View.MinimizeOnTVTestPanelOpen;
             WindowOpacity.Value = model.Settings.View.WindowOpacity;
             WindowFontSize.Value = model.Settings.View.WindowFontSize;
 
             compositeDisposable.Add(WindowTopmost.Subscribe(x => model.Settings.View.WindowTopmost = x));
+            compositeDisposable.Add(MinimizeOnTVTestPanelOpen.Subscribe(x => model.Settings.View.MinimizeOnTVTestPanelOpen = x));
             compositeDisposable.Add(WindowOpacity.Subscribe(x => model.Settings.View.WindowOpacity = x));
             compositeDisposable.Add(WindowFontSize.Subscribe(x => model.Settings.View.WindowFontSize = x));
 

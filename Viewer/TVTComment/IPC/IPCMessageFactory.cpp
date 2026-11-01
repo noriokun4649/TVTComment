@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "IPCMessageFactory.h"
 #include "IPCMessageDecodeError.h"
 #include "IPCMessage/ChatIPCMessage.h"
@@ -9,6 +9,7 @@
 #include "IPCMessage/CloseIPCMessage.h"
 #include "IPCMessage/SetChatOpacityIPCMessage.h"
 #include "IPCMessage/CommandIPCMessage.h"
+#include "IPCMessage/PanelIPCMessage.h"
 
 namespace TVTComment
 {
@@ -31,6 +32,8 @@ namespace TVTComment
 			msg = new SetChatOpacityIPCMessage();
 		else if (rawmsg.MessageName == "Command")
 			msg = new CommandIPCMessage();
+		else if (rawmsg.MessageName == "Panel")
+			msg = new PanelIPCMessage();
 		else
 			throw IPCMessageDecodeError("不明なMessageNameです: " + rawmsg.ToString());
 

@@ -14,6 +14,7 @@
                 "Close" => new IPCMessage.CloseIPCMessage(),
                 "SetChatOpacity" => new IPCMessage.SetChatOpacityIPCMessage(),
                 "Command" => new IPCMessage.CommandIPCMessage(),
+                "Panel" => new IPCMessage.PanelIPCMessage(),
                 _ => throw new IPCMessage.IPCMessageDecodeException("不明なMessageNameです: " + rawmsg.ToString()),
             };
             ret.Decode(rawmsg.Contents);

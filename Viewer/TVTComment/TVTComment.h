@@ -11,6 +11,7 @@
 #include <atomic>
 #include <thread>
 #include <ppltasks.h>
+#include <functional>
 
 #ifndef UNICODE
 #error Character set must be Unicode!
@@ -46,6 +47,7 @@ namespace TVTComment
 
 		std::atomic<bool> isConnected;
 		std::unique_ptr<IPCTunnel> ipcTunnel;
+		std::function<void(const IIPCMessage &)> additionalMessageHandler;
 
 		std::vector<ChannelInfo> channelList;
 
@@ -82,7 +84,9 @@ namespace TVTComment
 
 	public:
 		bool IsConnected() const;
-		TVTComment(TVTest::CTVTestApp *tvtest,CCommentWindow *commentWindow,const std::wstring &collectExePath);
+		TVTComment(TVTest::CTVTestApp *tvtest,CCommentWindow *commentWindow,const std::wstring &collectExePath,
+			std::function<void(const IIPCMessage &)> additionalMessageHandler = {});
+		bool SendIPCMessage(const IIPCMessage &message);
 		INT_PTR WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void OnChannelListChange();
 		void OnChannelSelectionChange();

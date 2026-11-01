@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -175,6 +175,11 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Viewer.h" />
+    <ClInclude Include="TVTCommentPanel.h" />
+    <ClInclude Include="TVTCommentPanelTheme.h" />
+    <ClInclude Include="TVTCommentPanelSourceList.h" />
+    <ClInclude Include="TVTCommentPanelDropDown.h" />
+    <ClInclude Include="TVTComment\IPC\IPCMessage\PanelIPCMessage.h" />
     <ClInclude Include="NicoJK\CommentWindow.h" />
     <ClInclude Include="NicoJK\OsdCompositor.h" />
     <ClInclude Include="NicoJK\TVTestPlugin.h" />
@@ -209,6 +214,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Viewer.cpp" />
+    <ClCompile Include="TVTCommentPanel.cpp" />
+    <ClCompile Include="TVTCommentPanelTheme.cpp" />
+    <ClCompile Include="TVTCommentPanelSourceList.cpp" />
+    <ClCompile Include="TVTCommentPanelDropDown.cpp" />
+    <ClCompile Include="TVTComment\IPC\IPCMessage\PanelIPCMessage.cpp" />
     <ClCompile Include="NicoJK\CommentWindow.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "TVTComment/TVTComment.h"
+#include "TVTCommentPanel.h"
 #include <atomic>
 #include <thread>
 
@@ -90,6 +91,7 @@ private:
 	recursive_mutex_ streamLock_;
 
 #pragma region TVTComment
+	TVTCommentPanel panel_;
 	std::unique_ptr<TVTComment::TVTComment> tvtComment;
 #pragma endregion
 };
