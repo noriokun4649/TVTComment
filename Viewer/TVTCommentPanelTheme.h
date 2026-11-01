@@ -9,6 +9,7 @@ public:
 	~TVTCommentPanelTheme();
 	void Initialize(TVTest::CTVTestApp *app, TVTest::PluginParam *parameter);
 	void Update(HWND window, int dpi);
+	int GetHeaderHeight(HWND control) const;
 	bool HandleMessage(HWND window, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &result);
 	ListColors GetListColors() const { return { input_, inputText_, selection_, selectionText_, border_, disabled_ }; }
 

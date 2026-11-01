@@ -608,7 +608,7 @@ void TVTCommentPanel::Layout()
 	int lines = min(3, 1 + static_cast<int>(std::count(draft.begin(), draft.end(), L'\n')));
 	int inputHeight = textMode ? button + px(14) * (lines - 1) : threadMode ? button : 0;
 	int height = max(0, static_cast<int>(rect.bottom) - 2 * margin - 2 * button - 2 * gap - (inputHeight ? inputHeight + gap : 0));
-	TabCtrl_SetItemSize(tabs_, max(1, (width - px(4)) / 3), px(28));
+	TabCtrl_SetItemSize(tabs_, max(1, (width - px(4)) / 3), theme_.GetHeaderHeight(tabs_));
 	MoveWindow(tabs_, margin, margin, width, height, TRUE);
 	RECT page{ 0, 0, width, height };
 	TabCtrl_AdjustRect(tabs_, FALSE, &page);
