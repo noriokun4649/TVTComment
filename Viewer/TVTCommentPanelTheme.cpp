@@ -113,6 +113,7 @@ void TVTCommentPanelTheme::Background(HDC dc, const RECT &rect, LPCWSTR style, C
 
 void TVTCommentPanelTheme::Label(HDC dc, RECT rect, LPCWSTR text, COLORREF color, UINT format)
 {
+	if (IsRectEmpty(&rect)) return;
 	SetBkMode(dc, TRANSPARENT);
 	SetTextColor(dc, color);
 	DrawText(dc, text, -1, &rect, format);
@@ -166,6 +167,7 @@ void TVTCommentPanelTheme::PaintControl(HWND control, HDC dc)
 		int first = ListView_GetTopIndex(control);
 		int end = min(ListView_GetItemCount(control), first + ListView_GetCountPerPage(control) + 1);
 		for (int row = first; row < end; ++row) DrawRow(control, dc, row, false);
+		DrawListDividers(control, dc);
 	} else if (IsClass(control, WC_TABCONTROL)) {
 		// WM_PRINTCLIENTで他のコントロールを塗りつぶさないようにする
 		for (HWND sibling = GetWindow(GetParent(control), GW_CHILD); sibling; sibling = GetWindow(sibling, GW_HWNDNEXT)) {
@@ -204,22 +206,22 @@ void TVTCommentPanelTheme::PaintControl(HWND control, HDC dc)
 		}
 	} else if (IsClass(control, WC_HEADER)) {
 		Background(dc, rect, L"panel.tab", background_);
-		RECT line{ rect.left, rect.bottom - 1, rect.right, rect.bottom };
-		Fill(dc, line, border_);
 		for (int i = 0; i < Header_GetItemCount(control); ++i) {
 			RECT item;
 			Header_GetItemRect(control, i, &item);
 			RECT divider{ item.right - 1, item.top, item.right, item.bottom };
-			Fill(dc, divider, border_);
 			HDITEM header{};
 			header.mask = HDI_TEXT;
 			header.pszText = text;
 			header.cchTextMax = _countof(text);
 			Header_GetItem(control, i, &header);
-			item.left += Px(5);
-			item.right -= Px(3);
-			Label(dc, item, text, Color(L"PanelTabText", text_));
+			item.left += Px(4);
+			item.right -= Px(4);
+			Label(dc, item, text, Color(L"PanelTabText", text_), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
+			Fill(dc, divider, border_);
 		}
+		RECT line{ rect.left, rect.bottom - 1, rect.right, rect.bottom };
+		Fill(dc, line, border_);
 	} else if (IsClass(control, WC_COMBOBOX)) {
 		Fill(dc, rect, input_);
 		RECT arrow = rect;
@@ -288,6 +290,27 @@ void TVTCommentPanelTheme::DrawRow(HWND list, HDC dc, int row, bool selected)
 	if (GetFocus() == list && (ListView_GetItemState(list, row, LVIS_FOCUSED) & LVIS_FOCUSED)) DrawFocusRect(dc, &bounds);
 }
 
+void TVTCommentPanelTheme::DrawListDividers(HWND list, HDC dc)
+{
+	HWND header = ListView_GetHeader(list);
+	RECT client{}, headerBounds{};
+	GetClientRect(list, &client);
+	if (!GetWindowRect(header, &headerBounds)) return;
+	MapWindowPoints(nullptr, list, reinterpret_cast<POINT *>(&headerBounds), 2);
+	client.top = max(client.top, headerBounds.bottom);
+	if (IsRectEmpty(&client)) return;
+
+	// 文字・選択背景の描画後に、空白部分まで共通の罫線を重ねる
+	for (int column = 0; column < Header_GetItemCount(header); ++column) {
+		RECT item{};
+		if (!Header_GetItemRect(header, column, &item) || IsRectEmpty(&item)) continue;
+		MapWindowPoints(header, list, reinterpret_cast<POINT *>(&item), 2);
+		if (item.right <= client.left || item.right > client.right) continue;
+		RECT divider{ item.right - 1, client.top, item.right, client.bottom };
+		Fill(dc, divider, border_);
+	}
+}
+
 bool TVTCommentPanelTheme::HandleMessage(HWND, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &result)
 {
 	result = 0;
@@ -328,12 +351,15 @@ bool TVTCommentPanelTheme::HandleMessage(HWND, UINT message, WPARAM wParam, LPAR
 		}
 		if (header->code == NM_CUSTOMDRAW && IsClass(header->hwndFrom, WC_LISTVIEW)) {
 			auto draw = reinterpret_cast<NMLVCUSTOMDRAW *>(lParam);
-			if (draw->nmcd.dwDrawStage == CDDS_PREPAINT) result = CDRF_NOTIFYITEMDRAW;
+			if (draw->nmcd.dwDrawStage == CDDS_PREPAINT) result = CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
 			else if (draw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT) {
 				int row = static_cast<int>(draw->nmcd.dwItemSpec);
 				bool selected = (ListView_GetItemState(header->hwndFrom, row, LVIS_SELECTED) & LVIS_SELECTED) != 0;
 				DrawRow(header->hwndFrom, draw->nmcd.hdc, row, selected);
 				result = CDRF_SKIPDEFAULT;
+			} else if (draw->nmcd.dwDrawStage == CDDS_POSTPAINT) {
+				DrawListDividers(header->hwndFrom, draw->nmcd.hdc);
+				result = CDRF_DODEFAULT;
 			} else result = CDRF_DODEFAULT;
 			return true;
 		}
@@ -344,10 +370,11 @@ bool TVTCommentPanelTheme::HandleMessage(HWND, UINT message, WPARAM wParam, LPAR
 LRESULT CALLBACK TVTCommentPanelTheme::ControlSubclass(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR data)
 {
 	auto self = reinterpret_cast<TVTCommentPanelTheme *>(data);
-	bool bordered = IsClass(hwnd, WC_LISTVIEW) || IsClass(hwnd, L"EDIT") || IsClass(hwnd, TVTCommentPanelSourceList::ClassName());
+	bool listView = IsClass(hwnd, WC_LISTVIEW);
+	bool bordered = listView || IsClass(hwnd, L"EDIT") || IsClass(hwnd, TVTCommentPanelSourceList::ClassName());
 	bool hover = IsClass(hwnd, L"BUTTON") || IsClass(hwnd, WC_COMBOBOX);
 	bool painted = IsClass(hwnd, WC_TABCONTROL) || IsClass(hwnd, WC_HEADER) || IsClass(hwnd, L"BUTTON") || IsClass(hwnd, WC_COMBOBOX)
-		|| (IsClass(hwnd, WC_LISTVIEW) && !IsWindowEnabled(hwnd));
+		|| (listView && !IsWindowEnabled(hwnd));
 	if (painted && message == WM_ERASEBKGND) return 1;
 	if (painted && (message == WM_PAINT || message == WM_PRINTCLIENT)) {
 		PAINTSTRUCT paint{};
@@ -367,7 +394,13 @@ LRESULT CALLBACK TVTCommentPanelTheme::ControlSubclass(HWND hwnd, UINT message, 
 	if (hover && message == WM_MOUSELEAVE) { RemoveProp(hwnd, HOT_PROPERTY); InvalidateRect(hwnd, nullptr, FALSE); }
 	// ドラッグ中以外は標準のホバー描画を抑制
 	if ((hover || IsClass(hwnd, WC_TABCONTROL)) && GetCapture() != hwnd && (message == WM_MOUSEMOVE || message == WM_MOUSELEAVE)) return 0;
+	int oldHorizontalPosition = listView ? GetScrollPos(hwnd, SB_HORZ) : 0;
 	result = DefSubclassProc(hwnd, message, wParam, lParam);
+	if (listView && message != WM_NCDESTROY && GetScrollPos(hwnd, SB_HORZ) != oldHorizontalPosition) {
+		// 標準のスクロール描画は既存の画素を転送するため、独自の罫線が残る
+		// ヘッダーの移動完了後に空白部分も含めて描き直す
+		RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+	}
 	if (bordered && message == WM_NCPAINT) {
 		HDC dc = GetWindowDC(hwnd);
 		if (dc) { self->PaintBorder(hwnd, dc); ReleaseDC(hwnd, dc); }

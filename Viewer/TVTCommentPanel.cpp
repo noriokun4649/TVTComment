@@ -290,7 +290,7 @@ void TVTCommentPanel::ApplyMessage(const TVTComment::PanelIPCMessage &message)
 	if (message.Operation == "Channels") {
 		if (fields.size() % 4 != 0) throw std::invalid_argument("Invalid channels");
 		auto rows = ReadRows(fields, offset, fields.size() / 4, 3);
-		for (auto &row : rows) row.Cells[0] = row.Cells[0] == L"1" ? L"●" : L"";
+		for (auto &row : rows) row.Cells[0] = row.Cells[0] == L"1" ? L"\U0001F4FA" : L"";
 		SetRows(channels_, channelRows_, std::move(rows));
 	} else if (message.Operation == "Sources") {
 		if (fields.size() < 4 || (fields[0] != "0" && fields[0] != "1") || (fields[1] != "0" && fields[1] != "1"))
@@ -483,7 +483,9 @@ HWND TVTCommentPanel::CreateControl(LPCWSTR className, LPCWSTR text, DWORD style
 HWND TVTCommentPanel::CreateList(int id, std::initializer_list<std::pair<LPCWSTR, int>> columns)
 {
 	HWND list = CreateControl(WC_LISTVIEW, L"", WS_TABSTOP | WS_BORDER | LVS_REPORT | LVS_OWNERDATA | LVS_SINGLESEL | LVS_SHOWSELALWAYS, id);
-	ListView_SetExtendedListViewStyle(list, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_INFOTIP);
+	ListView_SetExtendedListViewStyle(list, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+	// 省略されたラベルに対する標準ツールチップも無効にする
+	if (HWND tooltip = ListView_SetToolTips(list, nullptr)) DestroyWindow(tooltip);
 	int index = 0;
 	for (const auto &column : columns) {
 		LVCOLUMN info{};
@@ -527,14 +529,6 @@ void TVTCommentPanel::CreateControls()
 	SendMessage(postMail_, EM_SETCUEBANNER, TRUE, reinterpret_cast<LPARAM>(L"コマンド"));
 	SendMessage(postService_, CB_SETCUEBANNER, 0, reinterpret_cast<LPARAM>(L"投稿先"));
 	SendMessage(postThread_, CB_SETCUEBANNER, 0, reinterpret_cast<LPARAM>(L"スレッド"));
-	HWND tooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, window_, nullptr, instance_, nullptr);
-	TOOLINFO tool{ sizeof(tool) };
-	tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
-	tool.hwnd = window_;
-	tool.uId = reinterpret_cast<UINT_PTR>(postText_);
-	tool.lpszText = const_cast<LPWSTR>(L"コメント (Enterで投稿 / Alt+Enterで改行)");
-	SendMessage(tooltip, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&tool));
 	status_ = CreateControl(L"STATIC", L"", WS_VISIBLE | SS_CENTERIMAGE | SS_ENDELLIPSIS, Status);
 	open_ = CreateControl(L"BUTTON", L"", WS_VISIBLE | WS_TABSTOP, Open);
 	// タブの背景を他のコントロールより背面にする
@@ -743,15 +737,6 @@ LRESULT TVTCommentPanel::HandleWindowMessage(HWND hwnd, UINT message, WPARAM wPa
 					std::replace(text.begin(), text.end(), L'\n', L' ');
 					lstrcpyn(info->item.pszText, text.c_str(), info->item.cchTextMax);
 				}
-			}
-			return 0;
-		}
-		if (header->code == LVN_GETINFOTIP) {
-			auto info = reinterpret_cast<NMLVGETINFOTIP *>(lParam);
-			if (info->iItem >= 0 && static_cast<size_t>(info->iItem) < rows->size()) {
-				std::wstring text;
-				for (const auto &cell : (*rows)[info->iItem].Cells) text += cell + L"\r\n";
-				lstrcpyn(info->pszText, text.c_str(), info->cchTextMax);
 			}
 			return 0;
 		}

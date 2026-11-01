@@ -20,6 +20,7 @@ private:
 	void PaintBorder(HWND control, HDC dc);
 	void DrawComboItem(const DRAWITEMSTRUCT &item);
 	void DrawRow(HWND list, HDC dc, int row, bool selected);
+	void DrawListDividers(HWND list, HDC dc);
 	void Background(HDC dc, const RECT &rect, LPCWSTR style, COLORREF fallback);
 	void Label(HDC dc, RECT rect, LPCWSTR text, COLORREF color, UINT format = DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
 	COLORREF Color(LPCWSTR name, COLORREF fallback) const;
