@@ -87,6 +87,8 @@ void TVTCommentPanelTheme::Update(HWND window, int dpi)
 			ListView_SetTextBkColor(child, input_);
 			ListView_SetTextColor(child, inputText_);
 			ApplyControl(ListView_GetHeader(child));
+			// フォントやDPIの変更時も、ヘッダーと先頭行の位置を再計算する
+			SetWindowPos(child, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 		}
 		if (IsClass(child, WC_COMBOBOX)) {
 			COMBOBOXINFO info{ sizeof(info) };
@@ -95,6 +97,19 @@ void TVTCommentPanelTheme::Update(HWND window, int dpi)
 	}
 	RedrawWindow(window, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_FRAME);
 	updating_ = false;
+}
+
+int TVTCommentPanelTheme::GetHeaderHeight(HWND control) const
+{
+	HDC dc = GetDC(control);
+	auto font = reinterpret_cast<HFONT>(SendMessage(control, WM_GETFONT, 0, 0));
+	auto old = SelectObject(dc, font ? font : GetStockObject(DEFAULT_GUI_FONT));
+	TEXTMETRIC metrics{};
+	GetTextMetrics(dc, &metrics);
+	SelectObject(dc, old);
+	ReleaseDC(control, dc);
+	// TVTest標準のパネルタブと同じく、16px以上の内容領域と上下3pxの余白を確保する
+	return max(static_cast<int>(metrics.tmHeight), Px(16)) + 2 * Px(3);
 }
 
 void TVTCommentPanelTheme::ApplyControl(HWND control)
@@ -201,7 +216,10 @@ void TVTCommentPanelTheme::PaintControl(HWND control, HDC dc)
 			tab.pszText = text;
 			tab.cchTextMax = _countof(text);
 			TabCtrl_GetItem(control, i, &tab);
-			Label(dc, item, text, textColor, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
+			RECT label = item;
+			label.top += Px(2);
+			label.bottom -= 1;
+			Label(dc, label, text, textColor, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
 			if (selected && GetFocus() == control) { InflateRect(&item, -Px(3), -Px(3)); DrawFocusRect(dc, &item); }
 		}
 	} else if (IsClass(control, WC_HEADER)) {
@@ -217,6 +235,8 @@ void TVTCommentPanelTheme::PaintControl(HWND control, HDC dc)
 			Header_GetItem(control, i, &header);
 			item.left += Px(4);
 			item.right -= Px(4);
+			item.top += 1;
+			item.bottom -= 1;
 			Label(dc, item, text, Color(L"PanelTabText", text_), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
 			Fill(dc, divider, border_);
 		}
@@ -396,6 +416,15 @@ LRESULT CALLBACK TVTCommentPanelTheme::ControlSubclass(HWND hwnd, UINT message, 
 	if ((hover || IsClass(hwnd, WC_TABCONTROL)) && GetCapture() != hwnd && (message == WM_MOUSEMOVE || message == WM_MOUSELEAVE)) return 0;
 	int oldHorizontalPosition = listView ? GetScrollPos(hwnd, SB_HORZ) : 0;
 	result = DefSubclassProc(hwnd, message, wParam, lParam);
+	if (message == HDM_LAYOUT && result && IsClass(hwnd, WC_HEADER)) {
+		auto layout = reinterpret_cast<HDLAYOUT *>(lParam);
+		if (layout->pwpos->cy > 0) {
+			// タブと同じ高さに揃え、リスト本体の開始位置も更新する
+			int height = self->GetHeaderHeight(hwnd);
+			layout->prc->top += height - layout->pwpos->cy;
+			layout->pwpos->cy = height;
+		}
+	}
 	if (listView && message != WM_NCDESTROY && GetScrollPos(hwnd, SB_HORZ) != oldHorizontalPosition) {
 		// 標準のスクロール描画は既存の画素を転送するため、独自の罫線が残る
 		// ヘッダーの移動完了後に空白部分も含めて描き直す
