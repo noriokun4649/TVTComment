@@ -9,7 +9,6 @@
         xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
         xmlns:contents="clr-namespace:TVTComment.Views.ShellContents"
         xmlns:attachedproperties="clr-namespace:TVTComment.Views.AttachedProperties"
-        xmlns:acb="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
         local:ViewModelLocator.AutoWireViewModel="True"
         mc:Ignorable="d"
         Title="{Binding WindowTitle.Value}"
@@ -107,9 +106,9 @@
                                     <Style TargetType="ListViewItem">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                         <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="acb:CommandBehavior.Event" Value="MouseDoubleClick"/>
-                                        <Setter Property="acb:CommandBehavior.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"/>
-                                        <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding Path=Channel}"/>
+                                        <Setter Property="attachedproperties:RoutedEventCommand.Event" Value="{x:Static Control.MouseDoubleClickEvent}"/>
+                                        <Setter Property="attachedproperties:RoutedEventCommand.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"/>
+                                        <Setter Property="attachedproperties:RoutedEventCommand.CommandParameter" Value="{Binding Path=Channel}"/>
                                         <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
                                     </Style>
                                 </ListView.ItemContainerStyle>
@@ -237,9 +236,9 @@
                                     </Setter.Value>
                                 </Setter>
                                 <Setter Property="Background" Value="White"/>
-                                <Setter Property="acb:CommandBehavior.Event" Value="MouseEnter" />
-                                <Setter Property="acb:CommandBehavior.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.UpdateHoverdUserCommand}"/>
-                                <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding UserId}" />
+                                <Setter Property="attachedproperties:RoutedEventCommand.Event" Value="{x:Static UIElement.MouseEnterEvent}" />
+                                <Setter Property="attachedproperties:RoutedEventCommand.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.UpdateHoverdUserCommand}"/>
+                                <Setter Property="attachedproperties:RoutedEventCommand.CommandParameter" Value="{Binding UserId}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsHoverd}" Value="True">
                                         <Setter Property="Background" Value="LightBlue"/>

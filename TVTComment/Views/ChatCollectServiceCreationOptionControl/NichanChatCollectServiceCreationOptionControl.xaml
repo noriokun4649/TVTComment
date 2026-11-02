@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-             xmlns:acb="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
+             xmlns:attachedproperties="clr-namespace:TVTComment.Views.AttachedProperties"
              xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
              xmlns:converters="clr-namespace:TVTComment.Views.Converters"
              xmlns:local="clr-namespace:TVTComment.Views.ChatCollectServiceCreationOptionControl"
@@ -64,8 +64,8 @@
         <ListView ItemsSource="{Binding Threads}" SelectedItem="{Binding SelectedThread}" Style="{StaticResource DisableWhenAutoMethod}" Grid.Row="4">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
-                    <Setter Property="acb:CommandBehavior.Event" Value="MouseDoubleClick"/>
-                    <Setter Property="acb:CommandBehavior.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListBox},Path=DataContext.OkCommand}"/>
+                    <Setter Property="attachedproperties:RoutedEventCommand.Event" Value="{x:Static Control.MouseDoubleClickEvent}"/>
+                    <Setter Property="attachedproperties:RoutedEventCommand.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListBox},Path=DataContext.OkCommand}"/>
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.View>

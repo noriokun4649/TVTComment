@@ -35,9 +35,8 @@ namespace TVTComment.Model.ChatCollectService
 
         private async Task Read()
         {
-            while (!reader.EndOfStream)
+            while (await reader.ReadLineAsync() is string line)
             {
-                string line = await reader.ReadLineAsync();
                 parser.Push(line);
                 while (parser.DataAvailable())
                 {
