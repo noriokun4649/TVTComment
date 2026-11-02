@@ -1,7 +1,6 @@
-﻿using Microsoft.Practices.ServiceLocation;
-using System;
+﻿using System;
 using System.Windows;
-using System.Windows.Interactivity;
+using Microsoft.Xaml.Behaviors;
 
 namespace TVTComment.Views.Behaviors
 {
@@ -89,7 +88,7 @@ namespace TVTComment.Views.Behaviors
                 return;
             }
 
-            Window window = (Window)ServiceLocator.Current.GetInstance(WindowType);
+            Window window = (Window)ViewModelLocator.CreateView(WindowType);
             showingWindow = window;
             window.Closed += Window_Closed;
             window.Owner = Window.GetWindow(AssociatedObject);

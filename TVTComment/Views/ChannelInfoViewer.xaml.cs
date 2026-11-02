@@ -1,4 +1,4 @@
-﻿using Prism.Mvvm;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,7 +10,7 @@ namespace TVTComment.Views
     /// </summary>
     public partial class ChannelInfoViewer : UserControl
     {
-        private class ViewModel : BindableBase
+        private class ViewModel : ObservableObject
         {
             private Model.ChannelInfo channel;
             public Model.ChannelInfo Channel { get { return channel; } set { SetProperty(ref channel, value); } }

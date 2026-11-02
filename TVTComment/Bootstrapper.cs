@@ -1,36 +1,22 @@
-﻿using Microsoft.Practices.Unity;
-using Prism.Unity;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using TVTComment.ViewModels.Services;
 using TVTComment.Views;
 
 namespace TVTComment
 {
-    class Bootstrapper : UnityBootstrapper
+    class Bootstrapper
     {
-        protected override DependencyObject CreateShell()
+        public void Run()
         {
-            return Container.Resolve<Shell>();
-        }
+            var services = new ServiceCollection();
+            services.AddSingleton(new Model.TVTComment());
+            services.AddTransient<Model.NiconicoUtils.INiconicoLoginService, Views.Services.WebView2NiconicoLoginService>();
+            services.AddTransient<IDialogService, Views.Services.DialogService>();
+            services.AddTransient<ChatCollectServiceCreationOptionFactory>();
 
-        protected override void InitializeShell()
-        {
-            ((Window)Shell).Show();
-        }
-
-        protected override void ConfigureContainer()
-        {
-            base.ConfigureContainer();
-
-            Container.RegisterInstance(typeof(Model.TVTComment), new Model.TVTComment());
-            Container.RegisterType<Model.NiconicoUtils.INiconicoLoginService, Views.Services.WebView2NiconicoLoginService>();
-            Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.NichanChatCollectServiceCreationOptionControl>
-                 (nameof(Views.ChatCollectServiceCreationOptionControl.NichanChatCollectServiceCreationOptionControl));
-            Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl>
-                (nameof(Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl));
-            Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl>
-                (nameof(Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl));
-            Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.TwitterLiveChatCollectServiceCreationOptionControl>
-                (nameof(Views.ChatCollectServiceCreationOptionControl.TwitterLiveChatCollectServiceCreationOptionControl));
+            ViewModelLocator.Configure(services.BuildServiceProvider());
+            ((Window)ViewModelLocator.CreateView(typeof(Shell))).Show();
         }
     }
 }

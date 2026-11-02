@@ -1,7 +1,8 @@
 ﻿using ObservableUtils;
-using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.Input;
+using TVTComment.ViewModels.Notifications;
+using TVTComment.ViewModels.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ using TVTComment.Model.TwitterUtils.AnnictUtils;
 
 namespace TVTComment.ViewModels
 {
-    class SettingsWindowViewModel : BindableBase, IDisposable
+    class SettingsWindowViewModel : ObservableObject, IDisposable
     {
         public ObservableValue<int> ChatPreserveCount { get; }
         public ShellContents.DefaultChatCollectServicesViewModel DefaultChatCollectServices { get; }
@@ -55,7 +56,7 @@ namespace TVTComment.ViewModels
         public ICommand AnnictAccessTokenApplyCommand { get; }
         public ICommand ThirdForceApplyCommand { get; }
 
-        public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
+        private readonly IDialogService dialogService;
 
         public SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel ChatCollectServiceCreationPresetSettingControlViewModel { get; }
 
@@ -66,8 +67,9 @@ namespace TVTComment.ViewModels
         private TwitterAuthentication twitterAuthentication;
         private readonly IDisposable rememberSessionSubscription;
 
-        public SettingsWindowViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService)
+        public SettingsWindowViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService, IDialogService dialogService)
         {
+            this.dialogService = dialogService;
             var secrets = App.Configuration;
             var annict = new AnnictAuthentication(secrets["Annict:ClientId"], secrets["Annict:ClientSecret"]);
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
@@ -76,7 +78,7 @@ namespace TVTComment.ViewModels
             nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
             twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
 
-            ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model);
+            ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model, dialogService);
 
             AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
             AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
@@ -84,19 +86,19 @@ namespace TVTComment.ViewModels
             Always184.Value = niconico.Always184;
             Always184.Subscribe(state => niconico.Always184 = state);
 
-            LoginNiconicoCommand = new DelegateCommand(async () => await niconico.LoginAsync(niconicoLoginService), () => !niconico.IsBusy);
-            LogoutNiconicoCommand = new DelegateCommand(niconico.Logout);
+            LoginNiconicoCommand = new RelayCommand(async () => await niconico.LoginAsync(niconicoLoginService), () => !niconico.IsBusy);
+            LogoutNiconicoCommand = new RelayCommand(niconico.Logout);
             NiconicoRememberSession.Value = niconico.RememberSession;
             rememberSessionSubscription = NiconicoRememberSession.Subscribe(value => niconico.RememberSession = value);
             niconico.AuthenticationChanged += NiconicoAuthenticationChanged;
 
-            ThirdForceApplyCommand = new DelegateCommand(async () =>
+            ThirdForceApplyCommand = new RelayCommand(async () =>
             {
                 if (EnableThirdForce.Value)
                 {
                     if (string.IsNullOrWhiteSpace(ThirdForceApiUri.Value))
                     {
-                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "URIが空腹です" });
+                        dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "URIが空腹です" });
                         return;
                     }
                     try
@@ -105,23 +107,23 @@ namespace TVTComment.ViewModels
 
                         niconico.EnableThirdForce = EnableThirdForce.Value;
                         niconico.ThirdForceApiUri = ThirdForceApiUri.Value;
-                        AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
+                        dialogService.ShowNotification(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
                     }
                     catch (InvalidOperationException e)
                     {
-                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "無効なURIのため適用できません\n\n" + e.Message });
+                        dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "無効なURIのため適用できません\n\n" + e.Message });
                     }
                     catch (HttpRequestException e)
                     {
-                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "HTTPリクエストエラーが発生したため適用できません\n\n" + e.Message });
+                        dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "HTTPリクエストエラーが発生したため適用できません\n\n" + e.Message });
                     }
                     catch (XmlException e)
                     {
-                        AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "XMLデータとして扱えない情報のため適用できません\n\n" + e.Message });
+                        dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "XMLデータとして扱えない情報のため適用できません\n\n" + e.Message });
                     }
                     catch (ValidationException e)
                     {
-                        AlertRequest.Raise(new Notification
+                        dialogService.ShowNotification(new Notification
                         {
                             Title = "TVTCommentエラー",
                             Content = "XMLデータのバリデーションチェックに失敗しました\n形式が違うため旧ニコニコ実況互換の勢いAPIとして利用出来ません\n\n" + e.Message
@@ -131,13 +133,13 @@ namespace TVTComment.ViewModels
                 else
                 {
                     niconico.EnableThirdForce = EnableThirdForce.Value;
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
                 }
                 SyncThirdForceStatus();
 
             });
 
-            ApplyNichanSettingsCommand = new DelegateCommand(() =>
+            ApplyNichanSettingsCommand = new RelayCommand(() =>
               {
                   if (string.IsNullOrWhiteSpace(NichanResCollectInterval.Value) || string.IsNullOrWhiteSpace(NichanThreadSearchInterval.Value))
                       return;
@@ -154,19 +156,19 @@ namespace TVTComment.ViewModels
                   }
                   catch (Exception e) when (e is FormatException || e is OverflowException)
                   {
-                      AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "2ch設定の値が不正です" });
+                      dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "2ch設定の値が不正です" });
                   }
               });
 
-            ApplyTwitterApisCommand = new DelegateCommand(() =>
+            ApplyTwitterApisCommand = new RelayCommand(() =>
             {
                 twitter.ApiKey = TwitterApiKey.Value;
                 twitter.ApiSecret = TwitterApiSecret.Value;
                 twitter.BearerToken = TwitterBearerToken.Value;
-                AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
+                dialogService.ShowNotification(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
             });
 
-            LoginTokensTwitterCommand = new DelegateCommand(async () =>
+            LoginTokensTwitterCommand = new RelayCommand(async () =>
             {
                 try
                 {
@@ -175,12 +177,12 @@ namespace TVTComment.ViewModels
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
             });
 
 
-            OpenTwitter = new DelegateCommand(() =>
+            OpenTwitter = new RelayCommand(() =>
             {
                 try
                 {
@@ -190,11 +192,11 @@ namespace TVTComment.ViewModels
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
             });
 
-            EnterTwitter = new DelegateCommand(async () =>
+            EnterTwitter = new RelayCommand(async () =>
             {
                 try
                 {
@@ -203,12 +205,12 @@ namespace TVTComment.ViewModels
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
 
             });
 
-            LogoutTwitterCommand = new DelegateCommand(() =>
+            LogoutTwitterCommand = new RelayCommand(() =>
             {
                 try
                 {
@@ -216,35 +218,35 @@ namespace TVTComment.ViewModels
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
                 SyncTwitterStatus();
             });
 
-            AnnictAccessTokenApplyCommand = new DelegateCommand(() => {
+            AnnictAccessTokenApplyCommand = new RelayCommand(() => {
                 try
                 {
                     twitter.SetAnnictToken(AnnictAccessToken.Value);
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
                 SyncAnnictStatus();
             });
 
-            AnnictOAuthOpenCommand = new DelegateCommand(() => {
+            AnnictOAuthOpenCommand = new RelayCommand(() => {
                 try
                 {
                     Process.Start(new ProcessStartInfo(annict.GetAuthorizeUri().ToString()) { UseShellExecute = true });
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
             });
 
-            AnnictOAuthCertificationCommand = new DelegateCommand(async () => {
+            AnnictOAuthCertificationCommand = new RelayCommand(async () => {
                 try
                 {
                     var token = await annict.GetTokenAsync(AnnictPin.Value);
@@ -252,7 +254,7 @@ namespace TVTComment.ViewModels
                 }
                 catch (Exception e)
                 {
-                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
                 SyncAnnictStatus();
             });
@@ -269,7 +271,7 @@ namespace TVTComment.ViewModels
         private void SyncNiconicoUserStatus()
         {
             NiconicoLoginStatus.Value = niconico.AuthenticationMessage;
-            ((DelegateCommand)LoginNiconicoCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)LoginNiconicoCommand).NotifyCanExecuteChanged();
         }
 
         private void NiconicoAuthenticationChanged(object sender, EventArgs e) => SyncNiconicoUserStatus();

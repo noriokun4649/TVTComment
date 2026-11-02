@@ -1,5 +1,5 @@
 ﻿using ObservableUtils;
-using Prism.Commands;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
@@ -29,8 +29,8 @@ namespace TVTComment.ViewModels.ShellContents
         public ObservableValue<double> WindowFontSize { get; } = new ObservableValue<double>(1.2);
         public ObservableValue<bool> NXJikkyoImportDisable { get; private set; }
 
-        public DelegateCommand<int?> SetChatCollectTimeAdjustment { get; private set; }
-        public DelegateCommand<int?> AddChatCollectTimeAdjustment { get; private set; }
+        public RelayCommand<int?> SetChatCollectTimeAdjustment { get; private set; }
+        public RelayCommand<int?> AddChatCollectTimeAdjustment { get; private set; }
 
         public BasicSettingControlViewModel(Model.TVTComment model)
         {
@@ -67,8 +67,8 @@ namespace TVTComment.ViewModels.ShellContents
 
             ChatCollectTimeAdjustment = model.ChatCollectServiceModule.TimeAdjustment;
 
-            AddChatCollectTimeAdjustment = new DelegateCommand<int?>(time => { if (time.HasValue) ChatCollectTimeAdjustment.Value = ChatCollectTimeAdjustment.Value.Add(TimeSpan.FromSeconds(time.Value)); }, _ => true);
-            SetChatCollectTimeAdjustment = new DelegateCommand<int?>(time => { if (time.HasValue) ChatCollectTimeAdjustment.Value = TimeSpan.FromSeconds(time.Value); }, _ => true);
+            AddChatCollectTimeAdjustment = new RelayCommand<int?>(time => { if (time.HasValue) ChatCollectTimeAdjustment.Value = ChatCollectTimeAdjustment.Value.Add(TimeSpan.FromSeconds(time.Value)); }, _ => true);
+            SetChatCollectTimeAdjustment = new RelayCommand<int?>(time => { if (time.HasValue) ChatCollectTimeAdjustment.Value = TimeSpan.FromSeconds(time.Value); }, _ => true);
 
             PropertyChanged(this, new PropertyChangedEventArgs(null));
         }

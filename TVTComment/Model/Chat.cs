@@ -1,10 +1,10 @@
-﻿using Prism.Mvvm;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Drawing;
 
 namespace TVTComment.Model
 {
-    public class Chat : BindableBase
+    public class Chat : ObservableObject
     {
         public enum PositionType { Normal, Top, Bottom }
         public enum SizeType { Normal, Small, Large }

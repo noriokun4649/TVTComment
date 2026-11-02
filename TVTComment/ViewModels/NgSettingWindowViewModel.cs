@@ -1,7 +1,7 @@
 ﻿using ObservableUtils;
-using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.Input;
+using TVTComment.ViewModels.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,11 +11,11 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using Notification = Prism.Interactivity.InteractionRequest.Notification;
+using Notification = TVTComment.ViewModels.Notifications.Notification;
 
 namespace TVTComment.ViewModels
 {
-    class NgSettingWindowViewModel : BindableBase, IDisposable
+    class NgSettingWindowViewModel : ObservableObject, IDisposable
     {
         private readonly Model.TVTComment model;
         private readonly CompositeDisposable disposables = new CompositeDisposable();
@@ -101,11 +101,12 @@ namespace TVTComment.ViewModels
         public ICommand AddUrlNgCommand { get; private set; }
         public ICommand AddMentionNgCommand { get; private set; }
 
-        public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
+        private readonly IDialogService dialogService;
 
-        public NgSettingWindowViewModel(Model.TVTComment model)
+        public NgSettingWindowViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             this.model = model;
+            this.dialogService = dialogService;
 
             Model.Serialization.WindowPositionEntity rect = model.Settings.View.NgSettingWindowPosition;
             WindowLeft = rect.X;
@@ -119,79 +120,79 @@ namespace TVTComment.ViewModels
             var updateTimer = Observable.Interval(TimeSpan.FromSeconds(3));
             disposables.Add((IDisposable)(Rules = model.ChatModule.ChatModRules.MakeOneWayLinkedCollection(x => new Contents.ChatModRuleListItemViewModel(x, updateTimer.Select(_ => new Unit())))));
 
-            AddWordNgCommand = new DelegateCommand(() =>
+            AddWordNgCommand = new RelayCommand(() =>
               {
                   if (string.IsNullOrWhiteSpace(NgText)) return;
                   model.ChatModule.AddChatModRule(new Model.ChatModRules.WordNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
               });
 
-            AddUserNgCommand = new DelegateCommand(() =>
+            AddUserNgCommand = new RelayCommand(() =>
               {
                   if (string.IsNullOrWhiteSpace(NgText)) return;
                   model.ChatModule.AddChatModRule(new Model.ChatModRules.UserNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
               });
 
-            AddIroKomeNgCommand = new DelegateCommand(() =>
+            AddIroKomeNgCommand = new RelayCommand(() =>
               {
                   model.ChatModule.AddChatModRule(new Model.ChatModRules.IroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
               });
 
-            AddJyougeKomeNgCommand = new DelegateCommand(() =>
+            AddJyougeKomeNgCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddJyougeIroKomeNgCommand = new DelegateCommand(() =>
+            AddJyougeIroKomeNgCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeIroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddTextLengthNgCommand = new DelegateCommand(() =>
+            AddTextLengthNgCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.TextLengthNg(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), TextLengthCount.Value));
             });
 
-            AddRandomizeColorRuleCommand = new DelegateCommand(() =>
+            AddRandomizeColorRuleCommand = new RelayCommand(() =>
               {
                   model.ChatModule.AddChatModRule(new Model.ChatModRules.RandomizeColorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
               });
 
-            AddSmallOnMultiLineRuleCommand = new DelegateCommand(() =>
+            AddSmallOnMultiLineRuleCommand = new RelayCommand(() =>
               {
                   model.ChatModule.AddChatModRule(new Model.ChatModRules.SmallOnMultiLineChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), SmallOnMultiLineRuleLineCount.Value));
               });
 
-            AddRemoveAnchorCommand = new DelegateCommand(() =>
+            AddRemoveAnchorCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveAnchorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddRemoveUrlCommand = new DelegateCommand(() =>
+            AddRemoveUrlCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveUrlChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddRemoveHashtagCommand = new DelegateCommand(() =>
+            AddRemoveHashtagCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveHashtagChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddRemoveMentionCommand = new DelegateCommand(() =>
+            AddRemoveMentionCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveMentionChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddRenderEmotionAsCommentCommand = new DelegateCommand(() =>
+            AddRenderEmotionAsCommentCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderEmotionAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddRenderInfoAsCommentCommand = new DelegateCommand(() =>
+            AddRenderInfoAsCommentCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderInfoAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddSetColorRuleCommand = new DelegateCommand(() =>
+            AddSetColorRuleCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.SetColorChatModRule(
                     TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),
@@ -199,32 +200,32 @@ namespace TVTComment.ViewModels
                 ));
             });
 
-            AddRenderNicoadAsCommentCommand = new DelegateCommand(() =>
+            AddRenderNicoadAsCommentCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderNicoadAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddReplaceRegexCommand = new DelegateCommand(() =>
+            AddReplaceRegexCommand = new RelayCommand(() =>
             {
                 AddRegexChatModRule(() => new Model.ChatModRules.ReplaceRegexChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), ReplaceRegexPattern.Value, ReplaceRegexReplacement.Value));
             });
 
-            AddRegexNgCommand = new DelegateCommand(() =>
+            AddRegexNgCommand = new RelayCommand(() =>
             {
                 AddRegexChatModRule(() => new Model.ChatModRules.RegexNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
             });
 
-            AddUrlNgCommand = new DelegateCommand(() =>
+            AddUrlNgCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.UrlNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            AddMentionNgCommand = new DelegateCommand(() =>
+            AddMentionNgCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.MentionNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
-            RemoveRuleCommand = new DelegateCommand(() =>
+            RemoveRuleCommand = new RelayCommand(() =>
             {
                 if (SelectedRule == null) return;
                 model.ChatModule.RemoveChatModRule(SelectedRule.ChatModRule);
@@ -240,7 +241,7 @@ namespace TVTComment.ViewModels
             }
             catch (ArgumentException e)
             {
-                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"正規表現が不正です\n{e.Message}" });
+                dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = $"正規表現が不正です\n{e.Message}" });
                 return;
             }
             model.ChatModule.AddChatModRule(rule);

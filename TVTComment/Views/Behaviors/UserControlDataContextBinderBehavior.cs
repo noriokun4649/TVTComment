@@ -1,11 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interactivity;
+using Microsoft.Xaml.Behaviors;
 
 namespace TVTComment.Views.Behaviors
 {
     /// <summary>
-    /// PrismのAutoWireViewModelがセットされたUserControlのDataContextに、UserControlが配置されたWindow側からアクセスするために使う
+    /// AutoWireViewModelがセットされたUserControlのDataContextに、UserControlが配置されたWindow側からアクセスするために使う
     /// </summary>
     class UserControlDataContextBinderBehavior : Behavior<FrameworkElement>
     {

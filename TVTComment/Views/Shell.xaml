@@ -3,16 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" 
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:TVTComment.Views"
         xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
         xmlns:contents="clr-namespace:TVTComment.Views.ShellContents"
         xmlns:attachedproperties="clr-namespace:TVTComment.Views.AttachedProperties"
-        xmlns:prism="http://prismlibrary.com/"
         xmlns:acb="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
-        prism:ViewModelLocator.AutoWireViewModel="True"
+        local:ViewModelLocator.AutoWireViewModel="True"
         mc:Ignorable="d"
         Title="{Binding WindowTitle.Value}"
         WindowState="{Binding WindowPresentation.State.Value,Mode=TwoWay}"
@@ -54,32 +52,12 @@
     </Window.Triggers>
 
     <i:Interaction.Triggers>
-        <prism:InteractionRequestTrigger SourceObject="{Binding WindowPresentation.ActivationRequest}">
+        <i:EventTrigger SourceObject="{Binding WindowPresentation}" EventName="ActivationRequested">
             <behaviors:ActivateWindowAction/>
-        </prism:InteractionRequestTrigger>
+        </i:EventTrigger>
         <i:EventTrigger EventName="Closed">
             <behaviors:DisposeDataContextAction/>
         </i:EventTrigger>
-        
-        <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
-            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
-            </prism:PopupWindowAction>
-        </prism:InteractionRequestTrigger>
-
-        <prism:InteractionRequestTrigger SourceObject="{Binding ChatCollectServiceCreationSettingsRequest}">
-            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
-                <prism:PopupWindowAction.WindowContent>
-                    <local:ChatCollectServiceCreationSettingsControl/>
-                </prism:PopupWindowAction.WindowContent>
-                <prism:PopupWindowAction.WindowStyle>
-                    <Style TargetType="Window">
-                        <Setter Property="WindowStyle" Value="ToolWindow"/>
-                        <Setter Property="Width" Value="500"/>
-                        <Setter Property="Height" Value="400"/>
-                    </Style>
-                </prism:PopupWindowAction.WindowStyle>
-            </prism:PopupWindowAction>
-        </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
     <Border BorderThickness="0.5" BorderBrush="Black">
@@ -306,6 +284,11 @@
 
                         <CheckBox IsChecked="{Binding UseDefaultChatCollectService.Value}" Grid.Row="0">自動選択する</CheckBox>
                         <ListBox Name="ChatCollectServiceAddListBox" ItemsSource="{Binding Source={StaticResource CollectionViewSource}}" IsEnabled="{Binding UseDefaultChatCollectService.Value,Converter={StaticResource InverseBoolConverter}}" HorizontalContentAlignment="Stretch" Grid.Row="1">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="attachedproperties:PreserveHorizontalScrollOffset.IsEnabled" Value="True"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>

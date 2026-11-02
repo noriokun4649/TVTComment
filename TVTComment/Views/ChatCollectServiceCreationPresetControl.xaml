@@ -3,17 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-             xmlns:prism="http://prismlibrary.com/"
-             xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
-             xmlns:attachedproperties="clr-namespace:TVTComment.Views.AttachedProperties"
              xmlns:local="clr-namespace:TVTComment.Views"
              mc:Ignorable="d" 
-             prism:ViewModelLocator.AutoWireViewModel="True"
+             local:ViewModelLocator.AutoWireViewModel="True"
              d:DesignHeight="300" d:DesignWidth="300">
-    <i:Interaction.Behaviors>
-        <behaviors:SetRegionManagerBehavior/>
-    </i:Interaction.Behaviors>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top">
             <Label DockPanel.Dock="Left">プリセット名</Label>
@@ -35,12 +28,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <ContentControl attachedproperties:AddOrUpdateRegion.RegionName="ChatCollectServiceCreationPresetControl_OptionRegion" prism:RegionManager.RegionContext="{Binding OptionRegionViewModel,Mode=TwoWay}">
-            <!--<i:Interaction.Triggers>
-                <i:EventTrigger EventName="Unloaded">
-                    <behaviors:RemoveRegionAction/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>-->
-        </ContentControl>
+        <ContentControl Content="{Binding OptionRegionViewModel}"/>
     </DockPanel>
 </UserControl>

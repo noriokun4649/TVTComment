@@ -3,22 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        xmlns:prism="http://prismlibrary.com/"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:TVTComment.Views"
         xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
         mc:Ignorable="d"
-        prism:ViewModelLocator.AutoWireViewModel="True"
+        local:ViewModelLocator.AutoWireViewModel="True"
         Title="NgSettingWindow" Top="{Binding WindowTop,Mode=TwoWay}" Left="{Binding WindowLeft,Mode=TwoWay}" Height="{Binding WindowHeight,Mode=TwoWay}" Width="{Binding WindowWidth,Mode=TwoWay}" WindowStyle="ToolWindow">
 
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closed">
             <behaviors:DisposeDataContextAction/>
         </i:EventTrigger>
-        <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
-            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True"/>
-        </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
     <Window.Resources>

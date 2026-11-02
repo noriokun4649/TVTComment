@@ -1,6 +1,7 @@
 ﻿using ObservableUtils;
-using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
+using CommunityToolkit.Mvvm.Input;
+using TVTComment.ViewModels.Notifications;
+using TVTComment.ViewModels.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -36,13 +37,14 @@ namespace TVTComment.ViewModels.ShellContents
         public ICommand AddPostMailTextExampleCommand { get; private set; }
         public ICommand RemovePostMailTextExampleCommand { get; private set; }
 
-        public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
+        private readonly IDialogService dialogService;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ChatPostControlViewModel(Model.TVTComment model)
+        public ChatPostControlViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             this.model = model;
+            this.dialogService = dialogService;
             this.model.Initialize().ContinueWith(task =>
             {
                 if (!task.IsCompletedSuccessfully || disposed) return;
@@ -65,8 +67,8 @@ namespace TVTComment.ViewModels.ShellContents
                 SelectedPostService.Select(x => PostForm(x) == "thread")
             );
 
-            PostCommand = new DelegateCommand(PostChat);
-            UpdateNichanCurrentThreadsCommand = new DelegateCommand(() =>
+            PostCommand = new RelayCommand(PostChat);
+            UpdateNichanCurrentThreadsCommand = new RelayCommand(() =>
             {
                 var selected = SelectedNichanCurrentThread.Value;
                 var threads = (SelectedPostService.Value as Model.ChatCollectService.NichanChatCollectService)?.CurrentThreads.ToArray()
@@ -76,8 +78,8 @@ namespace TVTComment.ViewModels.ShellContents
                 foreach (var thread in threads) NichanCurrentThreads.Add(thread);
                 SelectedNichanCurrentThread.Value = threads.Contains(selected) ? selected : threads.FirstOrDefault();
             });
-            AddPostMailTextExampleCommand = new DelegateCommand<string>(AddPostMailTextExample);
-            RemovePostMailTextExampleCommand = new DelegateCommand<string>(RemovePostMailTextExample);
+            AddPostMailTextExampleCommand = new RelayCommand<string>(AddPostMailTextExample);
+            RemovePostMailTextExampleCommand = new RelayCommand<string>(RemovePostMailTextExample);
 
             selectionSubscription = SelectedPostService.Subscribe(_ => UpdateNichanCurrentThreadsCommand.Execute(null));
             ((INotifyCollectionChanged)PostServices).CollectionChanged += PostServicesChanged;
@@ -106,7 +108,7 @@ namespace TVTComment.ViewModels.ShellContents
         {
             if (SelectedPostService.Value == null)
             {
-                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "コメントの投稿先が選択されていません" });
+                dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "コメントの投稿先が選択されていません" });
                 return;
             }
 

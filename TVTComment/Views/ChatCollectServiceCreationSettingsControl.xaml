@@ -3,24 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-             xmlns:prism="http://prismlibrary.com/"
              xmlns:local="clr-namespace:TVTComment.Views"
-             xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" prism:ViewModelLocator.AutoWireViewModel="True">
-    <i:Interaction.Behaviors>
-        <behaviors:SetRegionManagerBehavior/>
-    </i:Interaction.Behaviors>
+             d:DesignHeight="300" d:DesignWidth="300" local:ViewModelLocator.AutoWireViewModel="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <ContentControl prism:RegionManager.RegionName="ChatCollectServiceCreationSettingsControl_CreationOptionRegion" 
-                        prism:RegionManager.RegionContext="{Binding CreationOptionRegionViewModel,Mode=TwoWay}" Grid.Row="0">
-        </ContentControl>
+        <ContentControl Content="{Binding CreationOptionRegionViewModel}" Grid.Row="0"/>
         <StackPanel Grid.Row="1">
             <Button Command="{Binding OkCommand}">OK</Button>
             <Button Command="{Binding CancelCommand}">Cancel</Button>

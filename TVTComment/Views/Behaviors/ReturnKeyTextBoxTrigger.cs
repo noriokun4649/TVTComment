@@ -2,12 +2,12 @@
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Interactivity;
+using Microsoft.Xaml.Behaviors;
 
 namespace TVTComment.Views.Behaviors
 {
     /// <summary>
-    /// <see cref="TextBox"/>のReturnキーを<see cref="System.Windows.Interactivity.TriggerAction"/>の実行に割り当て、改行を<see cref="ModifierKey"/>+Returnにする   
+    /// <see cref="TextBox"/>のReturnキーを<see cref="Microsoft.Xaml.Behaviors.TriggerAction"/>の実行に割り当て、改行を<see cref="ModifierKey"/>+Returnにする
     /// </summary>
     class ReturnKeyTextBoxTrigger : TriggerBase<TextBox>
     {

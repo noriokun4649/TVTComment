@@ -1,6 +1,5 @@
 using ObservableUtils;
-using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -13,18 +12,18 @@ namespace TVTComment.ViewModels
         private bool panelVisible;
 
         public ObservableValue<WindowState> State { get; } = new ObservableValue<WindowState>(WindowState.Minimized);
-        public InteractionRequest<Notification> ActivationRequest { get; } = new InteractionRequest<Notification>();
+        public event EventHandler ActivationRequested;
         public ICommand ShowCommand { get; }
         public ICommand MinimizeCommand { get; }
 
         public WindowStateViewModel(Func<bool> minimizeOnPanelOpen)
         {
             this.minimizeOnPanelOpen = minimizeOnPanelOpen;
-            MinimizeCommand = new DelegateCommand(() => State.Value = WindowState.Minimized);
-            ShowCommand = new DelegateCommand(() =>
+            MinimizeCommand = new RelayCommand(() => State.Value = WindowState.Minimized);
+            ShowCommand = new RelayCommand(() =>
             {
                 State.Value = WindowState.Normal;
-                ActivationRequest.Raise(new Notification());
+                ActivationRequested?.Invoke(this, EventArgs.Empty);
             });
         }
 

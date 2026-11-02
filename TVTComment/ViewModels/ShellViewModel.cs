@@ -1,7 +1,8 @@
 ﻿using ObservableUtils;
-using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.Input;
+using TVTComment.ViewModels.Notifications;
+using TVTComment.ViewModels.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -16,9 +17,9 @@ using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.ViewModels
 {
-    class ShellViewModel : BindableBase, IDisposable
+    class ShellViewModel : ObservableObject, IDisposable
     {
-        internal class Rect : BindableBase
+        internal class Rect : ObservableObject
         {
             private double x = double.NaN, y = double.NaN;
             private double width = double.NaN, height = double.NaN;
@@ -82,8 +83,8 @@ namespace TVTComment.ViewModels
         public ICommand CloseApplicationCommand { get; private set; }
         public ICommand MinimizeWindowCommand => WindowPresentation.MinimizeCommand;
         public ICommand ChangeChannelCommand { get; private set; }
-        public DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel> AddChatCollectServiceCommand { get; private set; }
-        public DelegateCommand<Model.ChatCollectService.IChatCollectService> RemoveChatCollectServiceCommand { get; private set; }
+        public RelayCommand<ShellContents.ChatCollectServiceAddListItemViewModel> AddChatCollectServiceCommand { get; private set; }
+        public RelayCommand<Model.ChatCollectService.IChatCollectService> RemoveChatCollectServiceCommand { get; private set; }
         public ICommand ClearChatsCommand { get; private set; }
         public ICommand AddWordNgCommand { get; private set; }
         public ICommand AddUserNgCommand { get; private set; }
@@ -91,8 +92,7 @@ namespace TVTComment.ViewModels
         public ICommand CopyUserCommand { get; private set; }
         public ICommand UpdateHoverdUserCommand { get; private set; }
 
-        public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
-        public InteractionRequest<Notifications.ChatCollectServiceCreationSettingsConfirmation> ChatCollectServiceCreationSettingsRequest { get; } = new InteractionRequest<Notifications.ChatCollectServiceCreationSettingsConfirmation>();
+        private readonly IDialogService dialogService;
 
         private ShellContents.BasicSettingControlViewModel basicSettingControlViewModel;
         public ShellContents.BasicSettingControlViewModel BasicSettingControlViewModel
@@ -112,10 +112,11 @@ namespace TVTComment.ViewModels
         private Model.ChatService.NiconicoChatService niconico;
         private TVTestPanelBridge panelBridge;
 
-        public ShellViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService)
+        public ShellViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService, IDialogService dialogService)
         {
             this.model = model;
             this.niconicoLoginService = niconicoLoginService;
+            this.dialogService = dialogService;
             WindowPresentation = new WindowStateViewModel(() => BasicSettingControlViewModel?.MinimizeOnTVTestPanelOpen.Value == true);
 
             Window mainWindow = Application.Current.MainWindow;
@@ -137,13 +138,13 @@ namespace TVTComment.ViewModels
             }
             catch (Exception e)
             {
-                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"初期化で予期しないエラーが発生しました\n{e}" });
+                dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = $"初期化で予期しないエラーが発生しました\n{e}" });
                 CloseApplication();
                 return;
             }
             if (model.State != Model.TVTCommentState.Working)
             {
-                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "Viewer側（TVTestプラグイン側）と接続できませんでした" });
+                dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "Viewer側（TVTestプラグイン側）と接続できませんでした" });
                 CloseApplication();
                 return;
             }
@@ -202,56 +203,56 @@ namespace TVTComment.ViewModels
             model.CommandModule.ShowWindowCommandInvoked += CommandModule_ShowWindowCommandInvoked;
 
             // コマンド生成
-            CloseApplicationCommand = new DelegateCommand(() =>
+            CloseApplicationCommand = new RelayCommand(() =>
             {
                 CloseApplication();
             });
 
-            ChangeChannelCommand = new DelegateCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
+            ChangeChannelCommand = new RelayCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
 
-            AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(
+            AddChatCollectServiceCommand = new RelayCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(
                 async x => await AddChatCollectService(x),
                 _ => !UseDefaultChatCollectService.Value && !addingChatCollectService
             );
-            RemoveChatCollectServiceCommand = new DelegateCommand<Model.ChatCollectService.IChatCollectService>(
+            RemoveChatCollectServiceCommand = new RelayCommand<Model.ChatCollectService.IChatCollectService>(
                 service => { if (service != null) model.ChatCollectServiceModule.RemoveService(service); },
                 _ => !UseDefaultChatCollectService.Value
             );
             UseDefaultChatCollectService.Subscribe(x =>
             {
-                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
-                RemoveChatCollectServiceCommand.RaiseCanExecuteChanged();
+                AddChatCollectServiceCommand.NotifyCanExecuteChanged();
+                RemoveChatCollectServiceCommand.NotifyCanExecuteChanged();
             });
 
-            ClearChatsCommand = new DelegateCommand(() => model.ChatModule.ClearChats());
-            AddWordNgCommand = new DelegateCommand<Model.Chat>(chat =>
+            ClearChatsCommand = new RelayCommand(() => model.ChatModule.ClearChats());
+            AddWordNgCommand = new RelayCommand<Model.Chat>(chat =>
             {
                 if (chat == null) return;
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.WordNgChatModRule(model.ChatServices.SelectMany(x => x.ChatCollectServiceEntries), chat.Text));
             });
-            AddUserNgCommand = new DelegateCommand<Model.Chat>(chat =>
+            AddUserNgCommand = new RelayCommand<Model.Chat>(chat =>
             {
                 if (chat?.SourceService?.Owner == null || chat.IsSystemMsg) return;
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.UserNgChatModRule(chat.SourceService.Owner.ChatCollectServiceEntries, chat.UserId));
             }, chat => chat?.SourceService?.Owner != null && !chat.IsSystemMsg);
-            CopyCommentCommand = new DelegateCommand<Model.Chat>(chat =>
+            CopyCommentCommand = new RelayCommand<Model.Chat>(chat =>
             {
                 if (chat == null) return;
                 Clipboard.SetText(chat.Text);
             });
-            CopyUserCommand = new DelegateCommand<Model.Chat>(chat =>
+            CopyUserCommand = new RelayCommand<Model.Chat>(chat =>
             {
                 if (chat == null) return;
                 Clipboard.SetText(chat.UserId);
             });
 
-            UpdateHoverdUserCommand = new DelegateCommand<string>(userid =>
+            UpdateHoverdUserCommand = new RelayCommand<string>(userid =>
             {
                 if (userid == null) return;
                 model.ChatModule.SetHoverdUser(userid);
             });
 
-            OnPropertyChanged(null);
+            OnPropertyChanged((string)null);
 
             panelBridge = new TVTestPanelBridge(model.IpcModule, this);
             panelBridge.Start();
@@ -292,12 +293,12 @@ namespace TVTComment.ViewModels
         {
             if (item == null || disposed || !AddChatCollectServiceCommand.CanExecute(item)) return;
             addingChatCollectService = true;
-            AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+            AddChatCollectServiceCommand.NotifyCanExecuteChanged();
             try { await AddChatCollectServiceCore(item, useDefaultCreationOption); }
             finally
             {
                 addingChatCollectService = false;
-                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+                AddChatCollectServiceCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -331,7 +332,7 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.TwitterLiveV2ChatCollectServiceEntry _:
                         // ダイアログを開く前にウィンドウの最小化を解除
                         WindowPresentation.ShowCommand.Execute(null);
-                        var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
+                        var confirmation = await dialogService.ShowAsync(
                             new Notifications.ChatCollectServiceCreationSettingsConfirmation { Title = "コメント元設定", TargetChatCollectServiceEntry = item.ServiceEntry }
                         );
                         if (!confirmation.Confirmed || disposed || UseDefaultChatCollectService.Value) return;
@@ -348,22 +349,22 @@ namespace TVTComment.ViewModels
             // 「自動選択」が有効
             if (UseDefaultChatCollectService.Value)
             {
-                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+                AddChatCollectServiceCommand.NotifyCanExecuteChanged();
                 return;
             }
 
-            AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"で以下のエラーが発生しました。このコメント元を無効化します。\n\n{errorText}" });
+            dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"で以下のエラーが発生しました。このコメント元を無効化します。\n\n{errorText}" });
         }
 
         private void Model_ErrorOccurredInChatPosting(Model.ChatCollectService.IChatCollectService service, Model.ChatCollectService.BasicChatPostObject postObject, string errorText)
         {
             WindowPresentation.ShowCommand.Execute(null);
-            AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"にコメントを投稿するとき以下のエラーが発生しました。\n\n{errorText}" });
+            dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"にコメントを投稿するとき以下のエラーが発生しました。\n\n{errorText}" });
         }
 
         private void Model_ErrorOccurredAtChatCollectServiceCreation(Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string errorText)
         {
-            AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"コメント元、\"{serviceEntry.Name}\"を有効にしようとしたとき以下のエラーが発生し、有効化できませんでした。\n\n{errorText}" });
+            dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = $"コメント元、\"{serviceEntry.Name}\"を有効にしようとしたとき以下のエラーが発生し、有効化できませんでした。\n\n{errorText}" });
         }
 
         private void CommandModule_ShowWindowCommandInvoked()

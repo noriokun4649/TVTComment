@@ -4,7 +4,7 @@ using System.Reactive.Disposables;
 
 namespace TVTComment.ViewModels.Contents
 {
-    class ChatModRuleListItemViewModel : Prism.Mvvm.BindableBase, IDisposable
+    class ChatModRuleListItemViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private Model.ChatModRules.IChatModRule chatModRule;
