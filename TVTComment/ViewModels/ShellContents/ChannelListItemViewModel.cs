@@ -1,10 +1,10 @@
-﻿using Prism.Mvvm;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Reactive.Disposables;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class ChannelListItemViewModel : BindableBase, IDisposable
+    class ChannelListItemViewModel : ObservableObject, IDisposable
     {
         public Model.ChannelInfo Channel { get; }
 

@@ -8,6 +8,15 @@ namespace ObservableUtils
 {
     static class ObservableCollectionExtension
     {
+        public static Collection<T> AddRange<T>(this Collection<T> collection, IEnumerable<T> items)
+        {
+            ArgumentNullException.ThrowIfNull(collection);
+            ArgumentNullException.ThrowIfNull(items);
+            foreach (var item in items)
+                collection.Add(item);
+            return collection;
+        }
+
         public static DisposableReadOnlyObservableCollection<TResult> MakeOneWayLinkedCollection<TSource, TCollection, TResult>(this TCollection source, Func<TSource, TResult> selector)
             where TCollection : INotifyCollectionChanged, IEnumerable<TSource>
         {

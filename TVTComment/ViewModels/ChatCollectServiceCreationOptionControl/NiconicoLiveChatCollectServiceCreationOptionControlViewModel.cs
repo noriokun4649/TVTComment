@@ -1,4 +1,4 @@
-﻿using Prism.Commands;
+﻿using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Windows.Input;
 using TVTComment.Model.ChatCollectServiceEntry;
@@ -21,7 +21,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public NiconicoLiveChatCollectServiceCreationOptionControlViewModel()
         {
-            OkCommand = new DelegateCommand(() => Finished(this, new EventArgs()));
+            OkCommand = new RelayCommand(() => Finished(this, new EventArgs()));
         }
 
         public override IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()

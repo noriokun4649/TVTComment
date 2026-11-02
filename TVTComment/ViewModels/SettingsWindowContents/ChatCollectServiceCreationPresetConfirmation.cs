@@ -1,9 +1,9 @@
-﻿using Prism.Interactivity.InteractionRequest;
-
-namespace TVTComment.ViewModels.SettingsWindowContents
+﻿namespace TVTComment.ViewModels.SettingsWindowContents
 {
-    class ChatCollectServiceCreationPresetConfirmation : Confirmation
+    class ChatCollectServiceCreationPresetConfirmation
     {
+        public string Title { get; set; }
+        public bool Confirmed { get; set; }
         public Model.ChatCollectServiceCreationPreset ChatCollectServiceCreationPreset { get; set; }
     }
 }

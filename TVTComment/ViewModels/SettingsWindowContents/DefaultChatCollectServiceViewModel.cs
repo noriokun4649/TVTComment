@@ -1,9 +1,9 @@
-﻿using Prism.Mvvm;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class DefaultChatCollectServiceViewModel : BindableBase
+    class DefaultChatCollectServiceViewModel : ObservableObject
     {
         private readonly IList<Model.ChatCollectServiceEntry.IChatCollectServiceEntry> enabledServiceEntries;
 

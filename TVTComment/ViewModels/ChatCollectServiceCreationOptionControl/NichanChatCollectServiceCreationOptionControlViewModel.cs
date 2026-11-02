@@ -1,4 +1,4 @@
-﻿using Prism.Commands;
+﻿using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,8 +57,8 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             var nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
             Boards = nichan.BoardList;
             Method = Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry.ChatCollectServiceCreationOption.ThreadSelectMethod.Auto;
-            OkCommand = new DelegateCommand(() => Finished?.Invoke(this, new EventArgs()));
-            RefreshThreadsCommand = new DelegateCommand(RefreshThreads);
+            OkCommand = new RelayCommand(() => Finished?.Invoke(this, new EventArgs()));
+            RefreshThreadsCommand = new RelayCommand(RefreshThreads);
         }
 
         public override Model.ChatCollectServiceEntry.IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()

@@ -1,7 +1,6 @@
 ﻿<Window x:Class="TVTComment.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:prism="http://prismlibrary.com/"
-        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +8,7 @@
         xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
         mc:Ignorable="d"
-        prism:ViewModelLocator.AutoWireViewModel="True"
+        local:ViewModelLocator.AutoWireViewModel="True"
         Title="SettingWindow" Height="580" Width="400" WindowStyle="ToolWindow">
 
     <Window.Resources>
@@ -26,9 +25,6 @@
         <i:EventTrigger EventName="Closed">
             <behaviors:DisposeDataContextAction/>
         </i:EventTrigger>
-        <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
-            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True"/>
-        </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
     <TabControl>

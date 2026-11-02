@@ -1,5 +1,5 @@
-﻿using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
+﻿using CommunityToolkit.Mvvm.Input;
+using TVTComment.ViewModels.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -13,20 +13,18 @@ namespace TVTComment.ViewModels.SettingsWindowContents
         public ICommand AddPreset { get; }
         public ICommand RemovePreset { get; }
 
-        public InteractionRequest<ChatCollectServiceCreationPresetConfirmation> AddPresetRequest { get; } = new InteractionRequest<ChatCollectServiceCreationPresetConfirmation>();
-
-        public ChatCollectServiceCreationPresetSettingControlViewModel(Model.TVTComment model)
+        public ChatCollectServiceCreationPresetSettingControlViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             ChatCollectServiceCreationPresets = model.ChatCollectServiceCreationPresetModule.CreationPresets;
 
-            AddPreset = new DelegateCommand(async () =>
+            AddPreset = new RelayCommand(async () =>
               {
-                  ChatCollectServiceCreationPresetConfirmation result = await AddPresetRequest.RaiseAsync(new ChatCollectServiceCreationPresetConfirmation { Title = "プリセット追加" });
+                  ChatCollectServiceCreationPresetConfirmation result = await dialogService.ShowAsync(new ChatCollectServiceCreationPresetConfirmation { Title = "プリセット追加" });
                   if (!result.Confirmed) return;
                   model.ChatCollectServiceCreationPresetModule.AddCreationPreset(
                       result.ChatCollectServiceCreationPreset.Name, result.ChatCollectServiceCreationPreset.ServiceEntry, result.ChatCollectServiceCreationPreset.CreationOption);
               });
-            RemovePreset = new DelegateCommand(() =>
+            RemovePreset = new RelayCommand(() =>
               {
                   model.ChatCollectServiceCreationPresetModule.RemoveCreationPreset(SelectedChatCollectServiceCreationPreset);
               });

@@ -3,7 +3,7 @@ using System.Reactive;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class ChatCollectServiceViewModel : Prism.Mvvm.BindableBase, IDisposable
+    class ChatCollectServiceViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private readonly IDisposable disposable;
         private string informationText;

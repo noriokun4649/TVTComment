@@ -1,12 +1,12 @@
-﻿using Prism.Interactivity.InteractionRequest;
-
-namespace TVTComment.ViewModels.Notifications
+﻿namespace TVTComment.ViewModels.Notifications
 {
     /// <summary>
     /// コメント元を追加するときに表示されるダイアログ<see cref="ChatCollectServiceCreationSettingsControlViewModel"/>に渡す情報
     /// </summary>
-    class ChatCollectServiceCreationSettingsConfirmation : Confirmation
+    class ChatCollectServiceCreationSettingsConfirmation
     {
+        public string Title { get; set; }
+        public bool Confirmed { get; set; }
         /// <summary>
         /// どのコメント元を追加するか
         /// </summary>

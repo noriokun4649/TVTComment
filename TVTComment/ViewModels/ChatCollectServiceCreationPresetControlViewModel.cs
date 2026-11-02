@@ -1,7 +1,7 @@
 ﻿using ObservableUtils;
-using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
-using Prism.Regions;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using TVTComment.ViewModels.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,48 +10,48 @@ using TVTComment.ViewModels.Contents;
 
 namespace TVTComment.ViewModels
 {
-    class ChatCollectServiceCreationPresetControlViewModel : IInteractionRequestAware
+    class ChatCollectServiceCreationPresetControlViewModel : ObservableObject, IDialogViewModel
     {
-        private readonly IRegionManager regionManager;
+        private readonly ChatCollectServiceCreationOptionFactory optionFactory;
         private SettingsWindowContents.ChatCollectServiceCreationPresetConfirmation confirmation;
 
         public IReadOnlyList<SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>> ChatCollectServiceEntries { get; }
         public ObservableValue<string> PresetName { get; } = new ObservableValue<string>();
-        public ChatCollectServiceCreationOptionControl.ChatCollectServiceCreationOptionControlViewModel OptionRegionViewModel { get; set; }
+        private ChatCollectServiceCreationOptionControl.ChatCollectServiceCreationOptionControlViewModel optionRegionViewModel;
+        public ChatCollectServiceCreationOptionControl.ChatCollectServiceCreationOptionControlViewModel OptionRegionViewModel
+        {
+            get { return optionRegionViewModel; }
+            set { SetProperty(ref optionRegionViewModel, value); }
+        }
 
         public ICommand OkCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public INotification Notification
-        {
-            get { return confirmation; }
-            set { confirmation = (SettingsWindowContents.ChatCollectServiceCreationPresetConfirmation)value; Initialize(); }
-        }
+        public event Action CloseRequested;
 
-        public Action FinishInteraction { get; set; }
-
-        public ChatCollectServiceCreationPresetControlViewModel(IRegionManager regionManager, Model.TVTComment model)
+        public ChatCollectServiceCreationPresetControlViewModel(ChatCollectServiceCreationOptionFactory optionFactory, Model.TVTComment model)
         {
-            this.regionManager = regionManager;
+            this.optionFactory = optionFactory;
             ChatCollectServiceEntries = model.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => new SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>(x)).ToList();
             foreach (var entry in ChatCollectServiceEntries)
                 entry.PropertyChanged += ChatCollectServiceEntryListItemChanged;
             ChatCollectServiceEntries[0].IsSelected = true;
 
-            OkCommand = new DelegateCommand(() =>
+            OkCommand = new RelayCommand(() =>
               {
                   var entry = ChatCollectServiceEntries.FirstOrDefault(x => x.IsSelected)?.Value;
                   var option = OptionRegionViewModel?.GetChatCollectServiceCreationOption();
                   if (string.IsNullOrWhiteSpace(PresetName.Value) || entry == null || option == null) return;
                   confirmation.ChatCollectServiceCreationPreset = new Model.ChatCollectServiceCreationPreset(PresetName.Value, entry, option);
                   confirmation.Confirmed = true;
-                  FinishInteraction();
+                  CloseRequested?.Invoke();
               });
-            CancelCommand = new DelegateCommand(() => { confirmation.Confirmed = false; FinishInteraction(); });
+            CancelCommand = new RelayCommand(() => { confirmation.Confirmed = false; CloseRequested?.Invoke(); });
         }
 
-        private void Initialize()
+        public void Initialize(SettingsWindowContents.ChatCollectServiceCreationPresetConfirmation confirmation)
         {
+            this.confirmation = confirmation;
             confirmation.Confirmed = false;
             confirmation.ChatCollectServiceCreationPreset = null;
         }
@@ -74,7 +74,8 @@ namespace TVTComment.ViewModels
                 Model.ChatCollectServiceEntry.TwitterLiveV2ChatCollectServiceEntry _ => "TwitterLiveChatCollectServiceCreationOptionControl",
                 _ => "",
             };
-            regionManager.RequestNavigate("ChatCollectServiceCreationSettingsControl_CreationOptionRegion", creationOptionControl);
+            if (!string.IsNullOrEmpty(creationOptionControl))
+                OptionRegionViewModel = optionFactory.GetViewModel(creationOptionControl);
         }
     }
 }

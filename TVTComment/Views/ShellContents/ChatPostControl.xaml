@@ -3,12 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-             xmlns:prism="http://prismlibrary.com/"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:acb="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
              xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
              xmlns:local="clr-namespace:TVTComment.Views" xmlns:utils="clr-namespace:TVTComment.Model.Utils"
-             prism:ViewModelLocator.AutoWireViewModel="True"
+             local:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -16,10 +15,6 @@
     </UserControl.Resources>
     
     <i:Interaction.Triggers>
-        <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
-            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
-            </prism:PopupWindowAction>
-        </prism:InteractionRequestTrigger>
         <!--<behaviors:WindowEventTrigger EventName="Loaded">
             <behaviors:SetKeyboardFocusedElementAction Element="{Binding ElementName=PostTextBox}"/>
         </behaviors:WindowEventTrigger>
