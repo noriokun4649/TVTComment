@@ -23,7 +23,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - name: Include CoreTweet Nuget
         run: nuget sources add -name CoreTweetSource -source ${{ github.workspace }}\CoreTweetNuget
@@ -37,14 +37,14 @@ jobs:
           $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
 
       - name: Build (TVTComment.exe)
-        run: dotnet publish -m -c Release /p:PublishProfile="TVTComment/Properties/PublishProfiles/ReleaseProfile.pubxml"
+        run: dotnet publish TVTComment/TVTComment.csproj -m -c Release /p:PublishProfile=ReleaseProfile
 
       - name: Copy asset (TVTComment.exe)
         shell: powershell
         run: |
           New-Item -Path Asset -ItemType Directory
           New-Item -Path Asset/misc -ItemType Directory
-          Copy-Item -Path TVTComment/bin/Release/net8.0-windows/publish/TvtComment.exe -Destination Asset/
+          Copy-Item -Path TVTComment/bin/Release/net10.0-windows/publish/TvtComment.exe -Destination Asset/
           Copy-Item -Path TVTComment/Data/* -Destination Asset/
           Copy-Item -Path CHANGELOG.md -Destination Asset/misc/CHANGELOG.txt
           Copy-Item -Path LICENSE -Destination Asset/misc/LICENSE.txt

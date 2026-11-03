@@ -48,12 +48,6 @@ nicolive-comment-protobuf 2024.725.91748
 
 ------------------------------------------------------------------------------
 
-AttachedCommandBehavior 2.0.0
-
-   https://marlongrech.wordpress.com/2008/12/13/attachedcommandbehavior-v2-aka-acb/
-
-------------------------------------------------------------------------------
-
 CommunityToolkit.Mvvm 8.4.2
 
    # .NET Community Toolkit
@@ -283,13 +277,39 @@ Google.Protobuf 3.27.2
 
 ------------------------------------------------------------------------------
 
-System.Linq.Async 6.0.1
+Newtonsoft.Json 13.0.4
+
+   The MIT License (MIT)
+
+   Copyright (c) 2007 James Newton-King
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy of
+   this software and associated documentation files (the "Software"), to deal in
+   the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do so,
+   subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+------------------------------------------------------------------------------
+
 System.Reactive 6.0.1
-Microsoft.Extensions.Configuration.UserSecrets 8.0.0
-Microsoft.Extensions.DependencyInjection 8.0.1
-Microsoft.Extensions.DependencyInjection.Abstractions 8.0.2
-System.Configuration.ConfigurationManager 8.0.0
-System.Text.Json 8.0.4
+Microsoft.Extensions.Configuration.UserSecrets 10.0.14
+Microsoft.Extensions.DependencyInjection 10.0.14
+Microsoft.Extensions.DependencyInjection.Abstractions 10.0.14
+System.Configuration.ConfigurationManager 10.0.14
+System.Security.Cryptography.ProtectedData 10.0.14
+System.Text.Json 10.0.14
 
    The MIT License (MIT)
 
@@ -317,9 +337,9 @@ System.Text.Json 8.0.4
 
 ------------------------------------------------------------------------------
 
-Microsoft.Xml.SgmlReader 1.8.18
+Microsoft.Xml.SgmlReader 1.8.30
 
-   Copyright 2002-2017 Microsoft Corp.
+   Copyright 2002-2022 Microsoft Corp.
    Copyright 2007-2013 MindTouch, Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");

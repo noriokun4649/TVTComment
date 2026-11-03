@@ -34,7 +34,8 @@ TVTest ニコニコ & 5ch コメント表示プラグイン
 ## 開発環境
 - TVTest 0.10.0 [4023008](https://github.com/DBCTRADO/TVTest/commit/402300897d009411a8738eb8278240b1b48a0681) x64 (MSVC:19.42.34438.0)
 - LiblSDB [6fa3b9d](https://github.com/DBCTRADO/LibISDB/commit/6fa3b9d616d4fa739eb343908d4446504c8718f6) x64 (MSVC:19.42.34438.0)
-- Microsoft Visual Studio Community 2022
+- .NET 10 SDK
+- Microsoft Visual Studio Community 2026（18.0以降）
 
 ## 謝辞
 このソフトは[TvtComment](https://github.com/silane/TVTComment)から改造して作られました。また過去ログの取得は[非公式過去ログAPI](https://jikkyo.tsukumijima.net)より取得しております。

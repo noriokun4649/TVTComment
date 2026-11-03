@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-             xmlns:acb="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
+             xmlns:attachedproperties="clr-namespace:TVTComment.Views.AttachedProperties"
              xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
              xmlns:local="clr-namespace:TVTComment.Views" xmlns:utils="clr-namespace:TVTComment.Model.Utils"
              local:ViewModelLocator.AutoWireViewModel="True"
@@ -69,9 +69,9 @@
                                 <Setter Property="Content" Value="現在のコマンドを追加"/>
                                 <Setter Property="ContextMenu" Value="{x:Null}"/>
                                 <Setter Property="FontStyle" Value="Italic"/>
-                                <Setter Property="acb:CommandBehavior.Event" Value="PreviewMouseLeftButtonDown"/>
-                                <Setter Property="acb:CommandBehavior.Command" Value="{Binding Path=DataContext.AddPostMailTextExampleCommand,RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
-                                <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding Path=DataContext.PostMailText.Value,RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
+                                <Setter Property="attachedproperties:RoutedEventCommand.Event" Value="{x:Static UIElement.PreviewMouseLeftButtonDownEvent}"/>
+                                <Setter Property="attachedproperties:RoutedEventCommand.Command" Value="{Binding Path=DataContext.AddPostMailTextExampleCommand,RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
+                                <Setter Property="attachedproperties:RoutedEventCommand.CommandParameter" Value="{Binding Path=DataContext.PostMailText.Value,RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
                             </DataTrigger>
                         </Style.Triggers>
                         <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
