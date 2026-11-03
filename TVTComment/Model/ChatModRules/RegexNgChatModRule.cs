@@ -13,7 +13,7 @@ namespace TVTComment.Model.ChatModRules
 
         public RegexNgChatModRule(IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> targetChatCollectServiceEntries, string regex)
         {
-            TargetChatCollectServiceEntries = targetChatCollectServiceEntries;
+            TargetChatCollectServiceEntries = targetChatCollectServiceEntries?.ToArray();
 
             Regex = regex;
             CompiledRegex = new Regex(regex, RegexOptions.Compiled);

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace TVTComment.Model.ChatModRules
@@ -13,7 +14,7 @@ namespace TVTComment.Model.ChatModRules
 
         public ReplaceRegexChatModRule(IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> targetChatCollectServiceEntries, string regex, string replacement)
         {
-            TargetChatCollectServiceEntries = targetChatCollectServiceEntries;
+            TargetChatCollectServiceEntries = targetChatCollectServiceEntries?.ToArray();
 
             Regex = regex;
             CompiledRegex = new Regex(regex, RegexOptions.Compiled);
