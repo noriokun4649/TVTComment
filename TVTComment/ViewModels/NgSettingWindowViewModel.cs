@@ -100,6 +100,7 @@ namespace TVTComment.ViewModels
         public ICommand RemoveRuleCommand { get; private set; }
         public ICommand AddUrlNgCommand { get; private set; }
         public ICommand AddMentionNgCommand { get; private set; }
+        public ICommand AddAnchorNgCommand { get; private set; }
 
         private readonly IDialogService dialogService;
 
@@ -223,6 +224,11 @@ namespace TVTComment.ViewModels
             AddMentionNgCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.MentionNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddAnchorNgCommand = new RelayCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.AnchorNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
             RemoveRuleCommand = new RelayCommand(() =>

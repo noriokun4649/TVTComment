@@ -244,6 +244,9 @@ namespace TVTComment.Model
                     case "MentionNg":
                         entry.ChatModRule = new ChatModRules.MentionNgChatModRule(targetServices);
                         break;
+                    case "AnchorNg":
+                        entry.ChatModRule = new ChatModRules.AnchorNgChatModRule(targetServices);
+                        break;
                     default:
                         continue;
                 }
@@ -338,6 +341,9 @@ namespace TVTComment.Model
                         break;
                     case ChatModRules.MentionNgChatModRule _:
                         entity.Type = "MentionNg";
+                        break;
+                    case ChatModRules.AnchorNgChatModRule _:
+                        entity.Type = "AnchorNg";
                         break;
                     default:
                         throw new Exception();
