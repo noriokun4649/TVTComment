@@ -14,6 +14,10 @@ namespace TVTComment.Model
         /// </summary>
         public DateTime Time { get; private set; }
 
+        /// <summary>
+        /// コメント改変ルール適用前の本文
+        /// </summary>
+        public string OriginalText { get; }
         public string Text { get; private set; }
         public PositionType Position { get; private set; }
         public SizeType Size { get; private set; }
@@ -34,6 +38,7 @@ namespace TVTComment.Model
         public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number, bool isSelfComment = false)
         {
             Time = time;
+            OriginalText = text;
             Text = text;
             Position = position;
             Size = size;

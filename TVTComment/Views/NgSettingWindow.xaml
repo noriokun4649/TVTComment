@@ -62,6 +62,7 @@
                             </Button>
                             <Button Command="{Binding AddUrlNgCommand}">URLが含まれるコメNG</Button>
                             <Button Command="{Binding AddMentionNgCommand}">メンションが含まれるコメNG</Button>
+                            <Button Command="{Binding AddAnchorNgCommand}" ToolTip="アンカー削除などの改変前の本文で判定します。">アンカーが含まれるコメNG</Button>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Header="改変">
