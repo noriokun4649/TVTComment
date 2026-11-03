@@ -208,11 +208,13 @@ namespace TVTComment.ViewModels
 
             AddReplaceRegexCommand = new RelayCommand(() =>
             {
+                if (string.IsNullOrEmpty(ReplaceRegexPattern.Value)) return;
                 AddRegexChatModRule(() => new Model.ChatModRules.ReplaceRegexChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), ReplaceRegexPattern.Value, ReplaceRegexReplacement.Value));
             });
 
             AddRegexNgCommand = new RelayCommand(() =>
             {
+                if (string.IsNullOrEmpty(NgText)) return;
                 AddRegexChatModRule(() => new Model.ChatModRules.RegexNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
             });
 
