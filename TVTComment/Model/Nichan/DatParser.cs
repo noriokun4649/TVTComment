@@ -90,7 +90,12 @@ namespace Nichan
                 int startIdx = row[2].IndexOf("ID:");
                 string userId = startIdx != -1 ? row[2][(startIdx + 3)..].Split(' ')[0] : null;
 
-                using var reader = new StringReader($"<html><div>{row[3]}</div></html>");
+                string body = row[3];
+                // DAT形式由来の本文両端・改行前後の半角スペース各1文字の除去と、投稿内の字下げの保持
+                if (body.Length >= 2 && body[0] == ' ' && body[^1] == ' ')
+                    body = body[1..^1].Replace(" <br> ", "<br>");
+
+                using var reader = new StringReader($"<html><div>{body}</div></html>");
                 sgmlReader.InputStream = reader;
                 XElement text = XDocument.Load(sgmlReader).XPathSelectElement("./html/div");
 
