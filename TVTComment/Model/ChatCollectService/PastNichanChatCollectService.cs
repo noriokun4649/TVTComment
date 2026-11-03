@@ -81,8 +81,9 @@ namespace TVTComment.Model.ChatCollectService
                     && cursor.DisplayedUntil < r.Date.Value && r.Date.Value <= displayUntil).OrderBy(r => r.Date))
                 {
                     var body = new XElement(res.Text);
-                    foreach (var br in body.Descendants("br").ToArray())
-                        br.ReplaceWith("\n");
+                    // DTDなしの解析でbrの子となった本文を保持するための内側からの改行変換
+                    foreach (var br in body.Descendants("br").Reverse().ToArray())
+                        br.ReplaceWith("\n", br.Nodes());
                     result.Add(new Chat(
                         res.Date.Value, body.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
                         Color.White, res.UserId, res.Number
