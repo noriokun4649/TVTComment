@@ -17,13 +17,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -61,7 +61,7 @@ jobs:
           git checkout $env:before CHANGELOG.md
           Copy-Item -Path CHANGELOG.md -Destination Asset/misc/OLDCHANGELOG.txt
       - name: Upload asset to Artifacts (TVTComment.exe)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TvtComment
           if-no-files-found: error
@@ -79,13 +79,13 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Build (tvtcomment.tvtp)
         run: msbuild Viewer/Viewer.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}" /p:CodePage=932
@@ -97,7 +97,7 @@ jobs:
           Copy-Item -Path Viewer/${{ matrix.platform }}/Release/TvtComment.tvtp -Destination Asset/
 
       - name: Upload asset to Artifacts (tvtcomment.tvtp)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TvtComment_${{ matrix.platform }}
           if-no-files-found: error
@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: Asset/
 
@@ -141,7 +141,7 @@ jobs:
           7z a -r ../TvtComment_v${{ env.RELEASE_VERSION }}.zip *
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
           name: Release v${{ env.RELEASE_VERSION }}
