@@ -11,7 +11,6 @@ namespace TVTComment
         {
             var services = new ServiceCollection();
             services.AddSingleton(new Model.TVTComment());
-            services.AddTransient<Model.NiconicoUtils.INiconicoLoginService, Views.Services.WebView2NiconicoLoginService>();
             services.AddTransient<IDialogService, Views.Services.DialogService>();
             services.AddTransient<ChatCollectServiceCreationOptionFactory>();
 
