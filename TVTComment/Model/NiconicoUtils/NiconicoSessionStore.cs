@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -22,22 +20,9 @@ namespace TVTComment.Model.NiconicoUtils
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TVTComment", key);
         }
 
-        private sealed class StoredCookie
+        public void Save(NiconicoOAuthSession session)
         {
-            public string Name { get; set; }
-            public string Value { get; set; }
-            public string Domain { get; set; }
-            public string Path { get; set; }
-            public bool Secure { get; set; }
-            public bool HttpOnly { get; set; }
-            public DateTime Expires { get; set; }
-        }
-
-        public void Save(NiconicoLoginSession session)
-        {
-            var values = session.Cookie.Cast<Cookie>().Where(c => NiconicoLoginSession.IsServiceDomain(c.Domain) && !c.Expired)
-                .Select(c => new StoredCookie { Name = c.Name, Value = c.Value, Domain = c.Domain, Path = c.Path, Secure = c.Secure, HttpOnly = c.HttpOnly, Expires = c.Expires });
-            var data = JsonSerializer.SerializeToUtf8Bytes(values);
+            var data = JsonSerializer.SerializeToUtf8Bytes(session.Credentials);
             try
             {
                 var encrypted = ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
@@ -49,22 +34,21 @@ namespace TVTComment.Model.NiconicoUtils
             finally { CryptographicOperations.ZeroMemory(data); }
         }
 
-        public CookieCollection Load()
+        public NiconicoOAuthSession Load()
         {
             if (!File.Exists(path)) return null;
             var data = ProtectedData.Unprotect(File.ReadAllBytes(path), null, DataProtectionScope.CurrentUser);
             try
             {
-                var values = JsonSerializer.Deserialize<StoredCookie[]>(data) ?? throw new FormatException("セッション保存データが空です。");
-                var cookies = new CookieCollection();
-                foreach (var value in values)
+                using var document = JsonDocument.Parse(data);
+                if (document.RootElement.ValueKind == JsonValueKind.Array)
                 {
-                    if (!NiconicoLoginSession.IsServiceDomain(value.Domain)) continue;
-                    var cookie = new Cookie(value.Name, value.Value, value.Path, value.Domain)
-                    { Secure = value.Secure, HttpOnly = value.HttpOnly, Expires = value.Expires };
-                    if (!cookie.Expired) cookies.Add(cookie);
+                    Delete();
+                    throw new FormatException("通常ログインは廃止されました。設定の「ログイン」からOAuth認証を行ってください。");
                 }
-                return cookies;
+                if (document.RootElement.ValueKind != JsonValueKind.Object)
+                    throw new FormatException("OAuthのセッション保存データが不正です。");
+                return new NiconicoOAuthSession(document.RootElement.Deserialize<NiconicoOAuthCredentials>());
             }
             finally { CryptographicOperations.ZeroMemory(data); }
         }

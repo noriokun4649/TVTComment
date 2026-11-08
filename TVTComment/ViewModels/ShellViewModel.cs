@@ -13,7 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.ViewModels
 {
@@ -108,14 +107,12 @@ namespace TVTComment.ViewModels
         private bool addingChatCollectService;
         private readonly CompositeDisposable disposables = new CompositeDisposable();
         private readonly Model.TVTComment model;
-        private readonly INiconicoLoginService niconicoLoginService;
         private Model.ChatService.NiconicoChatService niconico;
         private TVTestPanelBridge panelBridge;
 
-        public ShellViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService, IDialogService dialogService)
+        public ShellViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             this.model = model;
-            this.niconicoLoginService = niconicoLoginService;
             this.dialogService = dialogService;
             WindowPresentation = new WindowStateViewModel(() => BasicSettingControlViewModel?.MinimizeOnTVTestPanelOpen.Value == true);
 
@@ -261,14 +258,14 @@ namespace TVTComment.ViewModels
             {
                 niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
                 niconico.AuthenticationChanged += NiconicoAuthenticationChanged;
-                // 起動時の復元で検出した失効も、メイン画面の準備後に案内する。
-                await niconico.ReloginIfExpiredAsync(niconicoLoginService);
+                // 起動時の復元で検出した失効の、メイン画面準備後の案内
+                await niconico.ReloginIfExpiredAsync();
             }
         }
 
         private async void NiconicoAuthenticationChanged(object sender, EventArgs e)
         {
-            if (!disposed) await niconico.ReloginIfExpiredAsync(niconicoLoginService);
+            if (!disposed) await niconico.ReloginIfExpiredAsync();
         }
 
         private void CloseApplication()

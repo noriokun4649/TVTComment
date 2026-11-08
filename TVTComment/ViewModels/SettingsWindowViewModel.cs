@@ -67,7 +67,7 @@ namespace TVTComment.ViewModels
         private TwitterAuthentication twitterAuthentication;
         private readonly IDisposable rememberSessionSubscription;
 
-        public SettingsWindowViewModel(Model.TVTComment model, INiconicoLoginService niconicoLoginService, IDialogService dialogService)
+        public SettingsWindowViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             this.dialogService = dialogService;
             var secrets = App.Configuration;
@@ -86,7 +86,10 @@ namespace TVTComment.ViewModels
             Always184.Value = niconico.Always184;
             Always184.Subscribe(state => niconico.Always184 = state);
 
-            LoginNiconicoCommand = new RelayCommand(async () => await niconico.LoginAsync(niconicoLoginService), () => !niconico.IsBusy);
+            LoginNiconicoCommand = new RelayCommand(async () =>
+            {
+                await niconico.LoginAsync();
+            }, () => !niconico.IsBusy);
             LogoutNiconicoCommand = new RelayCommand(niconico.Logout);
             NiconicoRememberSession.Value = niconico.RememberSession;
             rememberSessionSubscription = NiconicoRememberSession.Subscribe(value => niconico.RememberSession = value);

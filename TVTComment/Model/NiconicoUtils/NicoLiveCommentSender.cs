@@ -67,6 +67,7 @@ namespace TVTComment.Model.NiconicoUtils
     class NicoLiveCommentSender : IDisposable
     {
         private readonly HttpClient httpClient;
+        private readonly NiconicoOAuthSession oauthSession;
         private BlockingCollection<string[]> messageColl = new();
         private BlockingCollection<string> errorMesColl = new();
         private readonly string ua;
@@ -75,6 +76,7 @@ namespace TVTComment.Model.NiconicoUtils
 
         public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
         {
+            oauthSession = niconicoSession as NiconicoOAuthSession;
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoSession.Cookie);
             httpClient = new HttpClient(handler);
@@ -110,7 +112,9 @@ namespace TVTComment.Model.NiconicoUtils
 
             try
             {
-                var (webSocketUrl, notOnAir, openTime) = await GetLiveDataAsync("https://live.nicovideo.jp/watch/" + liveId, cancellationToken).ConfigureAwait(false);
+                var (webSocketUrl, notOnAir, openTime) = oauthSession != null
+                    ? await oauthSession.GetWatchDataAsync(liveId, cancellationToken).ConfigureAwait(false)
+                    : await GetLiveDataAsync("https://live.nicovideo.jp/watch/" + liveId, cancellationToken).ConfigureAwait(false);
 
 
                 if (notOnAir || webSocketUrl == null)
@@ -119,7 +123,7 @@ namespace TVTComment.Model.NiconicoUtils
                     // LiveIDがチャンネルだった場合のみ代替策で取得する
                     // https://x.com/nico_nico_talk/status/1920441957840486464
 
-                    if (liveId.Contains("lv"))
+                    if (oauthSession != null || liveId.Contains("lv"))
                         throw new LiveNotFoundException("放送が終了しています。");
 
                     // チャンネルページから放送IDを取得
@@ -142,6 +146,10 @@ namespace TVTComment.Model.NiconicoUtils
                 webScoketUri = new Uri(webSocketUrl);
 
             }
+            catch (NiconicoLoginSessionException e)
+            {
+                throw new NicoLiveCommentSenderException(e.Message, e);
+            }
             catch (HttpRequestException e)
             {
                 if (e.StatusCode == HttpStatusCode.NotFound)
@@ -149,7 +157,7 @@ namespace TVTComment.Model.NiconicoUtils
                 else
                     throw new NicoLiveCommentSenderException($"放送ページにアクセスできません。HTTP Status:{e.Message}");
             }
-            catch (Exception e) when (e is JsonException || e is InvalidOperationException || e is ArgumentException || e is KeyNotFoundException)
+            catch (Exception e) when (e is JsonException || e is InvalidOperationException || e is ArgumentException || e is KeyNotFoundException || e is FormatException)
             {
                 throw new NicoLiveCommentSenderException("放送情報を解析出来ませんでした。");
             }

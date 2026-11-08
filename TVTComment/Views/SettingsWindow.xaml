@@ -80,7 +80,7 @@
 
                 <GroupBox Header="アカウント" Grid.Row="1">
                     <StackPanel>
-                        <TextBlock Text="「ログイン」を押し、開いたニコニコの画面でログインしてください。" TextWrapping="Wrap"/>
+                        <TextBlock Text="「ログイン」を押し、既定のブラウザーでニコニコのOAuth認証を完了してください。" TextWrapping="Wrap"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Content="ログイン" Command="{Binding LoginNiconicoCommand}"/>
                             <Button Content="ログアウト" Command="{Binding LogoutNiconicoCommand}"/>

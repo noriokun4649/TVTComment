@@ -2,7 +2,6 @@ using ObservableUtils;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -35,7 +34,7 @@ namespace TVTComment.Model.ChatService
         private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private readonly NiconicoChatServiceSettings settings;
         private readonly NiconicoSessionStore store;
-        private readonly Func<CookieCollection, NiconicoSessionClient> sessionClientFactory;
+        private readonly NiconicoOAuthClient oauthClient;
         private readonly CancellationTokenSource lifetime = new CancellationTokenSource();
         private CancellationTokenSource operation;
         private bool disposed;
@@ -69,7 +68,7 @@ namespace TVTComment.Model.ChatService
             set
             {
                 settings.RememberSession = value;
-                try { if (!value) store.Delete(); else if (IsLoggedin) store.Save(loginSession.Value); }
+                try { if (!value) store.Delete(); else if (loginSession.Value is NiconicoOAuthSession session) store.Save(session); }
                 catch (Exception e) when (IsStorageError(e)) { SetState(AuthenticationState, "ログイン状態の保存設定を反映できませんでした。保存先へのアクセスを確認してください。"); }
             }
         }
@@ -77,11 +76,11 @@ namespace TVTComment.Model.ChatService
         public NiconicoChatService(
             NiconicoChatServiceSettings settings, ChannelDatabase channelDatabase,
             string jikkyouIdTableFilePath, string liveIdTableFilePath,
-            Func<CookieCollection, NiconicoSessionClient> sessionClientFactory = null
+            NiconicoOAuthClient oauthClient = null
         )
         {
             this.settings = settings;
-            this.sessionClientFactory = sessionClientFactory ?? (cookies => new NiconicoSessionClient(cookies));
+            this.oauthClient = oauthClient ?? new NiconicoOAuthClient();
             store = new NiconicoSessionStore(Path.GetDirectoryName(liveIdTableFilePath));
             jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));
             liveIdResolver = new NiconicoUtils.LiveIdResolver(channelDatabase, new NiconicoUtils.LiveIdTable(liveIdTableFilePath));
@@ -107,15 +106,14 @@ namespace TVTComment.Model.ChatService
             await RunOperationAsync(async token =>
             {
                 if (!RememberSession) { store.Delete(); return; }
-                var cookies = store.Load();
-                if (cookies == null) return;
+                var session = store.Load();
+                if (session == null) return;
                 SetState(NiconicoAuthenticationState.Restoring, "保存したログイン状態を確認中…");
-                using var client = sessionClientFactory(cookies);
                 try
                 {
-                    var restored = await client.ValidateAsync(token);
+                    await session.GetAccessTokenAsync(token);
                     token.ThrowIfCancellationRequested();
-                    ApplySession(restored);
+                    ApplySession(session);
                 }
                 catch (NiconicoSessionExpiredException)
                 {
@@ -127,32 +125,49 @@ namespace TVTComment.Model.ChatService
         }
 
         /// <summary>
-        /// WebView2で取得したセッションを検証して適用する
-        /// 失敗・キャンセルした場合は既存のセッションを保持する
+        /// 取得したセッションの検証・適用と、失敗・キャンセル時の既存セッションの保持
         /// </summary>
-        public Task LoginAsync(INiconicoLoginService loginService) => RunOperationAsync(async token =>
+        public Task LoginAsync() => RunOperationAsync(async token =>
         {
-            SetState(NiconicoAuthenticationState.Authenticating, "開いたニコニコの画面でログインしてください…");
-            var cookies = await loginService.LoginAsync(token);
-            token.ThrowIfCancellationRequested();
-            using var client = sessionClientFactory(cookies);
-            var session = await client.ValidateAsync(token);
+            SetState(NiconicoAuthenticationState.Authenticating, "ブラウザーでニコニコの認証を完了してください…");
+            var credentials = await oauthClient.AuthorizeAsync(token);
+            var session = new NiconicoOAuthSession(credentials, oauthClient);
             token.ThrowIfCancellationRequested();
             ApplySession(session);
         });
 
-        public Task ReloginIfExpiredAsync(INiconicoLoginService loginService)
+        public Task ReloginIfExpiredAsync()
         {
-            return AuthenticationState == NiconicoAuthenticationState.Expired ? LoginAsync(loginService) : Task.CompletedTask;
+            return AuthenticationState == NiconicoAuthenticationState.Expired ? LoginAsync() : Task.CompletedTask;
         }
 
-        private void ApplySession(NiconicoLoginSession session)
+        private void ApplySession(NiconicoOAuthSession session)
         {
+            (loginSession.Value as NiconicoOAuthSession)?.Invalidate();
+            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            session.ChangedAsync = () => Task.Factory.StartNew(() => SaveSession(session),
+                CancellationToken.None, TaskCreationOptions.None, scheduler);
             settings.UserId = session.UserId;
             loginSession.Value = session;
             SetState(NiconicoAuthenticationState.SignedIn, $"ログイン済（ユーザーID: {session.UserId}）");
+            SaveSession(session);
+        }
+
+        private bool SaveSession(NiconicoOAuthSession session)
+        {
+            if (disposed || loginSession.Value != session) return true;
+            if (session.IsExpired)
+            {
+                InvalidateSession(session);
+                return true;
+            }
             try { if (RememberSession) store.Save(session); else store.Delete(); }
-            catch (Exception e) when (IsStorageError(e)) { SetState(NiconicoAuthenticationState.SignedIn, "ログイン済。ログイン状態を保存できませんでした。次回起動時に設定の「ログイン」から再度ログインしてください。"); }
+            catch (Exception e) when (IsStorageError(e))
+            {
+                SetState(NiconicoAuthenticationState.SignedIn, "ログイン済。ログイン状態を保存できませんでした。次回起動時に設定の「ログイン」から再度ログインしてください。");
+                return false;
+            }
+            return true;
         }
 
         private async Task RunOperationAsync(Func<CancellationToken, Task> action)
@@ -193,6 +208,7 @@ namespace TVTComment.Model.ChatService
         public void Logout()
         {
             CancelAuthentication();
+            (loginSession.Value as NiconicoOAuthSession)?.Invalidate();
             loginSession.Value = null;
             try { store.Delete(); SetState(NiconicoAuthenticationState.SignedOut, "ログアウトしました"); }
             catch (Exception e) when (IsStorageError(e)) { SetState(NiconicoAuthenticationState.SignedOut, "ログイン状態を解除しましたが、保存したログイン情報を削除できませんでした。"); }
@@ -201,6 +217,7 @@ namespace TVTComment.Model.ChatService
         public void InvalidateSession(NiconicoLoginSession session)
         {
             if (disposed || session == null || loginSession.Value != session) return;
+            (session as NiconicoOAuthSession)?.Invalidate();
             loginSession.Value = null;
             try { store.Delete(); } catch (Exception e) when (IsStorageError(e)) { }
             SetState(NiconicoAuthenticationState.Expired, "ログインの有効期限が切れました。設定の「ログイン」から再度ログインしてください。");
@@ -208,9 +225,9 @@ namespace TVTComment.Model.ChatService
 
         internal async Task CheckSessionAsync()
         {
-            var session = loginSession.Value;
+            var session = loginSession.Value as NiconicoOAuthSession;
             if (disposed || session == null || IsBusy) return;
-            try { using var client = sessionClientFactory(session.Cookie); await client.ValidateAsync(lifetime.Token); }
+            try { await session.GetAccessTokenAsync(lifetime.Token); }
             catch (NiconicoSessionExpiredException) { InvalidateSession(session); }
             catch (Exception e) when (e is HttpRequestException || e is NiconicoLoginSessionException || e is JsonException || e is OperationCanceledException) { }
         }
@@ -234,6 +251,7 @@ namespace TVTComment.Model.ChatService
             if (disposed) return;
             disposed = true;
             lifetime.Cancel();
+            (loginSession.Value as NiconicoOAuthSession)?.Invalidate();
             loginSession.Value = null;
         }
     }
