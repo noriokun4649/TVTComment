@@ -120,10 +120,13 @@ namespace TVTComment.Model.NiconicoUtils
                         headers = Encoding.ASCII.GetString(buffer, 0, length);
                     }
                     bool valid = TryReadCallback(headers, port, state, out var code, out var error);
+                    // 認証結果の受信後に表示する、OAuthサーバの共通画面
+                    var resultUrl = new Uri(serverOrigin, error == null ? "/oauth/complete" : "/oauth/cancelled");
                     var content = Encoding.UTF8.GetBytes(valid
-                        ? "<!doctype html><meta charset=\"utf-8\"><title>TVTComment</title>TVTCommentに戻って認証結果を確認してください。このページは閉じられます。"
+                        ? $"<!doctype html><html lang=\"ja\"><meta charset=\"utf-8\"><title>TVTComment</title><a href=\"{resultUrl.AbsoluteUri}\">TVTCommentの認証画面へ戻る</a></html>"
                         : "Invalid OAuth callback.");
-                    var head = Encoding.ASCII.GetBytes($"HTTP/1.1 {(valid ? "200 OK" : "400 Bad Request")}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {content.Length}\r\nConnection: close\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nContent-Security-Policy: default-src 'none'; frame-ancestors 'none'\r\nX-Content-Type-Options: nosniff\r\n\r\n");
+                    var location = valid ? $"Location: {resultUrl.AbsoluteUri}\r\n" : "";
+                    var head = Encoding.ASCII.GetBytes($"HTTP/1.1 {(valid ? "303 See Other" : "400 Bad Request")}\r\n{location}Content-Type: text/html; charset=utf-8\r\nContent-Length: {content.Length}\r\nConnection: close\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nContent-Security-Policy: default-src 'none'; frame-ancestors 'none'\r\nX-Content-Type-Options: nosniff\r\n\r\n");
                     await stream.WriteAsync(head.AsMemory(), readTimeout.Token).ConfigureAwait(false);
                     await stream.WriteAsync(content.AsMemory(), readTimeout.Token).ConfigureAwait(false);
                     if (!valid) continue;
