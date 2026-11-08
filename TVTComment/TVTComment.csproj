@@ -20,7 +20,9 @@
     <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Protobuf Include="protobuf\proto\**\*.proto" ProtoRoot="protobuf\proto\" OutputDir=".\" GrpcServices="None" />
+    <!-- 旧生成先に残るC#ファイルの自動コンパイル対象からの除外 -->
+    <Compile Remove="dwango\**\*.cs" />
+    <Protobuf Include="protobuf\proto\**\*.proto" ProtoRoot="protobuf\proto\" GrpcServices="None" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
