@@ -112,7 +112,9 @@ namespace TVTComment
 			{
 				static std::wstring_convert<std::codecvt<wchar_t, char, mbstate_t >> char_wide_conv;
 
-				std::wstring what = char_wide_conv.from_bytes(e.what());
+				// UTF-8のIPC例外とシステム由来の例外の文字コードの使い分け
+				std::wstring what = dynamic_cast<IPCMessageDecodeError *>(&e)
+					? utf8_utf16_conv.from_bytes(e.what()) : char_wide_conv.from_bytes(e.what());
 				wchar_t *text = new wchar_t[what.size() + 1];
 				what.copy(text, sizeof(text) / sizeof(text[0]));
 				text[what.size()] = L'\0';

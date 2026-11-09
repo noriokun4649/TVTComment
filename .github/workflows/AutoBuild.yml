@@ -79,7 +79,7 @@ jobs:
         uses: microsoft/setup-msbuild@v3
 
       - name: Build (tvtcomment.tvtp)
-        run: msbuild Viewer/Viewer.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}" /p:CodePage=932
+        run: msbuild Viewer/Viewer.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}"
 
       - name: Copy asset (tvtcomment.tvtp)
         shell: powershell
