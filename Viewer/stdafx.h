@@ -17,8 +17,7 @@
 #define _WIN32_IE 0x0600	// Internet Explorer 6.0
 #endif
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "NicoJK/Common.h"
 #include <WindowsX.h>
 #include <objbase.h>
 #include <vector>
@@ -27,7 +26,6 @@
 #include <memory>
 #include <utility>
 #include <algorithm>
-#include <tchar.h>
 
 #pragma comment(lib, "winmm.lib")
 
@@ -36,5 +34,3 @@
 #undef max
 using std::min;
 using std::max;
-
-typedef std::basic_string<TCHAR> tstring;
