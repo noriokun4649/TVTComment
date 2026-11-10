@@ -280,6 +280,7 @@ void CViewer::LoadFromIni()
 	s_.bCommentFontAntiAlias = GetBufferedProfileInt(buf.data(), TEXT("commentFontAntiAlias"), 1) != 0;
 	s_.commentDuration		= GetBufferedProfileInt(buf.data(), TEXT("commentDuration"), CCommentWindow::DISPLAY_DURATION);
 	s_.commentDrawLineCount = GetBufferedProfileInt(buf.data(), TEXT("commentDrawLineCount"), CCommentWindow::DEFAULT_LINE_DRAW_COUNT);
+	s_.bCommentVideoOnly = GetBufferedProfileInt(buf.data(), TEXT("commentVideoOnly"), 1) != 0;
 	s_.bUseOsdCompositor	= GetBufferedProfileInt(buf.data(), TEXT("useOsdCompositor"), 0) != 0;
 	s_.bUseTexture			= GetBufferedProfileInt(buf.data(), TEXT("useTexture"), 1) != 0;
 	s_.bUseDrawingThread	= GetBufferedProfileInt(buf.data(), TEXT("useDrawingThread"), 1) != 0;
@@ -518,6 +519,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		commentWindow_.SetDrawLineCount(s_.commentDrawLineCount);
 		commentWindow_.SetOpacity(static_cast<BYTE>(s_.commentOpacity));
 		commentWindow_.SetCommentHighlight(s_.hideCommentHighlight);
+		commentWindow_.SetVideoOnly(s_.bCommentVideoOnly);
 		if (commentWindow_.GetOpacity() != 0 && m_pApp->GetPreview()) {
 			HWND hwndContainer = FindVideoContainer();
 			commentWindow_.Create(hwndContainer);
