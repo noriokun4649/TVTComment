@@ -64,7 +64,6 @@ private:
 
 	// コメント描画ウィンドウ
 	CCommentWindow commentWindow_;
-	DWORD forwardTick_;
 	std::thread syncThread_;
 	std::atomic_bool bQuitSyncThread_;
 	std::atomic_bool bPendingTimerForward_;
@@ -88,7 +87,7 @@ private:
 	int pcrPid_;
 	int pcrPids_[8];
 	int pcrPidCounts_[8];
-	recursive_mutex_ streamLock_;
+	std::recursive_mutex streamLock_;
 
 #pragma region TVTComment
 	TVTCommentPanel panel_;

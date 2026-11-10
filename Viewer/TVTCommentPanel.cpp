@@ -346,8 +346,6 @@ void TVTCommentPanel::ApplyMessage(const TVTComment::PanelIPCMessage &message)
 		if (!reset) rows.assign(chatRows_.begin() + removed, chatRows_.end());
 		rows.insert(rows.end(), std::make_move_iterator(additions.begin()), std::make_move_iterator(additions.end()));
 		SetRows(chats_, chatRows_, std::move(rows));
-		if (chatRows_.empty()) followChats_ = true;
-		FollowChats();
 	}
 	UpdateControls();
 }
@@ -370,8 +368,9 @@ void TVTCommentPanel::SetRows(HWND list, Rows &rows, Rows replacement)
 		return;
 	}
 	if (list == chats_) updatingChats_ = true;
+	bool follow = list == chats_ && followChats_;
 	std::string selected = SelectedId(list, rows);
-	int top = list ? ListView_GetTopIndex(list) : -1;
+	int top = list && !follow ? ListView_GetTopIndex(list) : -1;
 	std::string topId = top >= 0 && static_cast<size_t>(top) < rows.size() ? rows[top].Id : std::string();
 	RECT oldTop{};
 	if (list && top >= 0) ListView_GetItemRect(list, top, &oldTop, LVIR_BOUNDS);
@@ -379,6 +378,7 @@ void TVTCommentPanel::SetRows(HWND list, Rows &rows, Rows replacement)
 	bool redraw = list && (GetWindowLongPtr(list, GWL_STYLE) & WS_VISIBLE) != 0;
 	if (redraw) SendMessage(list, WM_SETREDRAW, FALSE, 0);
 	rows = std::move(replacement);
+	if (list == chats_ && rows.empty()) followChats_ = true;
 	if (!list) { updatingChats_ = false; return; }
 	ListView_SetItemCountEx(list, static_cast<int>(rows.size()), LVSICF_NOSCROLL);
 	ListView_SetItemState(list, -1, 0, LVIS_SELECTED | LVIS_FOCUSED);
@@ -392,6 +392,8 @@ void TVTCommentPanel::SetRows(HWND list, Rows &rows, Rows replacement)
 				ListView_Scroll(list, 0, newTop.top - oldTop.top);
 		}
 	}
+	// 再描画再開前の自動追従による中間描画の抑制
+	if (follow && !rows.empty()) ListView_EnsureVisible(list, static_cast<int>(rows.size()) - 1, FALSE);
 	if (redraw) SendMessage(list, WM_SETREDRAW, TRUE, 0);
 	InvalidateRect(list, nullptr, FALSE);
 	if (list == chats_) updatingChats_ = false;

@@ -42,7 +42,6 @@ enum {
 
 CViewer::CViewer()
 	: hDummy_(nullptr)
-	, forwardTick_(0)
 	, bQuitSyncThread_(false)
 	, bPendingTimerForward_(false)
 	, bHalfSkip_(false)
@@ -190,7 +189,7 @@ bool CViewer::TogglePlugin(bool bEnabled)
 				m_pApp->SetWindowMessageCallback(WindowMsgCallback, this);
 				// ストリームコールバック関数を登録(指定ファイル再生機能のために常に登録)
 				ToggleStreamCallback(true);
-				// DWMの更新タイミングでTIMER_FORWARDを呼ぶスレッドを開始(Vista以降)
+				// DWM同期による描画要求とUI処理通知の開始(Vista以降)
 				if (s_.timerInterval < 0) {
 					OSVERSIONINFOEX vi;
 					vi.dwOSVersionInfoSize = sizeof(vi);
@@ -233,14 +232,14 @@ void CViewer::SyncThread()
 			Sleep(500);
 		}
 		if (count >= 10000) {
-			// 捌き切れない量のメッセージを送らない
-			if (bPendingTimerForward_ && --timeout >= 0) {
-				continue;
-			}
 			count -= 10000;
-			timeout = 30;
-			bPendingTimerForward_ = true;
-			SendNotifyMessage(hDummy_, WM_TIMER, TIMER_FORWARD, 0);
+			commentWindow_.UpdateAsync();
+			// 捌き切れない量のメッセージを送らない
+			if (!bPendingTimerForward_ || --timeout < 0) {
+				timeout = 30;
+				bPendingTimerForward_ = true;
+				SendNotifyMessage(hDummy_, WM_TIMER, TIMER_FORWARD, 0);
+			}
 		}
 		count += bHalfSkip_ ? -s_.timerInterval / 2 : -s_.timerInterval;
 	}
@@ -524,7 +523,6 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			commentWindow_.Create(hwndContainer);
 			bHalfSkip_ = GetWindowHeight(hwndContainer) >= s_.halfSkipThreshold;
 		}
-		forwardTick_ = timeGetTime();
 		forwardOffset_ = 0;
 		forwardOffsetDelta_ = 0;
 		SendMessage(hwnd, WM_RESET_STREAM, 0, 0);
@@ -542,12 +540,11 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		return TRUE;
 	}
 	case WM_DESTROY:
-		commentWindow_.Destroy();
-
 		if (syncThread_.joinable()) {
 			bQuitSyncThread_ = true;
 			syncThread_.join();
 		}
+		commentWindow_.Destroy();
 		ToggleStreamCallback(false);
 		m_pApp->SetWindowMessageCallback(nullptr);
 		m_pApp->SetPluginCommandState(static_cast<int>(TVTComment::Command::ShowWindow), TVTest::PLUGIN_COMMAND_STATE_DISABLED);
@@ -625,9 +622,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					commentWindow_.AddChat(text, RGB(0x00,0xFF,0xFF), CCommentWindow::CHAT_POS_UE);
 				}
 				// コメントの表示を進める
-				DWORD tick = timeGetTime();
-				commentWindow_.Forward(min(static_cast<int>(tick - forwardTick_), 5000));
-				forwardTick_ = tick;
+				commentWindow_.Forward();
 				// 過去ログがあれば処理する
 				LONGLONG llft = GetCurrentTot();
 				if (llft >= 0) {
