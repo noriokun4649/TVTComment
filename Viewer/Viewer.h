@@ -33,6 +33,7 @@ private:
 		bool bCommentFontAntiAlias;
 		int commentDuration;
 		int commentDrawLineCount;
+		bool bCommentVideoOnly;
 		bool bUseOsdCompositor;
 		bool bUseTexture;
 		bool bUseDrawingThread;
