@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -26,9 +26,9 @@ namespace TVTComment.Model
             string jkIdStr = $"jk{jkId}";
             try
             {
-                return (int)doc.Element("channels").XPathSelectElements("channel|bs_channel").First(item => jkIdStr == item.Element("video").Value).Element("thread").Element("force");
+                return (int?)doc.Element("channels").XPathSelectElements("channel|bs_channel").First(item => jkIdStr == (string)item.Element("video")).Element("thread")?.Element("force");
             }
-            catch (Exception e) when (e is ArgumentNullException || e is InvalidOperationException)
+            catch (Exception e) when (e is ArgumentNullException || e is InvalidOperationException || e is FormatException || e is OverflowException)
             {
                 //（ふつうないが）JKIDが見つからなかった場合
                 return null;

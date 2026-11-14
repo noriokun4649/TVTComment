@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 using TVTComment.Model.ChatService;
 
@@ -15,7 +15,7 @@ namespace TVTComment.Model
 
         private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private readonly NiconicoChatServiceSettings chatServiceSettings;
-        private static readonly HttpClient httpClient = new HttpClient();
+        private readonly HttpClient httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         public NiconicoChatTrendService(NiconicoUtils.JkIdResolver jkIdResolver, NiconicoChatServiceSettings chatServiceSettings)
         {
@@ -29,19 +29,23 @@ namespace TVTComment.Model
             try
             {
                 var apiUri = chatServiceSettings.EnableThirdForce ? chatServiceSettings.ThirdForceApiUri : @"https://force.norikun.jp/api/v2_app/getchannels";
-                Stream stream = await httpClient.GetStreamAsync(apiUri);
+                // HTTP本文全体への取得期限の適用
+                byte[] body = await httpClient.GetByteArrayAsync(apiUri).ConfigureAwait(false);
+                using Stream stream = new MemoryStream(body);
                 doc = XDocument.Load(stream);
+                if (doc.Root?.Name != "channels")
+                    throw new XmlException("channels要素がありません");
             }
-            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
+            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException || e is XmlException)
             {
-                throw new ChatTrendServiceException("勢い値データのタウンロードに失敗しました", e);
+                throw new ChatTrendServiceException("勢い値データの取得に失敗しました", e);
             }
             return new NiconicoForceValueData(doc, jkIdResolver);
         }
 
         public void Dispose()
         {
-            httpClient.CancelPendingRequests();
+            httpClient.Dispose();
         }
     }
 }

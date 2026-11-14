@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -21,6 +22,8 @@ namespace TVTComment.Model
 
         public SynchronizationContext ForceValueUpdatedSynchronizationContext { get; }
         private readonly ConcurrentDictionary<IChatTrendService, Timer> timers = new ConcurrentDictionary<IChatTrendService, Timer>();
+        private readonly HashSet<IChatTrendService> updatingServices = new HashSet<IChatTrendService>();
+        private bool disposed;
         private readonly ObservableCollection<IChatTrendService> registeredServices = new ObservableCollection<IChatTrendService>();
         private readonly ObservableCollection<Tuple<IChatTrendService, IForceValueData>> forceValues = new ObservableCollection<Tuple<IChatTrendService, IForceValueData>>();
 
@@ -48,15 +51,25 @@ namespace TVTComment.Model
 
         public async void AddService(IChatTrendServiceEntry serviceEntry)
         {
+            if (disposed)
+                return;
             IChatTrendService service = await serviceEntry.GetNewService();
+            if (disposed)
+            {
+                service.Dispose();
+                return;
+            }
+            if (timers.ContainsKey(service))
+                return;
             timers.TryAdd(service, new Timer(TimerCallback, service, 1000, (int)service.UpdateInterval.TotalMilliseconds));
             registeredServices.Add(service);
         }
 
         public void RemoveService(IChatTrendService service)
         {
+            if (!timers.TryRemove(service, out Timer timer))
+                return;
             registeredServices.Remove(service);
-            timers.TryRemove(service, out Timer timer);
             DisposeService(service, timer);
         }
 
@@ -65,6 +78,9 @@ namespace TVTComment.Model
             ForceValueUpdatedSynchronizationContext.Post(async (chatTrendService) =>
             {
                 IChatTrendService service = (IChatTrendService)chatTrendService;
+                // 指定同期コンテキスト上での重複取得の防止
+                if (disposed || !timers.TryGetValue(service, out Timer timer) || !updatingServices.Add(service))
+                    return;
                 IForceValueData forceValueData;
 
                 try
@@ -73,10 +89,16 @@ namespace TVTComment.Model
                 }
                 catch (ChatTrendServiceException)
                 {
-                    RemoveService(service);
-                    //TODO: サービスが消えたことを伝える
+                    if (timers.TryGetValue(service, out Timer current) && current == timer)
+                        RemoveService(service);
                     return;
                 }
+                finally
+                {
+                    updatingServices.Remove(service);
+                }
+                if (disposed || !timers.TryGetValue(service, out Timer active) || active != timer)
+                    return;
 
                 var item = forceValues.FirstOrDefault(x => x.Item1 == chatTrendService);
                 if (item != null)
@@ -90,16 +112,17 @@ namespace TVTComment.Model
 
         private void DisposeService(IChatTrendService chatTrendService, Timer timer)
         {
-            ManualResetEvent waitHandle = new ManualResetEvent(false);
-            timer?.Dispose(waitHandle);//Timer破棄
-            waitHandle.WaitOne();
+            timer.Dispose();//Timer破棄
             chatTrendService.Dispose();//ChatTrendService破棄
         }
 
         public void Dispose()
         {
+            if (disposed)
+                return;
+            disposed = true;
             foreach (var pair in timers)
-                DisposeService(pair.Key, pair.Value);
+                RemoveService(pair.Key);
         }
     }
 }

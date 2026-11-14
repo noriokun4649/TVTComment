@@ -58,8 +58,9 @@ namespace TVTComment.Model.NiconicoUtils
             var errors = false;
             var message = "";
 
-            var httpClient = new HttpClient();
-            var stream = await httpClient.GetStreamAsync(uri);
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            byte[] body = await httpClient.GetByteArrayAsync(uri).ConfigureAwait(false);
+            using var stream = new MemoryStream(body);
             var doc = XDocument.Load(stream);
             var xrs = new XmlReaderSettings();
             xrs.ValidationType = ValidationType.Schema;
