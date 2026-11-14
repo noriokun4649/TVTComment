@@ -1,24 +1,80 @@
 name: TVTComment build and release
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       manual:
-        description: 'Please type version. Ex:"v*"'
+        description: 'Release version (e.g. 4.0.2 or v4.0.2)'
+        type: string
         required: true
         default: ""
 
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  prepare:
+    name: Update release metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+      commit: ${{ steps.commit.outputs.commit }}
+    steps:
+      - name: Check release branch
+        run: |
+          if [ "$GITHUB_REF_TYPE" != branch ]; then
+            echo "Run this workflow on a branch."
+            exit 1
+          fi
+
+      - name: Checkout release branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Update version and copyright year
+        id: metadata
+        shell: pwsh
+        env:
+          RELEASE_INPUT: ${{ inputs.manual }}
+        run: ./.github/scripts/Update-ReleaseMetadata.ps1 -Version $env:RELEASE_INPUT
+
+      - name: Commit release metadata
+        id: commit
+        env:
+          RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo "Tag $RELEASE_TAG already exists."
+            exit 1
+          fi
+          git add -- TVTComment/TVTComment.csproj TVTComment/Views/ShellContents/BasicSettingControl.xaml Viewer/Viewer.cpp LICENSE
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update release metadata for v$RELEASE_VERSION"
+            git push origin "HEAD:$GITHUB_REF"
+          fi
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   exe-build:
     name: TVTComment.exe build
+    needs: prepare
     runs-on: windows-latest
     steps:
       - name: checkout
         uses: actions/checkout@v7
         with:
+          ref: ${{ needs.prepare.outputs.commit }}
           submodules: recursive
           fetch-depth: 0
 
@@ -69,6 +125,7 @@ jobs:
 
   tvtp-build:
     name: tvtcomment.tvtp build
+    needs: prepare
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -81,6 +138,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v7
         with:
+          ref: ${{ needs.prepare.outputs.commit }}
           submodules: recursive
           fetch-depth: 0
 
@@ -105,23 +163,27 @@ jobs:
 
   release:
     needs:
+      - prepare
       - exe-build
       - tvtp-build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
     steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          fetch-depth: 0
+
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
           path: Asset/
-
-      - name: Get version from tag
-        id: ver
-        if: github.event.inputs.manual == ''
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/v}" >> $GITHUB_ENV
-
-      - name: Get version from input
-        if: steps.ver.conclusion == 'skipped' && github.event.inputs.manual != ''
-        run: echo "RELEASE_VERSION=${{github.event.inputs.manual}}" >> $GITHUB_ENV
 
       - name: Get CHANGELOG
         run: |
@@ -138,12 +200,22 @@ jobs:
       - name: Repack assets
         run: |
           cd Asset
-          7z a -r ../TvtComment_v${{ env.RELEASE_VERSION }}.zip *
+          7z a -r "../TvtComment_v${RELEASE_VERSION}.zip" *
+
+      - name: Tag release commit
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$RELEASE_COMMIT"
+          else
+            git tag "$RELEASE_TAG" "$RELEASE_COMMIT"
+            git push origin "refs/tags/$RELEASE_TAG"
+          fi
 
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ env.RELEASE_COMMIT }}
           name: Release v${{ env.RELEASE_VERSION }}
           body: ${{ env.CHANGELOG }}
           draft: false
