@@ -413,7 +413,7 @@ LRESULT CALLBACK TVTCommentPanelTheme::ControlSubclass(HWND hwnd, UINT message, 
 	}
 	if (hover && message == WM_MOUSELEAVE) { RemoveProp(hwnd, HOT_PROPERTY); InvalidateRect(hwnd, nullptr, FALSE); }
 	// ドラッグ中以外は標準のホバー描画を抑制
-	if ((hover || IsClass(hwnd, WC_TABCONTROL)) && GetCapture() != hwnd && (message == WM_MOUSEMOVE || message == WM_MOUSELEAVE)) return 0;
+	if ((hover || listView || IsClass(hwnd, WC_TABCONTROL)) && GetCapture() != hwnd && (message == WM_MOUSEMOVE || message == WM_MOUSELEAVE)) return 0;
 	int oldHorizontalPosition = listView ? GetScrollPos(hwnd, SB_HORZ) : 0;
 	result = DefSubclassProc(hwnd, message, wParam, lParam);
 	if (message == HDM_LAYOUT && result && IsClass(hwnd, WC_HEADER)) {
