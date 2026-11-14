@@ -33,6 +33,7 @@ std::streamsize basic_win32filebuf<charT, traits>::xsputn(const typename basic_w
 			ret += charsFree;
 			if (this->overflow(*(s + ret)) == traits::eof())
 				return ret;
+			++ret;
 		}
 		else
 		{
@@ -80,7 +81,7 @@ typename basic_win32filebuf<charT, traits>::int_type basic_win32filebuf<charT, t
 		return traits::eof();
 
 	*this->pptr() = traits::to_char_type(c);
-	//this->pbump(1);
+	this->pbump(1);
 	return c;
 }
 
