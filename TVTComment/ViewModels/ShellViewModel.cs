@@ -117,7 +117,20 @@ namespace TVTComment.ViewModels
             WindowPresentation = new WindowStateViewModel(() => BasicSettingControlViewModel?.MinimizeOnTVTestPanelOpen.Value == true);
 
             Window mainWindow = Application.Current.MainWindow;
-            mainWindow.MouseLeftButtonDown += (_, __) => { mainWindow.DragMove(); };
+            mainWindow.MouseLeftButtonDown += (_, __) =>
+            {
+                // ボタン解放済みの押下イベントの除外
+                if (Mouse.LeftButton != MouseButtonState.Pressed)
+                    return;
+                try
+                {
+                    mainWindow.DragMove();
+                }
+                catch (InvalidOperationException) when (Mouse.LeftButton != MouseButtonState.Pressed)
+                {
+                    // 押下確認後のボタン解放による例外の抑止
+                }
+            };
 
             model.ApplicationClose += CloseApplication;
         }
