@@ -120,6 +120,10 @@ namespace TVTComment.ViewModels
                     {
                         dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "HTTPリクエストエラーが発生したため適用できません\n\n" + e.Message });
                     }
+                    catch (OperationCanceledException e)
+                    {
+                        dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "勢いAPIの応答がタイムアウトしたため適用できません\n\n" + e.Message });
+                    }
                     catch (XmlException e)
                     {
                         dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = "XMLデータとして扱えない情報のため適用できません\n\n" + e.Message });
