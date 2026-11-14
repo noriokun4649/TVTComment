@@ -32,8 +32,8 @@ TVTest ニコニコ & 5ch コメント表示プラグイン
 [GitHub](https://github.com/noriokun4649/TVTComment)
 
 ## 開発環境
-- TVTest 0.10.0 [4023008](https://github.com/DBCTRADO/TVTest/commit/402300897d009411a8738eb8278240b1b48a0681) x64 (MSVC:19.42.34438.0)
-- LiblSDB [6fa3b9d](https://github.com/DBCTRADO/LibISDB/commit/6fa3b9d616d4fa739eb343908d4446504c8718f6) x64 (MSVC:19.42.34438.0)
+- TVTest 0.10.0-dev [dce8b3e5](https://github.com/DBCTRADO/TVTest/commit/dce8b3e5e19cb6b1b12c60ff839b943a0685d715) Release x64 (MSVC:19.44.35228.0)
+- LibISDB 0.2.0 [7c4fdaa](https://github.com/DBCTRADO/LibISDB/commit/7c4fdaabb808a03d5f326d3a99d03906278e55d7) x64 (MSVC:19.44.35228.0)
 - .NET 10 SDK
 - Microsoft Visual Studio Community 2026（18.0以降）
 
