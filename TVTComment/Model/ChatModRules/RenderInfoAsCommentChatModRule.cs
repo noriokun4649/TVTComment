@@ -23,7 +23,9 @@ namespace TVTComment.Model.ChatModRules
                 return false;
             }
 
-            var type = int.Parse(match.Groups["type"].Value);
+            if (!int.TryParse(match.Groups["type"].Value, out var type))
+                return false;
+
             var text = match.Groups["text"].Value;
 
             switch (type)
