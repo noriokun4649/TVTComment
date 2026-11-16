@@ -633,8 +633,7 @@ LRESULT CViewer::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 #pragma region TVTComment
 					tvtComment->OnForward(tm);
 #pragma endregion
-					// date属性値は秒精度しかないのでコメント表示が団子にならないよう適当にごまかす
-					commentWindow_.ScatterLatestChats(1000);
+					// コメント追加時のIPC受信側への表示タイミング分散処理の集約
 				}
 				commentWindow_.Update();
 				bPendingTimerForward_ = false;

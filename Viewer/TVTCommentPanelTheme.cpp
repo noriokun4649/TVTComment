@@ -295,17 +295,21 @@ void TVTCommentPanelTheme::DrawComboItem(const DRAWITEMSTRUCT &item)
 void TVTCommentPanelTheme::DrawRow(HWND list, HDC dc, int row, bool selected)
 {
 	RECT bounds;
-	ListView_GetItemRect(list, row, &bounds, LVIR_BOUNDS);
+	if (!ListView_GetItemRect(list, row, &bounds, LVIR_BOUNDS) || !RectVisible(dc, &bounds)) return;
 	Fill(dc, bounds, selected ? selection_ : input_);
-	for (int column = 0; column < Header_GetItemCount(ListView_GetHeader(list)); ++column) {
+	int columns = Header_GetItemCount(ListView_GetHeader(list));
+	COLORREF color = !IsWindowEnabled(list) ? disabled_ : selected ? selectionText_ : inputText_;
+	for (int column = 0; column < columns; ++column) {
 		RECT cell;
-		ListView_GetSubItemRect(list, row, column, LVIR_BOUNDS, &cell);
+		if (!ListView_GetSubItemRect(list, row, column, LVIR_BOUNDS, &cell)) continue;
 		if (column == 0) cell.right = cell.left + ListView_GetColumnWidth(list, 0);
+		// 画面外の列に対する文字取得・レイアウトの省略
+		if (!RectVisible(dc, &cell)) continue;
 		wchar_t text[2048]{};
 		ListView_GetItemText(list, row, column, text, _countof(text));
 		cell.left += Px(5);
 		cell.right -= Px(3);
-		Label(dc, cell, text, !IsWindowEnabled(list) ? disabled_ : selected ? selectionText_ : inputText_);
+		Label(dc, cell, text, color);
 	}
 	if (GetFocus() == list && (ListView_GetItemState(list, row, LVIS_FOCUSED) & LVIS_FOCUSED)) DrawFocusRect(dc, &bounds);
 }
