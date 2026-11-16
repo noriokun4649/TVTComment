@@ -39,7 +39,7 @@ namespace Nichan
             this.client = client ?? sharedClient;
         }
 
-        private static readonly HttpClient sharedClient = BoardClient.CreateHttpClient();
+        private static readonly HttpClient sharedClient = BoardClient.CreateHttpClient(decompress: true);
 
         public async Task Prepare(CancellationToken token)
         {
@@ -125,7 +125,7 @@ namespace Nichan
             return (sjis ? BoardClient.DatEncoding : Encoding.UTF8).GetString(bytes);
         }
 
-        public async Task<IEnumerable<Thread>> GetThreadsCreatedAt(DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken token)
+        public async Task<IEnumerable<Thread>> GetThreadsCreatedAt(DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken token, Action<Thread> onFound = null)
         {
             if (startTime > endTime)
                 throw new ArgumentException("検索時刻の範囲が不正です。");
@@ -143,7 +143,11 @@ namespace Nichan
                     continue;
                 if (visited.Count > 128)
                     throw new InvalidDataException("検索対象の過去ログ一覧が多すぎます。検索範囲を短くしてください。");
-                found.AddRange(page.Threads.Where(t => long.TryParse(t.Name, out var id) && start <= id && id <= end));
+                foreach (var thread in page.Threads.Where(t => long.TryParse(t.Name, out var id) && start <= id && id <= end))
+                {
+                    found.Add(thread);
+                    onFound?.Invoke(thread);
+                }
                 foreach (var range in page.Ranges.Where(r => r.Start <= end && start <= r.End))
                 {
                     if (visited.Contains(range.Uri.AbsoluteUri))
@@ -165,7 +169,7 @@ namespace Nichan
                         {
                             var other = await GetPageAsync(server, token).ConfigureAwait(false);
                             if (other.LastPage > 1 && other.Ranges.Count == 0)
-                                found.AddRange(await GetPagedThreadsAsync(other, start, end, token).ConfigureAwait(false));
+                                found.AddRange(await GetPagedThreadsAsync(other, start, end, token, onFound).ConfigureAwait(false));
                             else
                                 pending.Enqueue(other);
                         }
@@ -177,31 +181,74 @@ namespace Nichan
             return found.DistinctBy(t => ThreadAddress.Parse(t.Uri.AbsoluteUri).Identity).ToArray();
         }
 
-        // 集約一覧はスレッド番号昇順のため、全ページ巡回せず境界を二分探索
-        private async Task<IEnumerable<Thread>> GetPagedThreadsAsync(Page first, long start, long end, CancellationToken token)
+        // 集約一覧のスレッド番号による補間探索と、偏りの大きい範囲での二分探索
+        private async Task<IEnumerable<Thread>> GetPagedThreadsAsync(Page first, long start, long end, CancellationToken token, Action<Thread> onFound)
         {
             int low = 1, high = first.LastPage;
             Uri PageUri(int index) => new UriBuilder(first.Uri) { Query = "page=" + index }.Uri;
+            Task<Page> GetPage(int index) => index == 1 ? Task.FromResult(first) : GetPageAsync(PageUri(index), token);
+            long lowerId = first.Threads.Select(t => long.Parse(t.Name)).DefaultIfEmpty(0).Max();
+            long upperId = lowerId;
+            if (lowerId >= start)
+                high = 1;
+            else
+            {
+                upperId = 0;
+                try
+                {
+                    var last = await GetPage(high).ConfigureAwait(false);
+                    upperId = last.Threads.Select(t => long.Parse(t.Name)).DefaultIfEmpty(0).Max();
+                    if (last.Threads.Count > 0 && upperId < start)
+                        return Array.Empty<Thread>();
+                }
+                catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+                { }
+                low = 2;
+            }
+            int slowSteps = 0;
             while (low < high)
             {
-                int middle = low + (high - low) / 2;
-                var page = await GetPageAsync(PageUri(middle), token).ConfigureAwait(false);
+                token.ThrowIfCancellationRequested();
+                int width = high - low;
+                int middle = slowSteps < 2 && lowerId < upperId
+                    ? Math.Clamp(low - 1 + (int)Math.Ceiling((high - low + 1) * ((double)(start - lowerId) / (upperId - lowerId))), low, high - 1)
+                    : low + width / 2;
+                var page = await GetPage(middle).ConfigureAwait(false);
                 if (page.Threads.Count == 0)
                     return Array.Empty<Thread>();
-                if (page.Threads.Max(t => long.Parse(t.Name)) < start)
+                long min = page.Threads.Min(t => long.Parse(t.Name)), max = page.Threads.Max(t => long.Parse(t.Name));
+                if (max < start)
+                {
                     low = middle + 1;
+                    lowerId = max;
+                }
                 else
+                {
                     high = middle;
+                    upperId = max;
+                    if (min < start)
+                    {
+                        low = middle;
+                        break;
+                    }
+                }
+                slowSteps = high - low <= width / 2 ? 0 : slowSteps + 1;
             }
             var result = new List<Thread>();
             for (int index = low; index <= first.LastPage; index++)
             {
+                token.ThrowIfCancellationRequested();
+                var page = await GetPage(index).ConfigureAwait(false);
+                // 一覧内の新しい外れ値による、次ページの取得漏れの防止
+                if (page.Threads.Count == 0 || page.Threads.Min(t => long.Parse(t.Name)) > end)
+                    break;
                 if (index - low >= 64)
                     throw new InvalidDataException("過去ログの検索範囲が広すぎます。");
-                var page = await GetPageAsync(PageUri(index), token).ConfigureAwait(false);
-                result.AddRange(page.Threads.Where(t => start <= long.Parse(t.Name) && long.Parse(t.Name) <= end));
-                if (page.Threads.Count == 0 || page.Threads.Max(t => long.Parse(t.Name)) >= end)
-                    break;
+                foreach (var thread in page.Threads.Where(t => start <= long.Parse(t.Name) && long.Parse(t.Name) <= end))
+                {
+                    result.Add(thread);
+                    onFound?.Invoke(thread);
+                }
             }
             return result;
         }

@@ -113,6 +113,7 @@ namespace TVTComment.Model.ChatCollectService
                 {
                     await queryLock.WaitAsync(token).ConfigureAwait(false);
                     entered = true;
+                    repository.ResetError();
                     var urls = await selector.Get(channel, new DateTimeOffset(time, TimeSpan.FromHours(9)), token).ToListAsync(token).ConfigureAwait(false);
                     var result = new List<Nichan.Thread>();
                     foreach (var url in urls.DistinctBy(x => Nichan.ThreadAddress.Parse(x).Identity))
