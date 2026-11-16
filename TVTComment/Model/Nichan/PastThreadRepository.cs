@@ -12,13 +12,34 @@ namespace Nichan
     // 時刻範囲判定と表示で同じ本文を共有し、有効日時のないログもキャッシュ
     sealed class PastThreadRepository : IDisposable
     {
+        internal const int MaxConcurrentLoads = 6;
+        private const string UnavailableError = "取得できない過去ログがあります。";
         private readonly HttpClient client;
-        private readonly SemaphoreSlim gate = new SemaphoreSlim(1);
-        private readonly Dictionary<string, (Thread Thread, DateTime Expires)> cache = new Dictionary<string, (Thread, DateTime)>();
-        public string LastError { get; private set; }
+        private readonly SemaphoreSlim gate = new SemaphoreSlim(MaxConcurrentLoads);
+        private readonly Dictionary<string, (Thread Thread, DateTime Expires, string Error)> cache = new Dictionary<string, (Thread, DateTime, string)>();
+        private string lastError;
+        public string LastError
+        {
+            get
+            {
+                lock (cache)
+                    return lastError;
+            }
+        }
+        public void ResetError()
+        {
+            lock (cache)
+                lastError = null;
+        }
+        private void RecordError(string error)
+        {
+            lock (cache)
+                if (error != null && (lastError == null || error == UnavailableError))
+                    lastError = error;
+        }
         public PastThreadRepository(string userAgent, HttpMessageHandler handler = null)
         {
-            client = BoardClient.CreateHttpClient(handler);
+            client = BoardClient.CreateHttpClient(handler, decompress: true);
             if (!string.IsNullOrWhiteSpace(userAgent))
             {
                 client.DefaultRequestHeaders.UserAgent.Clear();
@@ -31,15 +52,28 @@ namespace Nichan
             await gate.WaitAsync(token).ConfigureAwait(false);
             try
             {
-                if (cache.TryGetValue(address.Identity, out var cached) && DateTime.UtcNow < cached.Expires)
-                    return cached.Thread;
+                lock (cache)
+                {
+                    if (cache.TryGetValue(address.Identity, out var cached) && DateTime.UtcNow < cached.Expires)
+                    {
+                        RecordError(cached.Error);
+                        return cached.Thread;
+                    }
+                }
                 Thread result = null;
+                string error = null;
                 bool archived = false;
                 var attempts = new List<(Uri Uri, bool Html, bool Archive)>();
+                var htmlUri = new Uri(address.ThreadUri.AbsoluteUri.Replace("read.cgi/", "read.cgi/c/"));
+                bool htmlFirst = address.BoardUri.Host.Equals("kako.5ch.io", StringComparison.OrdinalIgnoreCase);
+                // 集約サーバーでのHTML優先による、存在しないDATへのアクセスの削減
+                if (htmlFirst)
+                    attempts.Add((htmlUri, true, true));
                 if (ThreadAddress.Is5chHost(address.BoardUri.Host))
                     attempts.Add((address.ArchiveDatUri, false, true));
                 attempts.Add((address.DatUri, false, false));
-                attempts.Add((new Uri(address.ThreadUri.AbsoluteUri.Replace("read.cgi/", "read.cgi/c/")), true, true));
+                if (!htmlFirst)
+                    attempts.Add((htmlUri, true, true));
                 if (ThreadAddress.Is5chHost(address.BoardUri.Host))
                 {
                     string server = address.BoardUri.Host.Split('.')[0];
@@ -78,20 +112,25 @@ namespace Nichan
                         result.Uri = address.ThreadUri;
                         result.ResCount = result.Res.Count;
                         archived = attempt.Archive;
-                        LastError = null;
+                        error = null;
                         break;
                     }
                     catch (Exception e) when (e is HttpRequestException || e is NichanException || e is IOException || e is System.Xml.XmlException)
                     {
-                        LastError = "一部の過去ログを取得できませんでした。";
+                        error = "一部の過去ログを取得できませんでした。";
                     }
                 }
                 token.ThrowIfCancellationRequested();
                 if (result == null)
-                    LastError = "取得できない過去ログがあります。";
-                if (cache.Count >= 128)
-                    cache.Remove(cache.Keys.First());
-                cache[address.Identity] = (result, DateTime.UtcNow + (result == null ? TimeSpan.FromMinutes(5) : archived ? TimeSpan.FromDays(1) : TimeSpan.FromSeconds(30)));
+                    error = UnavailableError;
+                lock (cache)
+                {
+                    if (cache.Count >= 128)
+                        cache.Remove(cache.Keys.First());
+                    cache[address.Identity] = (result, DateTime.UtcNow + (result == null ? TimeSpan.FromMinutes(5) : archived ? TimeSpan.FromDays(1) : TimeSpan.FromSeconds(30)), error);
+                    // 今回の検索対象のエラー集約と、並列取得の成功による上書きの防止
+                    RecordError(error);
+                }
                 return result;
             }
             finally

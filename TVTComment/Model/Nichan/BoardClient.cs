@@ -33,9 +33,12 @@ namespace Nichan
             this.client = client ?? CreateHttpClient();
         }
 
-        internal static HttpClient CreateHttpClient(HttpMessageHandler handler = null)
+        internal static HttpClient CreateHttpClient(HttpMessageHandler handler = null, bool decompress = false)
         {
-            var client = new HttpClient(handler ?? new HttpClientHandler { AutomaticDecompression = DecompressionMethods.None })
+            var client = new HttpClient(handler ?? new HttpClientHandler
+            {
+                AutomaticDecompression = decompress ? DecompressionMethods.GZip | DecompressionMethods.Deflate : DecompressionMethods.None
+            })
             {
                 Timeout = TimeSpan.FromSeconds(30)
             };
