@@ -1,0 +1,17 @@
+<UserControl x:Class="TVTComment.Views.SettingsWindowContents.NicoJCatchSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TVTComment.Views"
+             local:ViewModelLocator.AutoWireViewModel="True">
+    <GroupBox Header="NicojCatch過去ログ" VerticalAlignment="Top">
+        <StackPanel>
+            <TextBlock Text="jk1・jk2などの局別フォルダが入った親フォルダを指定してください。" TextWrapping="Wrap"/>
+            <TextBlock Text="例: D:\NicoJK\jk1\1790000000.txt → D:\NicoJK" Margin="0,5" TextWrapping="Wrap"/>
+            <DockPanel>
+                <Button Content="参照…" DockPanel.Dock="Right" Click="Browse_Click"/>
+                <TextBox x:Name="Folder" Text="{Binding Folder.Value,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+            </DockPanel>
+            <Button Content="適用" Command="{Binding Apply}" HorizontalAlignment="Right"/>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

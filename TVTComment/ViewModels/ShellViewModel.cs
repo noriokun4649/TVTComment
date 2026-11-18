@@ -199,7 +199,8 @@ namespace TVTComment.ViewModels
             ChatCollectServiceAddList = presets.ObservableConcat(model.ChatServices.SelectMany(x => x.ChatCollectServiceEntries)
                 .Select(x => new ShellContents.ChatCollectServiceAddListItemViewModel(x, null)));
             ChatCollectServices = model.ChatCollectServiceModule.RegisteredServices.MakeOneWayLinkedCollection(
-                x => new ShellContents.ChatCollectServiceViewModel(x, updateTimer.Select(_ => new System.Reactive.Unit())));
+                x => new ShellContents.ChatCollectServiceViewModel(x, x is Model.ChatCollectService.NicoJCatchChatCollectService local
+                    ? local.StatusChanges.Select(_ => System.Reactive.Unit.Default) : updateTimer.Select(_ => new System.Reactive.Unit())));
             Channels = model.ChannelInformationModule.ChannelList.MakeOneWayLinkedCollectionMany(x =>
                 x.Hidden ? null : new[] { new ShellContents.ChannelListItemViewModel(x, CurrentChannel, forceValueData) });
             disposables.Add(presets);
@@ -302,6 +303,8 @@ namespace TVTComment.ViewModels
         internal async Task AddChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item, bool useDefaultCreationOption = false)
         {
             if (item == null || disposed || !AddChatCollectServiceCommand.CanExecute(item)) return;
+            if (item.ServiceEntry is Model.ChatCollectServiceEntry.NicoJCatchChatCollectServiceEntry
+                && model.ChatCollectServiceModule.RegisteredServices.Any(x => x.ServiceEntry == item.ServiceEntry)) return;
             addingChatCollectService = true;
             AddChatCollectServiceCommand.NotifyCanExecuteChanged();
             try { await AddChatCollectServiceCore(item, useDefaultCreationOption); }
@@ -332,6 +335,7 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.NicoJCatchChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.NxJikkyoChatCollectServiceEntry _:
                         model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
                         break;

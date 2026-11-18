@@ -18,6 +18,7 @@ namespace TVTComment.Model.ChatService
         public bool Always184 { get; set; } = true;
         public bool EnableThirdForce { get; set; } = false;
         public string ThirdForceApiUri { get; set; } = "";
+        public string NicoJCatchLogFolder { get; set; } = "";
     }
 
     class NiconicoChatService : IChatService
@@ -89,6 +90,7 @@ namespace TVTComment.Model.ChatService
                 new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, liveIdResolver, loginSession),
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, loginSession),
                 new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver, loginSession),
+                new ChatCollectServiceEntry.NicoJCatchChatCollectServiceEntry(this, jkIdResolver, channelDatabase, settings),
                 new ChatCollectServiceEntry.NxJikkyoChatCollectServiceEntry(this, jkIdResolver)
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NiconicoChatTrendServiceEntry(jkIdResolver, settings) };
