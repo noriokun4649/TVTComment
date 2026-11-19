@@ -5,6 +5,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TVTComment.Views"
+        xmlns:settings="clr-namespace:TVTComment.Views.SettingsWindowContents"
         xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
         mc:Ignorable="d"
@@ -121,6 +122,9 @@
                     </TextBlock>
                 </GroupBox>
             </Grid>
+        </TabItem>
+        <TabItem Header="NicojCatch">
+            <settings:NicoJCatchSettingsControl/>
         </TabItem>
         <TabItem Header="Twitter実況">
             <Grid local:Grid.Shape="*:auto,auto,*">
