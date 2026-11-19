@@ -180,6 +180,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Viewer.h" />
+    <ClInclude Include="TvtPlayCommentGraph.h" />
     <ClInclude Include="TVTCommentPanel.h" />
     <ClInclude Include="TVTCommentPanelTheme.h" />
     <ClInclude Include="TVTCommentPanelSourceList.h" />
@@ -219,6 +220,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Viewer.cpp" />
+    <ClCompile Include="TvtPlayCommentGraph.cpp" />
     <ClCompile Include="TVTCommentPanel.cpp" />
     <ClCompile Include="TVTCommentPanelTheme.cpp" />
     <ClCompile Include="TVTCommentPanelSourceList.cpp" />

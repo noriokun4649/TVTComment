@@ -2,6 +2,7 @@
 
 #include "TVTComment/TVTComment.h"
 #include "TVTCommentPanel.h"
+#include "TvtPlayCommentGraph.h"
 #include <atomic>
 #include <thread>
 
@@ -92,6 +93,7 @@ private:
 
 #pragma region TVTComment
 	TVTCommentPanel panel_;
+	TvtPlayCommentGraph activityGraph_;
 	std::unique_ptr<TVTComment::TVTComment> tvtComment;
 #pragma endregion
 };

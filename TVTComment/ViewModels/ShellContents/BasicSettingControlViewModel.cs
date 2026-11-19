@@ -17,6 +17,7 @@ namespace TVTComment.ViewModels.ShellContents
 
         public string Version { get; }
         public ObservableValue<byte> ChatOpacity { get; private set; }
+        public ObservableValue<bool> CommentActivityGraphEnabled { get; private set; }
         public ObservableValue<double> WindowOpacity { get; } = new ObservableValue<double>(1.0);
         public ObservableValue<bool> WindowTopmost { get; } = new ObservableValue<bool>(false);
         public ObservableValue<bool> MinimizeOnTVTestPanelOpen { get; } = new ObservableValue<bool>(false);
@@ -58,6 +59,7 @@ namespace TVTComment.ViewModels.ShellContents
 
             //256段階でスライダーを動かすと大量にSetChatOpacityIPCMessageが発生してしまうため16段階にする
             ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
+            CommentActivityGraphEnabled = model.CommentActivityGraphEnabled;
             ClearChatsOnChannelChange = model.ChatModule.ClearChatsOnChannelChange;
             AddChannelLogOnChannelChange = model.ChatModule.AddChannelLogOnChannelChange;
             CommentLogSameUserHighlight = model.ChatModule.CommentLogSameUserHighlight;
