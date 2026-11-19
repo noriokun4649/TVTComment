@@ -25,6 +25,8 @@ namespace TVTComment.Model
         private ChannelDatabase channelDatabase;
 
         private IPCModule ipcModule;
+        private CommentActivityModule commentActivityModule;
+        public ObservableValue<bool> CommentActivityGraphEnabled => commentActivityModule.GraphEnabled;
         internal IPCModule IpcModule => ipcModule;
         public ChannelInformationModule ChannelInformationModule { get; private set; }
         public ChatCollectServiceModule ChatCollectServiceModule { get; private set; }
@@ -163,6 +165,8 @@ namespace TVTComment.Model
             ChatCollectServiceCreationPresetModule = new ChatCollectServiceCreationPresetModule(
                 Settings, ChatServices.SelectMany(x => x.ChatCollectServiceEntries)
             );
+            commentActivityModule = new CommentActivityModule(ipcModule, ChatCollectServiceModule,
+                new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(Path.Combine(baseDir, "niconicojikkyouids.txt"))));
 
             //コメント透過度設定処理
             ChatOpacity = new ObservableValue<byte>(Settings.ChatOpacity);
@@ -183,6 +187,7 @@ namespace TVTComment.Model
             ChatPostSplitterLeftSize = new ObservableValue<string>(Settings.ChatPostSplitterLeftSize);
 
             ipcModule.StartReceiving();
+            commentActivityModule.Start();
             State = TVTCommentState.Working;
         }
 
@@ -255,6 +260,7 @@ namespace TVTComment.Model
             Settings.ChatPostSplitterLeftSize = ChatPostSplitterLeftSize.Value;
 
             //各種SubModule破棄
+            commentActivityModule?.Dispose();
             CommandModule?.Dispose();
             ChatCollectServiceCreationPresetModule?.Dispose();
             DefaultChatCollectServiceModule?.Dispose();

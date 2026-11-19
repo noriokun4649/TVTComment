@@ -12,7 +12,7 @@
     
     <StackPanel Orientation="Vertical">
         <GroupBox Header="コメント設定">
-            <Grid local:Grid.Shape="*:auto,auto">
+            <Grid local:Grid.Shape="*:auto,auto,auto">
                 <DockPanel Grid.Row="0">
                     <Label DockPanel.Dock="Left">コメント透過度</Label>
                     <TextBlock Text="{Binding ElementName=ChatOpacitySlider,Path=Value}" DockPanel.Dock="Left"/>
@@ -49,6 +49,10 @@
                     </Button>
                     <FrameworkElement/>
                 </DockPanel>
+                <CheckBox Grid.Row="2" IsChecked="{Binding CommentActivityGraphEnabled.Value,Mode=TwoWay}"
+                          ToolTip="録画を開いて10秒間、その後はシークバーにマウスを重ねている間だけ表示">
+                    <TextBlock Text="TvtPlayの盛り上がりグラフを表示する" TextWrapping="Wrap"/>
+                </CheckBox>
             </Grid>
 
         </GroupBox>

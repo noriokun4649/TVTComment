@@ -156,6 +156,12 @@ bool CViewer::Initialize()
 	}, m_pPluginParam)) {
 		m_pApp->AddLog(L"TvtCommentパネルを登録できませんでした。");
 	}
+	if (!activityGraph_.Initialize(g_hinstDLL, m_pApp, [this](const TVTComment::IIPCMessage &message) {
+		return tvtComment && tvtComment->SendIPCMessage(message);
+	}, [this]() {
+		LONGLONG time = GetCurrentTot();
+		return time < 0 ? 0LL : FileTimeToUnixTime(time) * 1000LL;
+	}, iniFileName_)) m_pApp->AddLog(L"盛り上がりグラフを初期化できませんでした。");
 	return true;
 }
 
@@ -164,6 +170,7 @@ bool CViewer::Finalize()
 	// 終了処理
 	TogglePlugin(false);
 	panel_.Finalize();
+	activityGraph_.Finalize();
 	commentWindow_.Finalize();
 	return true;
 }
@@ -178,8 +185,9 @@ bool CViewer::TogglePlugin(bool bEnabled)
 			//tvtCommentオブジェクトは勢いウィンドウより生存期間が長い
 			// tstringをwstringに渡してるけどどうせUnicodeでしかビルドしないのでヨシ！
 			panel_.SetPluginEnabled(true);
+			activityGraph_.SetPluginEnabled(true);
 			tvtComment = std::make_unique<TVTComment::TVTComment>(m_pApp, &commentWindow_, s_.tvtCommentPath,
-				[this](const TVTComment::IIPCMessage &message) { panel_.OnMessage(message); });
+				[this](const TVTComment::IIPCMessage &message) { panel_.OnMessage(message); activityGraph_.OnMessage(message); });
 #pragma endregion
 
 			// ダミー窓作成
@@ -217,6 +225,7 @@ bool CViewer::TogglePlugin(bool bEnabled)
 #pragma region TVTComment
 		tvtComment = nullptr;
 		panel_.SetPluginEnabled(false);
+		activityGraph_.SetPluginEnabled(false);
 #pragma endregion
 		return true;
 	}
@@ -401,6 +410,7 @@ LRESULT CALLBACK CViewer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 	switch (Event) {
 	case TVTest::EVENT_COLORCHANGE:
 		pThis->panel_.OnColorChange();
+		pThis->activityGraph_.OnColorChange();
 		return TRUE;
 	case TVTest::EVENT_PANELITEM_NOTIFY:
 		return pThis->panel_.OnPanelEvent(reinterpret_cast<TVTest::PanelItemEventInfo *>(lParam1));
@@ -457,6 +467,7 @@ LRESULT CALLBACK CViewer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 	case TVTest::EVENT_COMMAND:
 		// コマンドが選択された
 		if (pThis->hDummy_) {
+			if (pThis->activityGraph_.OnCommand(static_cast<int>(lParam1))) break;
 			pThis->tvtComment->OnCommandInvoked(static_cast<TVTComment::Command>(lParam1));
 		}
 		break;
