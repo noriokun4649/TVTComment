@@ -132,7 +132,7 @@ namespace TVTComment.Model
             int idx = ~channelList.BinarySearch(new ChannelEntry(0, serviceId, null, null, 0), channelComparer);
 
             var ret = new List<ChannelEntry>();
-            for (; channelList[idx].ServiceId == serviceId; idx++)
+            for (; idx < channelList.Count && channelList[idx].ServiceId == serviceId; idx++)
             {
                 ret.Add(channelList[idx]);
             }
