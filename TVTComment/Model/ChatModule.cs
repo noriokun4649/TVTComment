@@ -105,7 +105,7 @@ namespace TVTComment.Model
                     continue;
                 }
 
-                if (ChatPreserveCount.Value > 0)
+                if (ChatPreserveCount.Value > 0 && (!chat.Ng || !NgCommentNotShow.Value))
                 {
                     while (chats.Count >= ChatPreserveCount.Value)
                         chats.RemoveAt(0);
