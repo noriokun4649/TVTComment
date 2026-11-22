@@ -6,7 +6,7 @@ namespace TVTComment.Model.ChatModRules
 {
     internal class RemoveUrlChatModRule : IChatModRule
     {
-        private static readonly Regex UrlPattern = new Regex(@"http(s)?://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?", RegexOptions.Compiled);
+        private static readonly Regex UrlPattern = new Regex(@"http(s)?://([\w-]+\.)+[\w-]+(/[\w./?%&=-]*)?", RegexOptions.Compiled);
 
         public string Description => "URL を削除";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }
