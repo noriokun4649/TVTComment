@@ -179,19 +179,19 @@ namespace TVTComment.Model
             }
             catch (EndOfStreamException)
             {
-                await Dispose(IPCModuleDisposeReason.ConnectionTerminated).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.ConnectionTerminated, fromReceiveLoop: true).ConfigureAwait(false);
             }
             catch (IOException e)
             {
-                await Dispose(IPCModuleDisposeReason.ReceiveFailure, e).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.ReceiveFailure, e, fromReceiveLoop: true).ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                await Dispose(IPCModuleDisposeReason.UnexpectedError, e).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.UnexpectedError, e, fromReceiveLoop: true).ConfigureAwait(false);
             }
         }
 
-        private async Task Dispose(IPCModuleDisposeReason reason, Exception e = null)
+        private async Task Dispose(IPCModuleDisposeReason reason, Exception e = null, bool fromReceiveLoop = false)
         {
             await disposeLock.WaitAsync().ConfigureAwait(false);
             try
@@ -213,7 +213,8 @@ namespace TVTComment.Model
             {
                 try
                 {
-                    await receiveTask.ConfigureAwait(false);
+                    if (!fromReceiveLoop)
+                        await receiveTask.ConfigureAwait(false);
                 }
                 catch (EndOfStreamException)
                 {
