@@ -307,7 +307,7 @@ namespace TVTComment.Model.NiconicoUtils
             var isAnonymous = arrayMail.Contains("184") ? "true" : "false"; //C#はTrue Falseの頭文字が大文字なので
             long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
             await WsSend("{\"type\":\"postComment\",\"data\":{" +
-                "\"text\":\"" + message + "\"," +
+                "\"text\":" + JsonSerializer.Serialize(message ?? "") + "," +
                 "\"vpos\":" + vpos + "," +
                 "\"isAnonymous\":" + isAnonymous + "," +
                 "\"color\":\"" + color + "\"," +
