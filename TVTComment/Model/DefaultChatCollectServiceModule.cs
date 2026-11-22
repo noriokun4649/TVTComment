@@ -59,7 +59,7 @@ namespace TVTComment.Model
             }, oldServiceEntry =>
             {
                 if (IsEnabled.Value && !lastIsRecord.GetValueOrDefault(true))
-                    foreach (var service in collectServiceModule.RegisteredServices.Where(x => x.ServiceEntry == oldServiceEntry))
+                    foreach (var service in collectServiceModule.RegisteredServices.Where(x => x.ServiceEntry == oldServiceEntry).ToArray())
                         collectServiceModule.RemoveService(service);
             }, () =>
             {
