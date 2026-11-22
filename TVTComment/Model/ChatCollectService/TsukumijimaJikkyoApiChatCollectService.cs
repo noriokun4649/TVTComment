@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatCollectService
 {
-    class TsukumijimaJikkyoApiChatCollectService : OnceASecondChatCollectService
+    class TsukumijimaJikkyoApiChatCollectService : IChatCollectService
     {
-        public override string Name => "非公式ニコニコ実況過去ログ";
+        public string Name => "非公式ニコニコ実況過去ログ";
 
-        public override string GetInformationText()
+        public string GetInformationText()
         {
             if (jkId != 0)
                 return $"現在の実況ID: {jkId}";
@@ -23,8 +23,8 @@ namespace TVTComment.Model.ChatCollectService
                 return $"現在の実況ID: [対応なし]";
         }
 
-        public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
-        public override bool CanPost => false;
+        public ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
+        public bool CanPost => false;
 
         private readonly string myUserId;
 
@@ -32,36 +32,31 @@ namespace TVTComment.Model.ChatCollectService
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
             NiconicoUtils.JkIdResolver jkIdResolver,
             NiconicoUtils.NiconicoLoginSession session
-        ) : base(TimeSpan.FromSeconds(10))
+        )
         {
             ServiceEntry = serviceEntry;
             myUserId = session?.UserId ?? "";
             this.jkIdResolver = jkIdResolver;
         }
 
-        protected override IEnumerable<Chat> GetOnceASecond(ChannelInfo channel, DateTime time)
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
         {
+            if (disposed) return Array.Empty<Chat>();
             int jkId = jkIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
+            bool seek = cursor.Observe(time, jkId != this.jkId);
 
             if (
                 jkId != this.jkId ||
-                time >= lastGetStartTime + TimeSpan.FromMinutes(14) ||
+                time >= lastGetStartTime + TimeSpan.FromMinutes(14) &&
+                    (chatCollectTask == null || seek && time >= lastGetStartTime.AddMinutes(15)) ||
                 time < lastGetStartTime
             )
             {
                 // 前回の取得から14分以上経っている（未来へのシークを含む）か、
                 // 前回の取得時刻を超えて過去にシークしたか、実況IDが違うなら再収集
-                chatCollectTaskCancellation?.Cancel();
-                try
-                {
-                    chatCollectTask?.Wait();
-                }
-                catch (AggregateException e)
-                {
-                    chatCollectTask = null;
-                    ChatCollectTaskExceptionHandler(e);
-                }
-                chatCollectTask = null;
+                CancelPending();
+                if (jkId != this.jkId || time < lastGetStartTime || seek && time >= loadedUntil)
+                    loadedUntil = DateTime.MinValue;
 
                 if (jkId != this.jkId)
                 {
@@ -74,9 +69,10 @@ namespace TVTComment.Model.ChatCollectService
                 if (jkId != 0)
                 {
                     chatCollectTaskCancellation = new CancellationTokenSource();
-                    var startTime = new DateTimeOffset(time, TimeSpan.FromHours(9));
+                    var startTime = new DateTimeOffset(loadedUntil != DateTime.MinValue && time > loadedUntil ? loadedUntil : time, TimeSpan.FromHours(9));
                     var endTime = startTime + TimeSpan.FromMinutes(15);
-                    chatCollectTask = Task.Run(() => CollectChat(jkId, startTime, endTime, chatCollectTaskCancellation.Token));
+                    var token = chatCollectTaskCancellation.Token;
+                    chatCollectTask = Task.Run(() => CollectChat(jkId, startTime, endTime, token), token);
                     lastGetStartTime = startTime;
                 }
                 else
@@ -88,49 +84,47 @@ namespace TVTComment.Model.ChatCollectService
                 this.jkId = jkId;
             }
 
-            try
-            {
-                chatCollectTask?.Wait();
-            }
-            catch (AggregateException e)
+            if (chatCollectTask is { IsCompleted: true } completed)
             {
                 chatCollectTask = null;
-                ChatCollectTaskExceptionHandler(e);
+                chatCollectTaskCancellation.Dispose();
+                if (completed.Exception != null) ChatCollectTaskExceptionHandler(completed.Exception);
+                loadedUntil = lastGetStartTime.DateTime.AddMinutes(15);
             }
-            chatCollectTask = null;
 
+            if (loadedUntil == DateTime.MinValue) return Array.Empty<Chat>();
+            var until = time < loadedUntil ? time : loadedUntil.AddSeconds(-1);
+            if (until <= cursor.DisplayedUntil) return Array.Empty<Chat>();
+            var from = cursor.DisplayedUntil.AddSeconds(1);
+            cursor.Advance(until);
             lock (chats)
             {
-                IEnumerable<Chat> ret = chats.Where(x => time <= x.Chat.Time && x.Chat.Time < time + TimeSpan.FromSeconds(1)).Select(x => x.Chat);
+                IEnumerable<Chat> ret = chats.Where(x => from <= x.Chat.Time && x.Chat.Time < until.AddSeconds(1)).OrderBy(x => x.Chat.Time).Select(x => x.Chat).ToArray();
                 return ret;
             }
         }
 
-        public override Task PostChat(BasicChatPostObject postObject)
+        public Task PostChat(BasicChatPostObject postObject)
         {
             throw new NotImplementedException();
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            chatCollectTaskCancellation?.Cancel();
-            try
+            disposed = true;
+            CancelPending();
+        }
+
+        private void CancelPending()
+        {
+            if (chatCollectTask == null) return;
+            var cancellation = chatCollectTaskCancellation;
+            _ = Task.WhenAll(cancellation.CancelAsync(), chatCollectTask).ContinueWith(t =>
             {
-                chatCollectTask?.Wait();
-            }
-            catch (AggregateException e)
-            {
-                try
-                {
-                    ChatCollectTaskExceptionHandler(e);
-                }
-                catch (ChatCollectException)
-                { }
-            }
-            finally
-            {
-                chatCollectTask = null;
-            }
+                _ = t.Exception;
+                cancellation.Dispose();
+            }, TaskScheduler.Default);
+            chatCollectTask = null;
         }
 
         private async Task CollectChat(int jkId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
@@ -203,6 +197,7 @@ namespace TVTComment.Model.ChatCollectService
 
                     lock (chats)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         chats.Add((thread, NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag)));
                     }
                 }
@@ -237,6 +232,9 @@ namespace TVTComment.Model.ChatCollectService
 
         private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private readonly List<(string Thread, Chat Chat)> chats = new List<(string, Chat)>();
+        private readonly ReplayCursor cursor = new ReplayCursor();
+        private DateTime loadedUntil;
+        private bool disposed;
         private int jkId = 0;
         /// <summary>
         /// この時刻から15分後までが前回の取得時間
