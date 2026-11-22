@@ -146,9 +146,9 @@ namespace TVTComment.Model
 
         private void OnChatPreserveCountChanged()
         {
-            if (chats.Count > ChatPreserveCount.Value)
+            if (ChatPreserveCount.Value > 0)
             {
-                for (int i = 0; i < chats.Count - ChatPreserveCount.Value; i++)
+                while (chats.Count > ChatPreserveCount.Value)
                     chats.RemoveAt(0);
             }
         }
