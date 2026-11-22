@@ -243,9 +243,9 @@ namespace TVTComment.ViewModels
             });
             AddUserNgCommand = new RelayCommand<Model.Chat>(chat =>
             {
-                if (chat?.SourceService?.Owner == null || chat.IsSystemMsg) return;
+                if (chat?.SourceService?.Owner == null || chat.IsSystemMsg || string.IsNullOrWhiteSpace(chat.UserId)) return;
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.UserNgChatModRule(chat.SourceService.Owner.ChatCollectServiceEntries, chat.UserId));
-            }, chat => chat?.SourceService?.Owner != null && !chat.IsSystemMsg);
+            }, chat => chat?.SourceService?.Owner != null && !chat.IsSystemMsg && !string.IsNullOrWhiteSpace(chat.UserId));
             CopyCommentCommand = new RelayCommand<Model.Chat>(chat =>
             {
                 if (chat == null) return;
@@ -253,9 +253,9 @@ namespace TVTComment.ViewModels
             });
             CopyUserCommand = new RelayCommand<Model.Chat>(chat =>
             {
-                if (chat == null) return;
+                if (string.IsNullOrWhiteSpace(chat?.UserId)) return;
                 Clipboard.SetText(chat.UserId);
-            });
+            }, chat => !string.IsNullOrWhiteSpace(chat?.UserId));
 
             UpdateHoverdUserCommand = new RelayCommand<string>(userid =>
             {

@@ -16,7 +16,7 @@ namespace TVTComment.Model.ChatModRules
 
         public bool Modify(Chat chat)
         {
-            if (chat.UserId != UserId)
+            if (string.IsNullOrWhiteSpace(UserId) || chat.UserId != UserId)
                 return false;
 
             chat.SetNg(true);
