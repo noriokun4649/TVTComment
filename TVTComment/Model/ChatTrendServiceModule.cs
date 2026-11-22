@@ -21,6 +21,13 @@ namespace TVTComment.Model
         }
 
         public SynchronizationContext ForceValueUpdatedSynchronizationContext { get; }
+        private const int MaxConsecutiveFailures = 3;
+        private sealed class FailedForceValueData : IForceValueData
+        {
+            public int? GetForceValue(ChannelInfo channelInfo) => null;
+        }
+        internal static readonly IForceValueData FailedUpdate = new FailedForceValueData();
+        private readonly Dictionary<IChatTrendService, int> consecutiveFailures = new();
         private readonly ConcurrentDictionary<IChatTrendService, Timer> timers = new ConcurrentDictionary<IChatTrendService, Timer>();
         private readonly HashSet<IChatTrendService> updatingServices = new HashSet<IChatTrendService>();
         private bool disposed;
@@ -69,6 +76,7 @@ namespace TVTComment.Model
         {
             if (!timers.TryRemove(service, out Timer timer))
                 return;
+            consecutiveFailures.Remove(service);
             registeredServices.Remove(service);
             DisposeService(service, timer);
         }
@@ -89,9 +97,7 @@ namespace TVTComment.Model
                 }
                 catch (ChatTrendServiceException)
                 {
-                    if (timers.TryGetValue(service, out Timer current) && current == timer)
-                        RemoveService(service);
-                    return;
+                    forceValueData = FailedUpdate;
                 }
                 finally
                 {
@@ -103,7 +109,20 @@ namespace TVTComment.Model
                 var item = forceValues.FirstOrDefault(x => x.Item1 == chatTrendService);
                 if (item != null)
                     forceValues.Remove(item);
-                forceValues.Add(new Tuple<IChatTrendService, IForceValueData>(service, forceValueData));
+                if (forceValueData == FailedUpdate)
+                {
+                    consecutiveFailures[service] = consecutiveFailures.GetValueOrDefault(service) + 1;
+                    if (consecutiveFailures[service] >= MaxConsecutiveFailures)
+                        RemoveService(service);
+                    else
+                        forceValueData = null;
+                }
+                else
+                {
+                    consecutiveFailures.Remove(service);
+                    if (forceValueData != null)
+                        forceValues.Add(new Tuple<IChatTrendService, IForceValueData>(service, forceValueData));
+                }
 
                 ForceValueUpdated?.Invoke(this, new ForceValueUpdatedEventArgs(service, forceValueData));
 

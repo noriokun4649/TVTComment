@@ -8,8 +8,8 @@ namespace TVTComment.ViewModels.ShellContents
     {
         public Model.ChannelInfo Channel { get; }
 
-        private int? forceValue;
-        public int? ForceValue
+        private string forceValue;
+        public string ForceValue
         {
             get { return forceValue; }
             set { SetProperty(ref forceValue, value); }
@@ -33,7 +33,8 @@ namespace TVTComment.ViewModels.ShellContents
             }));
             disposables.Add(forceValueData.Subscribe(forceValues =>
             {
-                ForceValue = forceValues?.GetForceValue(channel);
+                ForceValue = forceValues == Model.ChatTrendServiceModule.FailedUpdate
+                    ? "E" : forceValues?.GetForceValue(channel)?.ToString(System.Globalization.CultureInfo.InvariantCulture);
             }));
         }
 
