@@ -82,7 +82,7 @@ namespace TVTComment.Model
                     collectServiceModule.ClearServices();
             }));
 
-            disposables.Add(channelInformationModule.CurrentTime.Subscribe(TimeChanged));
+            disposables.Add(IsEnabled.Subscribe(_ => TimeChanged(channelInformationModule.CurrentTime.Value)));
         }
 
         private void TimeChanged(DateTime? time)
