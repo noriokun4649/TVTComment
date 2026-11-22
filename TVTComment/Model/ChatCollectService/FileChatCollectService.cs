@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatCollectService
@@ -13,7 +14,7 @@ namespace TVTComment.Model.ChatCollectService
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public override bool CanPost => false;
 
-        private readonly StreamReader reader;
+        private CancellationTokenSource readCancellation = new CancellationTokenSource();
         private readonly bool relativeTime;
         private DateTime? baseTime;
         private readonly Task readTask;
@@ -28,14 +29,15 @@ namespace TVTComment.Model.ChatCollectService
         public FileChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, StreamReader reader, bool relativeTime) : base(TimeSpan.FromSeconds(10))
         {
             ServiceEntry = serviceEntry;
-            this.reader = reader;
             this.relativeTime = relativeTime;
-            readTask = Read();
+            var token = readCancellation.Token;
+            readTask = Task.Run(() => Read(reader, token));
         }
 
-        private async Task Read()
+        private async Task Read(StreamReader input, CancellationToken token)
         {
-            while (await reader.ReadLineAsync() is string line)
+            using var reader = input;
+            while (!token.IsCancellationRequested && await reader.ReadLineAsync(token).ConfigureAwait(false) is string line)
             {
                 parser.Push(line);
                 while (parser.DataAvailable())
@@ -63,12 +65,13 @@ namespace TVTComment.Model.ChatCollectService
 
         public override void Dispose()
         {
-            reader.Dispose();
+            using var cancellation = Interlocked.Exchange(ref readCancellation, null);
+            cancellation?.Cancel();
             try
             {
                 readTask.Wait();
             }
-            catch (AggregateException e) when (e.InnerException is ObjectDisposedException)
+            catch (AggregateException e) when (e.InnerException is OperationCanceledException)
             {
             }
         }
