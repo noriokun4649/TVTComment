@@ -124,86 +124,86 @@ namespace TVTComment.ViewModels
             AddWordNgCommand = new RelayCommand(() =>
               {
                   if (string.IsNullOrWhiteSpace(NgText)) return;
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.WordNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.WordNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray(), NgText));
               });
 
             AddUserNgCommand = new RelayCommand(() =>
               {
                   if (string.IsNullOrWhiteSpace(NgText)) return;
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.UserNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.UserNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray(), NgText));
               });
 
             AddIroKomeNgCommand = new RelayCommand(() =>
               {
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.IroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.IroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
               });
 
             AddJyougeKomeNgCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddJyougeIroKomeNgCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeIroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeIroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddTextLengthNgCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.TextLengthNg(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), TextLengthCount.Value));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.TextLengthNg(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray(), TextLengthCount.Value));
             });
 
             AddRandomizeColorRuleCommand = new RelayCommand(() =>
               {
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.RandomizeColorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.RandomizeColorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
               });
 
             AddSmallOnMultiLineRuleCommand = new RelayCommand(() =>
               {
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.SmallOnMultiLineChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), SmallOnMultiLineRuleLineCount.Value));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.SmallOnMultiLineChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray(), SmallOnMultiLineRuleLineCount.Value));
               });
 
             AddRemoveAnchorCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveAnchorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveAnchorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddRemoveUrlCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveUrlChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveUrlChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddRemoveHashtagCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveHashtagChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveHashtagChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddRemoveMentionCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveMentionChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveMentionChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddRenderEmotionAsCommentCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderEmotionAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderEmotionAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddRenderInfoAsCommentCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderInfoAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderInfoAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddSetColorRuleCommand = new RelayCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.SetColorChatModRule(
-                    TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),
+                    TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray(),
                     SetColorRuleColor.Value
                 ));
             });
 
             AddRenderNicoadAsCommentCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderNicoadAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderNicoadAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddReplaceRegexCommand = new RelayCommand(() =>
@@ -220,12 +220,12 @@ namespace TVTComment.ViewModels
 
             AddUrlNgCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.UrlNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.UrlNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddMentionNgCommand = new RelayCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.MentionNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.MentionNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value).ToArray()));
             });
 
             AddAnchorNgCommand = new RelayCommand(() =>
