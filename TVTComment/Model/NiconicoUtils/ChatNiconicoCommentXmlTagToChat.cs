@@ -47,7 +47,7 @@ namespace TVTComment.Model.NiconicoUtils
 
             var time = DateTimeOffset.FromUnixTimeSeconds(tag.Date).DateTime.ToLocalTime();
 
-            string mail = tag.Mail;
+            var mail = tag.Mail.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
 
             if (mail.Contains("shita"))
                 position = Chat.PositionType.Bottom;
@@ -59,7 +59,7 @@ namespace TVTComment.Model.NiconicoUtils
             else if (mail.Contains("big"))
                 size = Chat.SizeType.Large;
 
-            var match = reColor.Match(mail);
+            var match = reColor.Match(tag.Mail);
             if (match.Success)
             {
                 int colorNum = int.Parse(match.Groups[1].Value, System.Globalization.NumberStyles.HexNumber);
