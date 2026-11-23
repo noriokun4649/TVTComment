@@ -24,7 +24,6 @@ namespace TVTComment.ViewModels.Services
                     "NichanChatCollectServiceCreationOptionControl" => new NichanChatCollectServiceCreationOptionControlViewModel(model),
                     "FileChatCollectServiceCreationOptionControl" => new FileChatCollectServiceCreationOptionControlViewModel(),
                     "NiconicoLiveChatCollectServiceCreationOptionControl" => new NiconicoLiveChatCollectServiceCreationOptionControlViewModel(),
-                    "TwitterLiveChatCollectServiceCreationOptionControl" => new TwitterLiveChatCollectServiceCreationOptionControlViewModel(),
                     _ => throw new ArgumentException($"Unknown creation option view: {viewName}", nameof(viewName)),
                 };
                 viewModels.Add(viewName, viewModel);

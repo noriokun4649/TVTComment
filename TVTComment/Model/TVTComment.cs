@@ -121,8 +121,7 @@ namespace TVTComment.Model
                     Settings.Niconico, channelDatabase, Path.Combine(baseDir, "niconicojikkyouids.txt"), Path.Combine(baseDir, "niconicoliveids.txt")
                 ),
                 new ChatService.NichanChatService(Settings.Nichan, channelDatabase, Path.Combine(baseDir, "2chthreads.txt")),
-                new ChatService.FileChatService(),
-                new ChatService.TwitterChatService(Settings.Twitter, channelDatabase, Path.Combine(baseDir, "twittersearchword.txt"))
+                new ChatService.FileChatService()
             });
 
             await ChatServices.OfType<ChatService.NiconicoChatService>().Single().RestoreAsync();

@@ -11,8 +11,6 @@ using System.Net.Http;
 using System.Windows.Input;
 using System.Xml;
 using TVTComment.Model.NiconicoUtils;
-using TVTComment.Model.TwitterUtils;
-using TVTComment.Model.TwitterUtils.AnnictUtils;
 
 namespace TVTComment.ViewModels
 {
@@ -62,26 +60,18 @@ namespace TVTComment.ViewModels
 
         private readonly Model.ChatService.NiconicoChatService niconico;
         private readonly Model.ChatService.NichanChatService nichan;
-        private readonly Model.ChatService.TwitterChatService twitter;
-
-        private TwitterAuthentication twitterAuthentication;
         private readonly IDisposable rememberSessionSubscription;
 
         public SettingsWindowViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             this.dialogService = dialogService;
             var secrets = App.Configuration;
-            var annict = new AnnictAuthentication(secrets["Annict:ClientId"], secrets["Annict:ClientSecret"]);
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
             nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
-            twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
 
             ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model, dialogService);
-
-            AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
-            AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
 
             Always184.Value = niconico.Always184;
             Always184.Subscribe(state => niconico.Always184 = state);
@@ -167,111 +157,10 @@ namespace TVTComment.ViewModels
                   }
               });
 
-            ApplyTwitterApisCommand = new RelayCommand(() =>
-            {
-                twitter.ApiKey = TwitterApiKey.Value;
-                twitter.ApiSecret = TwitterApiSecret.Value;
-                twitter.BearerToken = TwitterBearerToken.Value;
-                dialogService.ShowNotification(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
-            });
-
-            LoginTokensTwitterCommand = new RelayCommand(async () =>
-            {
-                try
-                {
-                    await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value, TwitterBearerToken.Value);
-                    SyncTwitterStatus();
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-            });
-
-
-            OpenTwitter = new RelayCommand(() =>
-            {
-                try
-                {
-                    twitterAuthentication = twitter.InitOAuthPin(twitter.ApiKey, twitter.ApiSecret);
-                    var oAuthSession = twitterAuthentication.AuthSession;
-                    Process.Start(new ProcessStartInfo(oAuthSession.AuthorizeUri.ToString()) { UseShellExecute = true });
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-            });
-
-            EnterTwitter = new RelayCommand(async () =>
-            {
-                try
-                {
-                    await twitter.LoginOAuthPin(twitterAuthentication, TwitterPinCode.Value);
-                    SyncTwitterStatus();
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-
-            });
-
-            LogoutTwitterCommand = new RelayCommand(() =>
-            {
-                try
-                {
-                    twitter.Logout();
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-                SyncTwitterStatus();
-            });
-
-            AnnictAccessTokenApplyCommand = new RelayCommand(() => {
-                try
-                {
-                    twitter.SetAnnictToken(AnnictAccessToken.Value);
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-                SyncAnnictStatus();
-            });
-
-            AnnictOAuthOpenCommand = new RelayCommand(() => {
-                try
-                {
-                    Process.Start(new ProcessStartInfo(annict.GetAuthorizeUri().ToString()) { UseShellExecute = true });
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-            });
-
-            AnnictOAuthCertificationCommand = new RelayCommand(async () => {
-                try
-                {
-                    var token = await annict.GetTokenAsync(AnnictPin.Value);
-                    twitter.SetAnnictToken(token);
-                }
-                catch (Exception e)
-                {
-                    dialogService.ShowNotification(new Notification { Title = "TVTCommentエラー", Content = e.Message });
-                }
-                SyncAnnictStatus();
-            });
-
             ChatPreserveCount = model.ChatModule.ChatPreserveCount;
 
             SyncNiconicoUserStatus();
             SyncNichanSettings();
-            SyncTwitterStatus();
-            SyncAnnictStatus();
             SyncThirdForceStatus();
         }
 
@@ -296,21 +185,6 @@ namespace TVTComment.ViewModels
             NichanThreadSearchInterval.Value = nichan.ThreadSearchInterval.TotalSeconds.ToString();
             NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
             NichanPastUserAgent.Value = nichan.GochanPastUserAgent;
-        }
-
-        private void SyncTwitterStatus()
-        {
-            TwitterApiKey.Value = twitter.ApiKey;
-            TwitterApiSecret.Value = twitter.ApiSecret;
-            TwitterApiAccessKey.Value = twitter.ApiAccessToken;
-            TwitterApiAccessSecret.Value = twitter.ApiAccessSecret;
-            TwitterBearerToken.Value = twitter.BearerToken;
-            TwitterStatus.Value = twitter.IsLoggedin ? twitter.UserName + "としてログイン中" : "未ログイン";
-        }
-
-        private void SyncAnnictStatus()
-        {
-            AnnictAccessToken.Value = twitter.AnnictAccessToken;
         }
 
         private void SyncThirdForceStatus()

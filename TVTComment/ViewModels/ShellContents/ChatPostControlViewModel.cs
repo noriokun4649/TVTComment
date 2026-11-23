@@ -94,7 +94,6 @@ namespace TVTComment.ViewModels.ShellContents
             Model.ChatCollectService.NiconicoChatCollectService _ or
             Model.ChatCollectService.NiconicoLiveChatCollectService _ or
             Model.ChatCollectService.NewNiconicoJikkyouChatCollectService _ or
-            Model.ChatCollectService.TwitterLiveChatCollectService _ or
             Model.ChatCollectService.NxJikkyoChatCollectService _ => "text",
             _ => "none"
         };
@@ -154,15 +153,6 @@ namespace TVTComment.ViewModels.ShellContents
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
                     new Model.ChatCollectService.NichanChatCollectService.ChatPostObject(SelectedNichanCurrentThread.Value.Uri.ToString())
-                );
-            }
-            else if (SelectedPostService.Value is Model.ChatCollectService.TwitterLiveChatCollectService)
-            {
-                if (string.IsNullOrWhiteSpace(PostText.Value))
-                    return;
-                model.ChatCollectServiceModule.PostChat(
-                    SelectedPostService.Value,
-                    new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
                 );
             }
             else if (SelectedPostService.Value is Model.ChatCollectService.NxJikkyoChatCollectService)

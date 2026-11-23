@@ -25,17 +25,6 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Include CoreTweet Nuget
-        run: nuget sources add -name CoreTweetSource -source ${{ github.workspace }}\CoreTweetNuget
-
-      - name: Replace id & secret
-        shell: powershell
-        run: |
-          $data=Get-Content TVTComment/ViewModels/SettingsWindowViewModel.cs | % { $_ -replace 'secrets\["Annict:ClientId"\]','"${{ secrets.CLIENT_ID }}"' }
-          $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
-          $data=Get-Content TVTComment/ViewModels/SettingsWindowViewModel.cs | % { $_ -replace 'secrets\["Annict:ClientSecret"\]','"${{ secrets.CLIENT_SECRET }}"' }
-          $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
-
       - name: Build (TVTComment.exe)
         run: dotnet publish TVTComment/TVTComment.csproj -m -c Release /p:PublishProfile=ReleaseProfile
 
