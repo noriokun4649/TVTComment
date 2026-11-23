@@ -41,6 +41,29 @@ namespace TVTComment.ViewModels.ShellContents
             Version = assembly.Version.ToString(4);
         }
 
+        internal static ObservableValue<byte> LinkChatOpacity(ObservableValue<byte> opacity)
+        {
+            const int opacityPerStep = 16;
+            const int maxSliderStep = byte.MaxValue / opacityPerStep;
+
+            byte ToSliderStep(byte value) => (byte)(value / opacityPerStep);
+
+            byte ToOpacity(byte step)
+            {
+                byte currentOpacity = opacity.Value;
+                // 初期通知やスライダー間の同期による端数の切り捨てを防止
+                if (step == ToSliderStep(currentOpacity))
+                    return currentOpacity;
+
+                if (step == maxSliderStep)
+                    return byte.MaxValue;
+
+                return (byte)(step * opacityPerStep);
+            }
+
+            return opacity.MakeLinkedObservableValue(ToSliderStep, ToOpacity);
+        }
+
         public async Task Initialize()
         {
             await model.Initialize();
@@ -58,7 +81,7 @@ namespace TVTComment.ViewModels.ShellContents
             compositeDisposable.Add(WindowFontSize.Subscribe(x => model.Settings.View.WindowFontSize = x));
 
             //256段階でスライダーを動かすと大量にSetChatOpacityIPCMessageが発生してしまうため16段階にする
-            ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
+            ChatOpacity = LinkChatOpacity(model.ChatOpacity);
             CommentActivityGraphEnabled = model.CommentActivityGraphEnabled;
             ClearChatsOnChannelChange = model.ChatModule.ClearChatsOnChannelChange;
             AddChannelLogOnChannelChange = model.ChatModule.AddChannelLogOnChannelChange;
