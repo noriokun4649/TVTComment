@@ -54,7 +54,7 @@ namespace TVTComment.ViewModels.ShellContents
 
         private void Initialize()
         {
-            ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
+            ChatOpacity = BasicSettingControlViewModel.LinkChatOpacity(model.ChatOpacity);
             PostServices = model.ChatCollectServiceModule?.RegisteredServices?.MakeOneWayLinkedCollectionMany(x =>
             {
                 if (x.CanPost) return new[] { x };
