@@ -64,6 +64,8 @@ namespace TVTComment.Model
                     var msg = " ★" + x.ChannelName + " (" + x.ServiceName + ") ";
                     var chat = new Chat(DateTime.Now, msg, Chat.PositionType.Normal, Chat.SizeType.Normal, Color.White, "TvTComment system message", 0, true);
                     chat.SetSystemMsg(true);
+                    while (ChatPreserveCount.Value > 0 && chats.Count >= ChatPreserveCount.Value)
+                        chats.RemoveAt(0);
                     chats.Add(chat);
                 }
             }));
