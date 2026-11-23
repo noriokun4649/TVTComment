@@ -5,7 +5,6 @@ using TVTComment.ViewModels.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Windows.Input;
@@ -24,16 +23,6 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanPastUserAgent { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterApiKey { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterApiSecret { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterBearerToken { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterApiAccessKey { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterApiAccessSecret { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterStatus { get; } = new ObservableValue<string>();
-        public ObservableValue<string> TwitterPinCode { get; } = new ObservableValue<string>();
-        public ObservableValue<string> AnnictAccessToken { get; } = new ObservableValue<string>();
-        public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
-        public ObservableValue<bool> AnnictAutoEnable { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> Always184 { get; } = new ObservableValue<bool>();
         public ObservableValue<bool> EnableThirdForce { get; } = new ObservableValue<bool>();
         public ObservableValue<string> ThirdForceApiUri { get; } = new ObservableValue<string>();
@@ -43,15 +32,6 @@ namespace TVTComment.ViewModels
         public ICommand LoginNiconicoCommand { get; }
         public ICommand LogoutNiconicoCommand { get; }
         public ICommand ApplyNichanSettingsCommand { get; }
-        public ICommand ApplyTwitterApisCommand { get; }
-        public ICommand LoginTokensTwitterCommand { get; }
-        public ICommand LogoutTokensTwitterCommand { get; }
-        public ICommand LogoutTwitterCommand { get; }
-        public ICommand OpenTwitter { get; }
-        public ICommand EnterTwitter { get; }
-        public ICommand AnnictOAuthOpenCommand { get; }
-        public ICommand AnnictOAuthCertificationCommand { get; }
-        public ICommand AnnictAccessTokenApplyCommand { get; }
         public ICommand ThirdForceApplyCommand { get; }
 
         private readonly IDialogService dialogService;
@@ -65,7 +45,6 @@ namespace TVTComment.ViewModels
         public SettingsWindowViewModel(Model.TVTComment model, IDialogService dialogService)
         {
             this.dialogService = dialogService;
-            var secrets = App.Configuration;
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();

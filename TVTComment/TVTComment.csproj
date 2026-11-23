@@ -13,7 +13,6 @@
     <Company>silane</Company>
     <NeutralLanguage>ja-JP</NeutralLanguage>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <UserSecretsId>02205759-ac04-42b1-bfc3-963e8b2237c0</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -31,7 +30,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.14" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
     <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.30" />

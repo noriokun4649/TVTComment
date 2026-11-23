@@ -277,7 +277,6 @@ Newtonsoft.Json 13.0.4
 ------------------------------------------------------------------------------
 
 System.Reactive 6.0.1
-Microsoft.Extensions.Configuration.UserSecrets 10.0.14
 Microsoft.Extensions.DependencyInjection 10.0.14
 Microsoft.Extensions.DependencyInjection.Abstractions 10.0.14
 System.Configuration.ConfigurationManager 10.0.14
