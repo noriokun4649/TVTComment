@@ -70,8 +70,6 @@ namespace TVTComment.ViewModels
                 Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _ => "NichanChatCollectServiceCreationOptionControl",
                 Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _ => "FileChatCollectServiceCreationOptionControl",
                 Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _ => "NiconicoLiveChatCollectServiceCreationOptionControl",
-                Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry _ => "TwitterLiveChatCollectServiceCreationOptionControl",
-                Model.ChatCollectServiceEntry.TwitterLiveV2ChatCollectServiceEntry _ => "TwitterLiveChatCollectServiceCreationOptionControl",
                 _ => "",
             };
             if (!string.IsNullOrEmpty(creationOptionControl))

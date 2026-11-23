@@ -342,8 +342,6 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _:
-                    case Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry _:
-                    case Model.ChatCollectServiceEntry.TwitterLiveV2ChatCollectServiceEntry _:
                         // ダイアログを開く前にウィンドウの最小化を解除
                         WindowPresentation.ShowCommand.Execute(null);
                         var confirmation = await dialogService.ShowAsync(

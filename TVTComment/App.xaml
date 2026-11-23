@@ -15,8 +15,5 @@
         <DataTemplate DataType="{x:Type optionViewModels:NiconicoLiveChatCollectServiceCreationOptionControlViewModel}">
             <options:NiconicoLiveChatCollectServiceCreationOptionControl/>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type optionViewModels:TwitterLiveChatCollectServiceCreationOptionControlViewModel}">
-            <options:TwitterLiveChatCollectServiceCreationOptionControl/>
-        </DataTemplate>
     </Application.Resources>
 </Application>

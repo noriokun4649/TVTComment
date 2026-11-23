@@ -4,7 +4,6 @@
     {
         public ChatService.NiconicoChatServiceSettings Niconico { get; set; } = new ChatService.NiconicoChatServiceSettings();
         public ChatService.NichanChatServiceSettings Nichan { get; set; } = new ChatService.NichanChatServiceSettings();
-        public ChatService.TwitterChatServiceSettings Twitter { get; set; } = new ChatService.TwitterChatServiceSettings();
         public string[] ChatPostMailTextExamples { get; set; } = System.Array.Empty<string>();
         public string ChatPostSplitterLeftSize { get; set; } = "*";
         public string ChatPostSplitterRightSize { get; set; } = "3*";
