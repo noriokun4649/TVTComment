@@ -90,31 +90,6 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         );
     }
 
-    class HTMLNichanChatCollectServiceEntry : NichanChatCollectServiceEntry
-    {
-        public override string Id => "2chHTML";
-        public override string Name => "2chHTML";
-        public override string Description => "5chのレスをHTMLのスクレイピングで表示";
-
-
-        public HTMLNichanChatCollectServiceEntry(
-            ChatService.NichanChatService owner,
-            ObservableValue<TimeSpan> resCollectInterval,
-            ObservableValue<TimeSpan> threadSearchInterval,
-            NichanUtils.ThreadResolver threadResolver
-        ) : base(owner, resCollectInterval, threadSearchInterval, threadResolver)
-        {
-        }
-
-        protected override ChatCollectService.IChatCollectService GetNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
-        {
-            return new ChatCollectService.HTMLNichanChatCollectService(
-                this, resCollectInterval.Value,
-                threadSearchInterval.Value, threadSelector
-            );
-        }
-    }
-
     class DATNichanChatCollectServiceEntry : NichanChatCollectServiceEntry
     {
         public override string Id => "2chDAT";
