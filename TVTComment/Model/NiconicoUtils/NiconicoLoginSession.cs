@@ -16,7 +16,6 @@ namespace TVTComment.Model.NiconicoUtils
     class NiconicoLoginSession
     {
         private readonly CookieContainer cookies = new CookieContainer();
-        public bool IsLoggedin => true;
         public string UserId { get; }
         public CookieCollection Cookie => cookies.GetAllCookies();
 

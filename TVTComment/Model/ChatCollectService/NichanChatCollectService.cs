@@ -293,27 +293,6 @@ namespace TVTComment.Model.ChatCollectService
         }
     }
 
-    class HTMLNichanChatCollectService : NichanChatCollectService
-    {
-        protected override string TypeName => "2chHTML";
-        private static readonly HttpClient client = Nichan.BoardClient.CreateHttpClient();
-
-        public HTMLNichanChatCollectService(
-            ChatCollectServiceEntry.IChatCollectServiceEntry entry,
-            TimeSpan res, TimeSpan search,
-            NichanUtils.INichanThreadSelector selector
-        ) : base(entry, res, search, selector)
-        {
-        }
-
-        protected override async Task<Nichan.Thread> GetThread(string url, CancellationToken token)
-        {
-            using var reader = new StringReader(await client.GetStringAsync(url, token).ConfigureAwait(false));
-            var thread = Nichan.ThreadParser.ParseFromStream(reader);
-            thread.Uri = new Uri(url);
-            return thread;
-        }
-    }
     class DATNichanChatCollectService : NichanChatCollectService
     {
         protected override string TypeName => "2chDAT";

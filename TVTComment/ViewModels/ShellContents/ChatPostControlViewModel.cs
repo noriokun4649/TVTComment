@@ -91,7 +91,6 @@ namespace TVTComment.ViewModels.ShellContents
         internal static string PostForm(Model.ChatCollectService.IChatCollectService service) => service switch
         {
             Model.ChatCollectService.NichanChatCollectService _ => "thread",
-            Model.ChatCollectService.NiconicoChatCollectService _ or
             Model.ChatCollectService.NiconicoLiveChatCollectService _ or
             Model.ChatCollectService.NewNiconicoJikkyouChatCollectService _ or
             Model.ChatCollectService.NxJikkyoChatCollectService _ => "text",
@@ -119,16 +118,7 @@ namespace TVTComment.ViewModels.ShellContents
                 else
                     mail184 += " 184";
             }
-            if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
-            {
-                if (string.IsNullOrWhiteSpace(PostText.Value))
-                    return;
-                model.ChatCollectServiceModule.PostChat(
-                    SelectedPostService.Value,
-                    new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, mail184)
-                );
-            }
-            else if (SelectedPostService.Value is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService)
+            if (SelectedPostService.Value is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService)
             {
                 if (string.IsNullOrWhiteSpace(PostText.Value))
                     return;
