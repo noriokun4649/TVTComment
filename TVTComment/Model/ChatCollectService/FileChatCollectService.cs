@@ -18,7 +18,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly bool relativeTime;
         private DateTime? baseTime;
         private readonly Task readTask;
-        private readonly NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false,""); //ファイルからは自分のコメント判定をしないので空文字
+        private readonly NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false, null); // 手動ファイルでの自己判定の無効化
         private readonly ConcurrentQueue<NiconicoUtils.ChatAndVpos> chats = new ConcurrentQueue<NiconicoUtils.ChatAndVpos>();
 
         public override string GetInformationText()
