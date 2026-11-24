@@ -1,6 +1,7 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Serialization;
 
@@ -51,6 +52,7 @@ namespace TVTComment.Model.ChatService
         public TimeSpan ThreadSearchInterval => threadSearchInterval.Value;
         public string GochanPastUserAgent => pastUserAgent.Value;
         public TimeSpan PastCollectServiceBackTime => pastCollectServiceBackTime.Value;
+        internal INotifyPropertyChanged[] SettingValues => [resCollectInterval, threadSearchInterval, pastCollectServiceBackTime, pastUserAgent];
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         private readonly ObservableValue<TimeSpan> resCollectInterval = new ObservableValue<TimeSpan>();

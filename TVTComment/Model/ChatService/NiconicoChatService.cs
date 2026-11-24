@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using ObservableUtils;
 using System;
 using System.Collections.Generic;
@@ -11,14 +12,14 @@ using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatService
 {
-    class NiconicoChatServiceSettings
+    class NiconicoChatServiceSettings : ObservableObject
     {
-        public string UserId { get; set; } = "";
-        public bool RememberSession { get; set; } = true;
-        public bool Always184 { get; set; } = true;
-        public bool EnableThirdForce { get; set; } = false;
-        public string ThirdForceApiUri { get; set; } = "";
-        public string NicoJCatchLogFolder { get; set; } = "";
+        public string UserId { get; set => SetProperty(ref field, value); } = "";
+        public bool RememberSession { get; set => SetProperty(ref field, value); } = true;
+        public bool Always184 { get; set => SetProperty(ref field, value); } = true;
+        public bool EnableThirdForce { get; set => SetProperty(ref field, value); } = false;
+        public string ThirdForceApiUri { get; set => SetProperty(ref field, value); } = "";
+        public string NicoJCatchLogFolder { get; set => SetProperty(ref field, value); } = "";
     }
 
     class NiconicoChatService : IChatService

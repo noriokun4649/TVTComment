@@ -123,7 +123,7 @@ namespace TVTComment.Model
             disposables.Dispose();
         }
 
-        private void SaveSettings()
+        internal void SaveSettings()
         {
             settings.UseDefaultChatCollectService = IsEnabled.Value;
 
