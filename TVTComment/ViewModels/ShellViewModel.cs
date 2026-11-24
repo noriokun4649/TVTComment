@@ -77,7 +77,16 @@ namespace TVTComment.ViewModels
         public WindowStateViewModel WindowPresentation { get; }
         public ShellContents.ChatPostControlViewModel ChatPostControlViewModel { get; set; }
 
-        public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = Array.Empty<Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo>();
+        private bool viewSettingsLoaded;
+        public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos
+        {
+            get;
+            set
+            {
+                field = value;
+                if (viewSettingsLoaded) { SaveChatListColumns(); model.RequestSettingsSave(); }
+            }
+        } = Array.Empty<Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo>();
 
         public ICommand CloseApplicationCommand { get; private set; }
         public ICommand MinimizeWindowCommand => WindowPresentation.MinimizeCommand;
@@ -171,6 +180,14 @@ namespace TVTComment.ViewModels
             ).ToArray();
 
             SelectedTab.Value = model.Settings.View.MainWindowTab;
+            viewSettingsLoaded = true;
+            WindowPosition.PropertyChanged += WindowPositionChanged;
+            disposables.Add(SelectedTab.Skip(1).Subscribe(tab => { model.Settings.View.MainWindowTab = tab; model.RequestSettingsSave(); }));
+            void WatchSetting<T>(ObservableValue<T> value) => disposables.Add(value.Skip(1).Subscribe(_ => model.RequestSettingsSave()));
+            WatchSetting(WindowTopmost);
+            WatchSetting(BasicSettingControlViewModel.MinimizeOnTVTestPanelOpen);
+            WatchSetting(WindowOpacity);
+            WatchSetting(WindowFontSize);
 
             // ウィンドウの位置を復元したら最小化を解除
             WindowPresentation.State.Value = WindowState.Normal;
@@ -382,6 +399,31 @@ namespace TVTComment.ViewModels
             WindowPresentation.ShowCommand.Execute(null);
         }
 
+        private void WindowPositionChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (WindowPresentation.State.Value == WindowState.Minimized) return;
+            SaveWindowPosition();
+            model.RequestSettingsSave();
+        }
+
+        private void SaveWindowPosition()
+        {
+            model.Settings.View.MainWindowPosition = new Model.Serialization.WindowPositionEntity()
+            {
+                X = WindowPosition.X,
+                Y = WindowPosition.Y,
+                Width = WindowPosition.Width,
+                Height = WindowPosition.Height,
+            };
+        }
+
+        private void SaveChatListColumns()
+        {
+            model.Settings.View.ChatListViewColumns = ChatListColumnInfos?.Select(
+                x => new ListViewColumnViewModel { Id = x.Id, Width = x.Width }
+            ).ToArray();
+        }
+
         public void Dispose()
         {
             if (disposed)
@@ -399,20 +441,12 @@ namespace TVTComment.ViewModels
                 model.ChatCollectServiceModule.ErrorOccurredInChatCollecting -= Model_ErrorOccurredInChatCollecting;
             }
 
+            WindowPosition.PropertyChanged -= WindowPositionChanged;
+            viewSettingsLoaded = false;
             if (model.Settings != null)
             {
-                model.Settings.View.MainWindowPosition = new Model.Serialization.WindowPositionEntity()
-                {
-                    X = WindowPosition.X,
-                    Y = WindowPosition.Y,
-                    Width = WindowPosition.Width,
-                    Height = WindowPosition.Height,
-                };
-
-                model.Settings.View.ChatListViewColumns = ChatListColumnInfos?.Select(
-                    x => new ListViewColumnViewModel { Id = x.Id, Width = x.Width }
-                ).ToArray();
-
+                SaveWindowPosition();
+                SaveChatListColumns();
                 model.Settings.View.MainWindowTab = SelectedTab.Value;
             }
 

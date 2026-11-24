@@ -114,6 +114,7 @@ namespace TVTComment.ViewModels
             WindowTop = rect.Y;
             WindowWidth = rect.Width;
             WindowHeight = rect.Height;
+            PropertyChanged += WindowPositionChanged;
 
             TargetChatCollectServiceEntries = new List<Contents.SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>>(
                 model.ChatServices.SelectMany(service => service.ChatCollectServiceEntries)
@@ -255,7 +256,13 @@ namespace TVTComment.ViewModels
             model.ChatModule.AddChatModRule(rule);
         }
 
-        public void Dispose()
+        private void WindowPositionChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            SaveWindowPosition();
+            model.RequestSettingsSave();
+        }
+
+        private void SaveWindowPosition()
         {
             model.Settings.View.NgSettingWindowPosition = new Model.Serialization.WindowPositionEntity()
             {
@@ -264,7 +271,12 @@ namespace TVTComment.ViewModels
                 Width = WindowWidth,
                 Height = WindowHeight,
             };
+        }
 
+        public void Dispose()
+        {
+            PropertyChanged -= WindowPositionChanged;
+            SaveWindowPosition();
             disposables.Dispose();
         }
     }

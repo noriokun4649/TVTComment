@@ -46,7 +46,8 @@ namespace TVTComment.Model
             StreamReader reader;
             try
             {
-                reader = new StreamReader(FilePath, Encoding.UTF8);
+                reader = new StreamReader(new FileStream(FilePath, FileMode.Open, FileAccess.Read,
+                    FileShare.Read | FileShare.Delete), Encoding.UTF8);
             }
             catch (Exception e) when (e is DirectoryNotFoundException || e is FileNotFoundException)
             {
@@ -66,12 +67,22 @@ namespace TVTComment.Model
             }
         }
 
-        public async Task Write(SettingT setting)
+        public Task Write(SettingT setting)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
-
-            using var writer = new StreamWriter(FilePath, false, Encoding.UTF8);
-            await writer.WriteAsync(JsonSerializer.Serialize(setting, jsonSerializerOptions));
+            // UIスレッドでの保存内容の確定と、別スレッドでのファイル書き込み
+            string json = JsonSerializer.Serialize(setting, jsonSerializerOptions);
+            return Task.Run(() =>
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
+                string temp = FilePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    File.WriteAllText(temp, json, Encoding.UTF8);
+                    try { File.Replace(temp, FilePath, null); }
+                    catch (FileNotFoundException) { File.Move(temp, FilePath, true); }
+                }
+                finally { File.Delete(temp); }
+            });
         }
     }
 }

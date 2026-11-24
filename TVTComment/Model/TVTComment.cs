@@ -52,6 +52,8 @@ namespace TVTComment.Model
         /// </summary>
         private readonly ManualResetEventSlim closingResetEvent = new ManualResetEventSlim(true);
         private readonly SettingFileReaderWriter<TVTCommentSettings> settingReaderWriter;
+        private SettingsAutosave settingsAutosave;
+        internal void RequestSettingsSave() => settingsAutosave?.RequestSave();
 
         public TVTCommentSettings Settings { get; private set; }
         //public SettingsBase Settings => Properties.Settings.Default;
@@ -187,6 +189,7 @@ namespace TVTComment.Model
 
             ipcModule.StartReceiving();
             commentActivityModule.Start();
+            settingsAutosave = new SettingsAutosave(this, settingReaderWriter);
             State = TVTCommentState.Working;
         }
 
@@ -251,13 +254,6 @@ namespace TVTComment.Model
                 chatService.Dispose();
             }
 
-            //メール欄例保存
-            Settings.ChatPostMailTextExamples = ChatPostMailTextExamples.ToArray();
-            
-            //スプリッター幅保存
-            Settings.ChatPostSplitterRightSize = ChatPostSplitterRightSize.Value;
-            Settings.ChatPostSplitterLeftSize = ChatPostSplitterLeftSize.Value;
-
             //各種SubModule破棄
             commentActivityModule?.Dispose();
             CommandModule?.Dispose();
@@ -273,8 +269,7 @@ namespace TVTComment.Model
                 ipcModule.Dispose();
             }
 
-            // 設定保存。asyncだがawaitせずに例外は無視。
-            settingReaderWriter.Write(Settings).Wait(5000);
+            settingsAutosave?.Dispose();
 
             State = TVTCommentState.Disposed;
         }

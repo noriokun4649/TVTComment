@@ -254,7 +254,7 @@ namespace TVTComment.Model
             }
         }
 
-        private void SaveSettings()
+        internal void SaveSettings()
         {
             settings.ChatPreserveCount = ChatPreserveCount.Value;
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
