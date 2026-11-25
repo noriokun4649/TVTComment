@@ -52,6 +52,7 @@ namespace Nichan
             using var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = true, CaseFolding = CaseFolding.ToLower, InputStream = reader };
             var document = XDocument.Load(sgml);
             var page = new Page { Uri = finalUri };
+            var legacyIndex = new Uri(finalUri, "kako-legacy.html");
             var byId = new Dictionary<string, Thread>();
             foreach (var row in document.Descendants().Where(e => HasClass(e, "main_odd") || HasClass(e, "main_even")))
             {
@@ -92,7 +93,7 @@ namespace Nichan
                     long a = long.Parse(range.Groups["first"].Value), b = long.Parse(range.Groups["last"].Value);
                     page.Ranges.Add((uri, Math.Min(a, b), Math.Max(a, b)));
                 }
-                else if (HasClass(link.Parent, "menu_link") && uri.Host != finalUri.Host && ThreadAddress.Is5chHost(uri.Host))
+                else if (HasClass(link.Parent, "menu_link") && ThreadAddress.Is5chHost(uri.Host) && (uri.Host != finalUri.Host || uri == legacyIndex))
                     page.Servers.Add(uri);
                 var pagination = Regex.Match(uri.Query, @"(?:\?|&)page=(\d+)(?:&|$)");
                 if (uri.Host == finalUri.Host && pagination.Success && int.TryParse(pagination.Groups[1].Value, out var number))
@@ -173,7 +174,9 @@ namespace Nichan
                             else
                                 pending.Enqueue(other);
                         }
-                        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+                        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound || server.Host == page.Uri.Host)
+                        { }
+                        catch (OperationCanceledException) when (server.Host == page.Uri.Host && !token.IsCancellationRequested)
                         { }
                     }
                 }

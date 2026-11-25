@@ -9,7 +9,7 @@ CX	番組ch(フジ)	https://sora.5ch.net/livecx/subback.html
 ANB	番組ch(朝日)	https://sora.5ch.net/liveanb/subback.html	
 TX	番組ch(TX)	https://sora.5ch.net/livetx/subback.html	
 MX	番組ch(MX)	https://fate.5ch.net/livemx/subback.html	
-BSNHK_BS1	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	BS1
+BSNHK_BS1	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	NHK　BS　1 BS1
 BSNHK_BSP	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	BSプレミアム
 BSFREE_NTV	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS日テレ
 BSFREE_ANB	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS朝日
